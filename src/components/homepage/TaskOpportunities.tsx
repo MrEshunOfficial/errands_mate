@@ -5,10 +5,10 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { ServiceOffering } from "@/types/profiles/business.profile.types";
+import { Service } from "@/types/services/service.types";
 
 interface TaskOpportunitiesProps {
-  services: ServiceOffering[];
+  services: Service[];
 }
 
 interface CountProps {
@@ -43,7 +43,7 @@ export default function TaskOpportunities({
       color: "text-purple-600 dark:text-purple-400",
     },
     {
-      value: services.filter((s) => s.status === "approved").length,
+      value: services.filter((s) => !!(s.approvedAt && !s.rejectedAt)).length,
       label: "Approved",
       color: "text-green-600 dark:text-green-400",
     },
