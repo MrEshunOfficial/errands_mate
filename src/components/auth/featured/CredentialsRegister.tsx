@@ -190,7 +190,7 @@ const PasswordGeneratorPopover = ({
         </ShadcnButton>
       </PopoverTrigger>
       <PopoverContent
-        className="w-96 p-0"
+        className="w-80 sm:w-96 p-0"
         align="end"
         side="bottom"
         sideOffset={5}>

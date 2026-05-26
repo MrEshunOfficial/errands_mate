@@ -189,7 +189,7 @@ export function BaseAuthForm({
   const [authMethod, setAuthMethod] = useState<AuthMethod>(defaultMethod);
 
   return (
-    <div className="p-2 shadow">
+    <div className="w-full p-2 shadow">
       <AuthHeader mode={mode} />
       <AuthMethodToggle
         authMethod={authMethod}

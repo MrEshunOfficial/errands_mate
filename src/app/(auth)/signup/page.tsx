@@ -5,11 +5,11 @@ import React from "react";
 
 export default function Page() {
   return (
-    <section className="w-full h-full flex p-2 justify-center flex-wrap gap-2">
-      <aside className="w-1/3 overflow-y-auto flex flex-col items-center justify-center border-r rounded-md p-2">
+    <section className="w-full min-h-screen flex flex-col md:flex-row p-2 gap-2">
+      <aside className="w-full md:w-2/5 lg:w-1/3 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r rounded-md p-4 md:p-2">
         <BaseAuthForm mode="register" defaultMethod="email" />
       </aside>
-      <article className="flex-1 overflow-y-auto flex items-center justify-center hide-scrollbar">
+      <article className="hidden md:flex flex-1 overflow-y-auto items-center justify-center hide-scrollbar">
         <FeaturedCarousel />
       </article>
     </section>
