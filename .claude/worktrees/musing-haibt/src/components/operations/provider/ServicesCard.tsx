@@ -1,0 +1,412 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Package,
+  Plus,
+  Archive,
+  RotateCcw,
+  ExternalLink,
+  Tag,
+  MoreHorizontal,
+  Search,
+  ChevronDown,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
+import type { ProviderProfile } from "@/types/provider.profile.types";
+import type { Service } from "@/types/services/service.types";
+import Image from "next/image";
+
+// ServicesCard.tsx — widen the prop
+interface ServicesCardProps {
+  profile: ProviderProfile; // ← was PopulatedProviderProfile
+  onAddService: () => void;
+  onArchiveService: (id: string) => Promise<void>;
+  onRestoreService: (id: string) => Promise<void>;
+}
+
+type FilterTab = "all" | "active" | "inactive";
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+function serviceStatus(service: Service): {
+  label: string;
+  variant: "default" | "secondary" | "outline" | "destructive";
+  icon: React.ReactNode;
+  className: string;
+} {
+  if (!service.isActive)
+    return {
+      label: "Archived",
+      variant: "secondary",
+      icon: <Archive size={9} />,
+      className: "text-zinc-500 border-zinc-300 dark:border-zinc-700",
+    };
+  if (service.approvedAt)
+    return {
+      label: "Live",
+      variant: "default",
+      icon: <CheckCircle2 size={9} />,
+      className:
+        "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
+    };
+  return {
+    label: "Pending",
+    variant: "outline",
+    icon: <Clock size={9} />,
+    className:
+      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
+  };
+}
+
+// ─── Service Row ───────────────────────────────────────────────────────────────
+
+function ServiceRow({
+  service,
+  onArchive,
+  onRestore,
+}: {
+  service: Service;
+  onArchive: (id: string) => Promise<void>;
+  onRestore: (id: string) => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const st = serviceStatus(service);
+
+  const handle = async (action: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await action();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors ${
+        service.isActive
+          ? "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700"
+          : "bg-zinc-50 dark:bg-zinc-900/50 border-zinc-100 dark:border-zinc-800/50 opacity-60"
+      }`}>
+      {/* Cover thumbnail */}
+      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800">
+        {service.coverImage?.thumbnailUrl ? (
+          <Image
+            src={service.coverImage.thumbnailUrl}
+            alt={service.title}
+            className="w-full h-full object-cover"
+            width={40}
+            height={40}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-zinc-400">
+            <Package size={16} />
+          </div>
+        )}
+      </div>
+
+      {/* Title + category */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-foreground truncate">
+          {service.title}
+        </p>
+        {service.categoryId && (
+          <p className="flex items-center gap-1 text-xs text-muted-foreground truncate mt-0.5">
+            <Tag size={9} className="shrink-0" />
+            {typeof service.categoryId === "object"
+              ? service.categoryId.catName
+              : service.categoryId}
+          </p>
+        )}
+      </div>
+
+      {/* Status badge */}
+      <Badge
+        variant={st.variant}
+        className={`text-[10px] gap-1 shrink-0 ${st.className}`}>
+        {st.icon}
+        {st.label}
+      </Badge>
+
+      {/* Actions menu */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            className="h-7 w-7 p-0 shrink-0 text-muted-foreground hover:text-foreground">
+            <MoreHorizontal size={14} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            className="text-xs gap-2"
+            onClick={() => window.open(`/services/${service.slug}`, "_blank")}>
+            <ExternalLink size={12} />
+            View listing
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {service.isActive ? (
+            <DropdownMenuItem
+              className="text-xs gap-2 text-destructive focus:text-destructive"
+              onClick={() => handle(() => onArchive(service._id.toString()))}>
+              <Archive size={12} />
+              Archive
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              className="text-xs gap-2 text-emerald-600 dark:text-emerald-400 focus:text-emerald-600"
+              onClick={() => handle(() => onRestore(service._id.toString()))}>
+              <RotateCcw size={12} />
+              Restore
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+// ─── Empty State ───────────────────────────────────────────────────────────────
+
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
+      <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+        <Package size={22} />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-foreground">No services yet</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Add your first offering to start receiving bookings.
+        </p>
+      </div>
+      <Button
+        size="sm"
+        onClick={onAdd}
+        className="mt-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
+        <Plus size={13} />
+        Add service
+      </Button>
+    </div>
+  );
+}
+
+// ─── No Results State ──────────────────────────────────────────────────────────
+
+function NoResults({ query }: { query: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+      <XCircle size={20} className="text-zinc-300 dark:text-zinc-600" />
+      <p className="text-sm text-muted-foreground">
+        No services match{" "}
+        <span className="font-semibold">&quot;{query}&quot;</span>
+      </p>
+    </div>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
+
+export function ServicesCard({
+  profile,
+  onAddService,
+  onArchiveService,
+  onRestoreService,
+}: ServicesCardProps) {
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<FilterTab>("all");
+  const [showArchived, setShowArchived] = useState(false);
+
+  const services = (profile.serviceOfferings ?? []) as unknown as Service[];
+
+  const active = services.filter((s) => s.isActive);
+  const archived = services.filter((s) => !s.isActive);
+
+  const filterFn = (list: Service[]) => {
+    const q = search.toLowerCase().trim();
+    return list.filter((s) => {
+      if (!q) return true;
+      const catName =
+        typeof s.categoryId === "object" ? (s.categoryId?.catName ?? "") : "";
+      return (
+        s.title.toLowerCase().includes(q) ||
+        catName.toLowerCase().includes(q) ||
+        s.slug.toLowerCase().includes(q)
+      );
+    });
+  };
+
+  const visibleActive = filterFn(active);
+  const visibleArchived = filterFn(archived);
+
+  const tabs: { key: FilterTab; label: string; count: number }[] = [
+    { key: "all", label: "All", count: services.length },
+    { key: "active", label: "Active", count: active.length },
+    { key: "inactive", label: "Archived", count: archived.length },
+  ];
+
+  const showActive = filter === "all" || filter === "active";
+  const showArchivedSection = filter === "all" || filter === "inactive";
+
+  return (
+    <Card className="dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl shrink-0 bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-900">
+              <Package size={16} />
+            </span>
+            <div>
+              <CardTitle className="text-base">Service Offerings</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                {services.length === 0
+                  ? "No services added yet"
+                  : `${active.length} active · ${archived.length} archived`}
+              </CardDescription>
+            </div>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={onAddService}
+            className="shrink-0 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white gap-1.5 text-xs">
+            <Plus size={13} />
+            Add service
+          </Button>
+        </div>
+
+        {/* Only show search + tabs when there's something to filter */}
+        {services.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {/* Search */}
+            <div className="relative">
+              <Search
+                size={13}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none"
+              />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search services…"
+                className="pl-8 h-8 text-xs dark:bg-zinc-800 dark:border-zinc-700"
+              />
+            </div>
+
+            {/* Filter tabs */}
+            <div className="flex gap-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilter(tab.key)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                    filter === tab.key
+                      ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
+                      : "text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  }`}>
+                  {tab.label}
+                  <span
+                    className={`text-[10px] px-1 rounded-full ${
+                      filter === tab.key
+                        ? "bg-white/20 dark:bg-black/20"
+                        : "bg-zinc-200 dark:bg-zinc-700"
+                    }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        {services.length === 0 ? (
+          <EmptyState onAdd={onAddService} />
+        ) : (
+          <div className="space-y-4">
+            {/* ── Active services ── */}
+            {showActive && (
+              <div className="space-y-1.5">
+                {visibleActive.length === 0 && search
+                  ? null
+                  : visibleActive.length === 0
+                    ? null
+                    : visibleActive.map((s) => (
+                        <ServiceRow
+                          key={s._id.toString()}
+                          service={s}
+                          onArchive={onArchiveService}
+                          onRestore={onRestoreService}
+                        />
+                      ))}
+                {visibleActive.length === 0 && search && (
+                  <NoResults query={search} />
+                )}
+              </div>
+            )}
+
+            {/* ── Archived services (collapsible) ── */}
+            {showArchivedSection && archived.length > 0 && (
+              <Collapsible open={showArchived} onOpenChange={setShowArchived}>
+                <CollapsibleTrigger asChild>
+                  <button className="flex w-full items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-1">
+                    <ChevronDown
+                      size={13}
+                      className={`transition-transform duration-200 ${showArchived ? "rotate-180" : ""}`}
+                    />
+                    Archived services
+                    <span className="ml-auto bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full text-[10px]">
+                      {archived.length}
+                    </span>
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1.5 mt-1">
+                  {visibleArchived.length === 0 && search ? (
+                    <NoResults query={search} />
+                  ) : (
+                    visibleArchived.map((s) => (
+                      <ServiceRow
+                        key={s._id.toString()}
+                        service={s}
+                        onArchive={onArchiveService}
+                        onRestore={onRestoreService}
+                      />
+                    ))
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
