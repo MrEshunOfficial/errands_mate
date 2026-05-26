@@ -34,7 +34,7 @@ export default function RightContentWrapper({
     return (
       <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 flex items-center justify-center min-h-100">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 text-teal-500 animate-spin mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400 text-sm">Loading…</p>
         </div>
       </div>

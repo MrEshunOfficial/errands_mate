@@ -91,7 +91,7 @@ export default function ProviderDashboard() {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 flex items-center justify-center min-h-100">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-teal-100 border-t-teal-500 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400 text-sm">
             Loading your dashboard…
           </p>
@@ -112,8 +112,8 @@ export default function ProviderDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-xl">
-              <Briefcase className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-teal-100 dark:bg-teal-950 rounded-xl">
+              <Briefcase className="w-6 h-6 text-teal-600 dark:text-teal-400" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {getGreeting()}
@@ -151,7 +151,7 @@ export default function ProviderDashboard() {
         <div className="w-full mt-6">
           <button
             onClick={() => router.push("/profile")}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-linear-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl">
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
             View Business Profile
             <ExternalLink className="w-4 h-4" />
           </button>

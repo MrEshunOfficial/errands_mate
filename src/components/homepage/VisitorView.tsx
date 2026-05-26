@@ -57,7 +57,7 @@ export default function VisitorView() {
           <div
             key={label}
             className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
-            <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
+            <CheckCircle className="w-3.5 h-3.5 text-teal-500 shrink-0" />
             {label}
           </div>
         ))}

@@ -46,7 +46,7 @@ export default function ProviderCard({
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div className="shrink-0">
-          <div className="w-14 h-14 rounded-full bg-linear-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-base font-bold shadow select-none overflow-hidden">
+          <div className="w-14 h-14 rounded-full bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-base font-bold shadow select-none overflow-hidden">
             {avatarUrl ? (
               <Image
                 src={avatarUrl}
@@ -134,7 +134,7 @@ export default function ProviderCard({
           {primaryContact && (
             <a
               href={`tel:${primaryContact}`}
-              className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
               <Phone size={12} />
               {primaryContact}
             </a>
@@ -142,7 +142,7 @@ export default function ProviderCard({
           {businessEmail && (
             <a
               href={`mailto:${businessEmail}`}
-              className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate max-w-50">
+              className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors truncate max-w-50">
               <Mail size={12} />
               {businessEmail}
             </a>

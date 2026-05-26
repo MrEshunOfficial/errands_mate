@@ -35,17 +35,17 @@ export default function TaskOpportunities({
     {
       value: services.length,
       label: "Active services",
-      color: "text-blue-600 dark:text-blue-400",
+      color: "text-teal-600 dark:text-teal-400",
     },
     {
       value: services.filter((s) => s.isActive).length,
       label: "Currently active",
-      color: "text-purple-600 dark:text-purple-400",
+      color: "text-gray-700 dark:text-gray-300",
     },
     {
       value: services.filter((s) => !!(s.approvedAt && !s.rejectedAt)).length,
       label: "Approved",
-      color: "text-green-600 dark:text-green-400",
+      color: "text-emerald-600 dark:text-emerald-400",
     },
   ];
 
@@ -57,7 +57,7 @@ export default function TaskOpportunities({
         </h3>
         <button
           onClick={() => router.push("/provider/tasks/available")}
-          className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors group">
+          className="inline-flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium transition-colors group">
           View all
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
         </button>
