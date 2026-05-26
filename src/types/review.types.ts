@@ -20,13 +20,4 @@ export interface ReviewListResponse {
   limit: number;
 }
 
-export interface ReviewResponse {
-  success: boolean;
-  message: string;
-  review?: Review;
-}
 
-export interface SubmitReviewBody {
-  rating: number;
-  comment?: string;
-}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { reviewAPI } from "@/lib/api/reviews/review.api";
-import { Review, SubmitReviewBody } from "@/types/review.types";
+import { Review } from "@/types/review.types";
 
 // ─── Shared primitives (mirrors useBooking.ts pattern) ────────────────────────
 
@@ -10,17 +10,6 @@ interface QueryState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
-}
-
-interface MutationState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-}
-
-interface MutationCallbacks<T> {
-  onSuccess?: (data: T) => void;
-  onError?: (error: string) => void;
 }
 
 // ─── Internal: base query ────────────────────────────────────────────────────
@@ -63,47 +52,6 @@ function useBaseQuery<T>(
   }, [enabled, tick, ...deps]);
 
   return { ...state, refetch };
-}
-
-// ─── Internal: base mutation ─────────────────────────────────────────────────
-
-function useBaseMutation<TData, TArgs>(
-  mutationFn: (args: TArgs) => Promise<TData>,
-  callbacks?: MutationCallbacks<TData>,
-): MutationState<TData> & {
-  mutate: (args: TArgs) => Promise<TData | null>;
-  reset: () => void;
-} {
-  const [state, setState] = useState<MutationState<TData>>({
-    data: null,
-    loading: false,
-    error: null,
-  });
-  const callbacksRef = useRef(callbacks);
-  useEffect(() => { callbacksRef.current = callbacks; });
-  const mutationFnRef = useRef(mutationFn);
-  useEffect(() => { mutationFnRef.current = mutationFn; });
-
-  const mutate = useCallback(async (args: TArgs): Promise<TData | null> => {
-    setState({ data: null, loading: true, error: null });
-    try {
-      const data = await mutationFnRef.current(args);
-      setState({ data, loading: false, error: null });
-      callbacksRef.current?.onSuccess?.(data);
-      return data;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unexpected error";
-      setState((prev) => ({ ...prev, loading: false, error: message }));
-      callbacksRef.current?.onError?.(message);
-      return null;
-    }
-  }, []);
-
-  const reset = useCallback(() => {
-    setState({ data: null, loading: false, error: null });
-  }, []);
-
-  return { ...state, mutate, reset };
 }
 
 // ─── Public: Provider Reviews (paginated, append-on-load-more) ───────────────
@@ -176,26 +124,6 @@ export function useProviderReviews(
   const hasMore = reviews.length < total;
 
   return { reviews, total, page, loading, loadingMore, error, hasMore, loadMore };
-}
-
-// ─── Public: Submit Review ───────────────────────────────────────────────────
-
-export function useSubmitReview(
-  callbacks?: MutationCallbacks<Review>,
-): MutationState<Review> & {
-  mutate: (args: { bookingId: string; body: SubmitReviewBody }) => Promise<Review | null>;
-  reset: () => void;
-} {
-  return useBaseMutation(
-    ({ bookingId, body }) =>
-      reviewAPI
-        .submitReview(bookingId, body)
-        .then((res) => {
-          if (!res.success) throw new Error(res.message);
-          return res.review as Review;
-        }),
-    callbacks,
-  );
 }
 
 // Re-export so callers can get the base query state shape if needed
