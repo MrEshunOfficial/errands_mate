@@ -375,10 +375,9 @@ function reducer<Populated extends boolean>(
     }
 
     case "LOCATION_MARK_USED": {
-      const now = new Date();
       const stamped = state.locations.map((loc) =>
         loc._id?.toString() === action.locationId
-          ? { ...loc, lastUsedAt: now }
+          ? { ...loc, lastUsedAt: new Date().toISOString() }
           : loc,
       );
       return { ...state, isSavingLocation: false, locations: stamped };

@@ -268,7 +268,7 @@ export function useProfile(autoFetch = true): UseProfileReturn {
       setState((prev) => ({
         ...prev,
         profile: prev.profile
-          ? { ...prev.profile, isDeleted: true, deletedAt: new Date() }
+          ? { ...prev.profile, isDeleted: true, deletedAt: new Date().toISOString() }
           : null,
       }));
       return true;

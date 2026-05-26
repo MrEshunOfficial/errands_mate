@@ -239,7 +239,7 @@ function CategoryTableRow({
           onUpload={onUploadCover}
           // CoverChangeMicro calls onSuccess with the full UploadOrphanCoverResponse.
           // We extract fileId and the Cloudinary URL here and forward them up.
-          onSuccess={(result) => onCoverLinked(result.fileId, result.url)}
+          onSuccess={(result) => onCoverLinked(result.fileId, result.file.url)}
         />
       </td>
 
