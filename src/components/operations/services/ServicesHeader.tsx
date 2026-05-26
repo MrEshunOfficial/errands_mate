@@ -277,7 +277,7 @@ export default function ServicesHeader({
                                         : "hover:bg-gray-100 dark:hover:bg-gray-700"
                                     }`}
                                   >
-                                    {cat.catCoverId?.url && (
+                                    {cat.catCoverId && typeof cat.catCoverId !== "string" && cat.catCoverId.url && (
                                       <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
                                         <Image
                                           src={cat.catCoverId.url}
