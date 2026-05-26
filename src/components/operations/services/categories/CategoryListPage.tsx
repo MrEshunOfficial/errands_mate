@@ -529,10 +529,7 @@ export default function CategoryListPage(): JSX.Element {
     useClientPreference();
 
   const favoriteCategoryIds = useMemo<string[]>(
-    () =>
-      (preference?.favoriteCategories ?? []).map((entry) =>
-        typeof entry === "string" ? entry : (entry._id?.toString() ?? ""),
-      ),
+    () => preference?.favoriteCategories ?? [],
     [preference?.favoriteCategories],
   );
 
