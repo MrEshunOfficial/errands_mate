@@ -7,10 +7,8 @@ import { useRouter } from "next/navigation";
 
 import ProviderSetupPrompt from "./ProviderSetupPrompt";
 import TaskOpportunities from "./TaskOpportunities";
-import {
-  useMyProviderProfile,
-  useServiceOfferings,
-} from "@/hooks/profiles/useProviderProfile";
+import { useMyProviderProfile } from "@/hooks/profiles/useProviderProfile";
+import { useServicesByProvider } from "@/hooks/services/useServices";
 import { useProfile } from "@/hooks/profiles/useCoreUserProfile";
 import { isPopulatedPicture } from "@/types/core.user.profile.types";
 import ProviderCard from "./ProviderCard";
@@ -74,11 +72,12 @@ export default function ProviderDashboard() {
   const { data: providerProfile, loading: profileLoading } =
     useMyProviderProfile();
 
-  const profileId = providerProfile?._id ? String(providerProfile._id) : null;
-
-  // ── Service offerings ──────────────────────────────────────────────────────
-  const { data: services, loading: servicesLoading } =
-    useServiceOfferings(profileId);
+  // ── Service offerings — authenticated /services/provider/me endpoint ───────
+  // Using the JWT-scoped endpoint ensures each provider only sees their own
+  // services (the public /providers/:id/services endpoint is not scoped).
+  const { data: servicesPage, isLoading: servicesLoading } =
+    useServicesByProvider({ includeInactive: true });
+  const services = servicesPage?.items ?? [];
 
   // ── User profile picture ───────────────────────────────────────────────────
   const { profile: userProfile } = useProfile();

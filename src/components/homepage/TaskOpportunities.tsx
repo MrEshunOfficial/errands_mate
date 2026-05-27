@@ -34,7 +34,7 @@ export default function TaskOpportunities({
   const counts: CountProps[] = [
     {
       value: services.length,
-      label: "Active services",
+      label: "Total services",
       color: "text-teal-600 dark:text-teal-400",
     },
     {
