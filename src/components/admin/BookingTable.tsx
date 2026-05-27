@@ -207,7 +207,7 @@ export function BookingTable({
   }
 
   return (
-    <Table>
+    <Table className="min-w-[640px]">
       <TableHeader className="sticky top-0 bg-muted/50 z-[1]">
         <TableRow>
           {TABLE_HEADERS.map((h) => (

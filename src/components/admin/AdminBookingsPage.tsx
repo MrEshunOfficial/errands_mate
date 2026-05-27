@@ -228,20 +228,21 @@ export default function AdminBookingsPage() {
     <div className="h-full bg-transparent">
       {/* ── Sticky Header ─────────────────────────────────────────────────── */}
       <div className="border-b backdrop-blur-3xl sticky top-0 z-10">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div>
-            <h1 className="text-lg font-bold">Booking Management</h1>
-            <p className="text-xs text-muted-foreground">
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 gap-2">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-bold truncate">Booking Management</h1>
+            <p className="text-xs text-muted-foreground hidden sm:block">
               Admin · Full control over all platform bookings
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRefetch}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
+          <Button variant="outline" size="sm" onClick={handleRefetch} className="shrink-0">
+            <RefreshCw className="h-3.5 w-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* ── Stats Grid ─────────────────────────────────────────────────── */}
         <BookingStatsGrid
           stats={statsState.data}
@@ -251,13 +252,13 @@ export default function AdminBookingsPage() {
         {/* ── Table Card ─────────────────────────────────────────────────── */}
         <Card className="overflow-hidden bg-transparent">
           {/* View Tabs */}
-          <div className="border-b px-4">
-            <div className="flex gap-1">
+          <div className="border-b overflow-x-auto">
+            <div className="flex gap-0 px-2 min-w-max">
               {VIEW_TABS.map((t) => (
                 <button
                   key={t.key}
                   onClick={() => handleViewChange(t.key)}
-                  className={`relative px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  className={`relative px-3 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                     activeView === t.key
                       ? "border-foreground text-foreground"
                       : "border-transparent text-muted-foreground hover:text-foreground"
@@ -290,7 +291,7 @@ export default function AdminBookingsPage() {
           <RevenueStrip bookings={bookings} />
 
           {/* Table */}
-          <div className="overflow-auto max-h-[calc(100vh-420px)] bg-transparent">
+          <div className="overflow-auto max-h-[40vh] sm:max-h-[calc(100vh-420px)] bg-transparent">
             <BookingTable
               bookings={bookings}
               selectedId={selectedBookingId}

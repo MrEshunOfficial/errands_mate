@@ -298,7 +298,7 @@ export function BookingDetailPanel({
     <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-xl p-0 flex flex-col bg-transparent backdrop-blur-3xl shadow-2xl"
+        className="w-full sm:max-w-xl p-0 flex flex-col bg-background/95 backdrop-blur-3xl shadow-2xl"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>
@@ -347,13 +347,13 @@ export function BookingDetailPanel({
                 </div>
 
                 {/* Quick links to client/provider */}
-                <div className="flex gap-1 shrink-0">
+                <div className="flex flex-col gap-1 shrink-0 items-end">
                   {getClientId(booking) && (
                     <a
                       href={`/admin/users/${getClientId(booking)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors min-h-[28px] px-1"
                       title="Open client profile"
                     >
                       Client <ExternalLink className="h-3 w-3" />
@@ -364,7 +364,7 @@ export function BookingDetailPanel({
                       href={`/admin/providers/${getProviderId(booking)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 ml-2 transition-colors"
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors min-h-[28px] px-1"
                       title="Open provider profile"
                     >
                       Provider <ExternalLink className="h-3 w-3" />
@@ -390,13 +390,13 @@ export function BookingDetailPanel({
             </div>
 
             {/* ── Tab Nav ──────────────────────────────────────────────────── */}
-            <div className="border-b px-4">
-              <div className="flex gap-1">
+            <div className="border-b overflow-x-auto">
+              <div className="flex gap-0 px-2 min-w-max">
                 {TABS.map((t) => (
                   <button
                     key={t.key}
                     onClick={() => setActiveTab(t.key)}
-                    className={`px-3 py-2 text-xs font-medium capitalize border-b-2 transition-colors ${
+                    className={`px-3 sm:px-4 py-2.5 text-xs font-medium capitalize border-b-2 transition-colors whitespace-nowrap ${
                       activeTab === t.key
                         ? "border-foreground text-foreground"
                         : "border-transparent text-muted-foreground hover:text-foreground"

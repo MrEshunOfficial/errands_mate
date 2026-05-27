@@ -10,11 +10,11 @@ interface InfoRowProps {
 
 function InfoRow({ label, value }: InfoRowProps) {
   return (
-    <div className="grid grid-cols-[140px_1fr] text-sm">
-      <div className="py-2 px-3 bg-muted/50 text-xs font-mono text-muted-foreground uppercase tracking-wide">
+    <div className="flex flex-col sm:grid sm:grid-cols-[140px_1fr] text-sm">
+      <div className="px-3 pt-2 pb-0.5 sm:py-2 bg-muted/50 text-[10px] font-mono text-muted-foreground uppercase tracking-wide">
         {label}
       </div>
-      <div className="py-2 px-3 break-all">{value ?? "—"}</div>
+      <div className="px-3 pb-2 pt-0.5 sm:py-2 break-words">{value ?? "—"}</div>
     </div>
   );
 }
