@@ -79,6 +79,10 @@ export const useAuth = (): AuthState & AuthActions => {
         updateState({ error: null });
         const response = await action();
 
+        if (response.token) {
+          localStorage.setItem("authToken", response.token);
+        }
+
         if (response.user) {
           updateState({
             user: response.user,
@@ -123,6 +127,7 @@ export const useAuth = (): AuthState & AuthActions => {
     } catch (error) {
       console.warn("Logout API call failed:", error);
     } finally {
+      localStorage.removeItem("authToken");
       updateState({ user: null, isAuthenticated: false, error: null });
     }
   }, [updateState]);
