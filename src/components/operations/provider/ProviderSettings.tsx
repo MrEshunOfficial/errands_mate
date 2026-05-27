@@ -364,8 +364,8 @@ export default function ProviderSettings() {
   const { mutateAsync: archiveServiceAsync } = useDeleteService();
   const { mutateAsync: restoreServiceAsync } = useRestoreService();
 
-  const handleAddService = () => {
-    router.push("/provider/services/create");
+  const handleManageServices = () => {
+    router.push("/provider/services");
   };
 
   const handleArchiveService = async (serviceId: string) => {
@@ -415,7 +415,7 @@ export default function ProviderSettings() {
                 {/* Services — new card */}
                 <ServicesCard
                   profile={profile}
-                  onAddService={handleAddService}
+                  onManageServices={handleManageServices}
                   onArchiveService={handleArchiveService}
                   onRestoreService={handleRestoreService}
                 />

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   Package,
-  Plus,
   Archive,
   RotateCcw,
   ExternalLink,
@@ -14,6 +13,7 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  Settings2,
 } from "lucide-react";
 import {
   Card,
@@ -45,12 +45,12 @@ import Image from "next/image";
 // ServicesCard.tsx — widen the prop
 interface ServicesCardProps {
   profile: ProviderProfile; // ← was PopulatedProviderProfile
-  onAddService: () => void;
+  onManageServices: () => void;
   onArchiveService: (id: string) => Promise<void>;
   onRestoreService: (id: string) => Promise<void>;
 }
 
-type FilterTab = "all" | "active" | "inactive";
+type FilterTab = "all" | "live" | "pending" | "inactive";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -199,7 +199,7 @@ function ServiceRow({
 
 // ─── Empty State ───────────────────────────────────────────────────────────────
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ onManage }: { onManage: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
       <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
@@ -208,15 +208,15 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       <div>
         <p className="text-sm font-semibold text-foreground">No services yet</p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Add your first offering to start receiving bookings.
+          Head to your services page to add your first offering.
         </p>
       </div>
       <Button
         size="sm"
-        onClick={onAdd}
+        onClick={onManage}
         className="mt-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
-        <Plus size={13} />
-        Add service
+        <ExternalLink size={13} />
+        Go to services
       </Button>
     </div>
   );
@@ -240,7 +240,7 @@ function NoResults({ query }: { query: string }) {
 
 export function ServicesCard({
   profile,
-  onAddService,
+  onManageServices,
   onArchiveService,
   onRestoreService,
 }: ServicesCardProps) {
@@ -256,7 +256,8 @@ export function ServicesCard({
     (profile.serviceOfferings ?? []) as unknown as Service[]
   ).filter((s) => s._id != null);
 
-  const active = validServices.filter((s) => s.isActive);
+  const live = validServices.filter((s) => s.isActive && !!s.approvedAt);
+  const pending = validServices.filter((s) => s.isActive && !s.approvedAt);
   const archived = validServices.filter((s) => !s.isActive);
 
   const filterFn = (list: Service[]) => {
@@ -273,16 +274,19 @@ export function ServicesCard({
     });
   };
 
-  const visibleActive = filterFn(active);
+  const visibleLive = filterFn(live);
+  const visiblePending = filterFn(pending);
   const visibleArchived = filterFn(archived);
 
   const tabs: { key: FilterTab; label: string; count: number }[] = [
     { key: "all", label: "All", count: validServices.length },
-    { key: "active", label: "Active", count: active.length },
+    { key: "live", label: "Live", count: live.length },
+    { key: "pending", label: "Pending", count: pending.length },
     { key: "inactive", label: "Archived", count: archived.length },
   ];
 
-  const showActive = filter === "all" || filter === "active";
+  const showLive = filter === "all" || filter === "live";
+  const showPending = filter === "all" || filter === "pending";
   const showArchivedSection = filter === "all" || filter === "inactive";
 
   return (
@@ -298,17 +302,17 @@ export function ServicesCard({
               <CardDescription className="text-xs mt-0.5">
                 {validServices.length === 0
                   ? "No services added yet"
-                  : `${active.length} active · ${archived.length} archived`}
+                  : `${live.length} live · ${pending.length} pending · ${archived.length} archived`}
               </CardDescription>
             </div>
           </div>
 
           <Button
             size="sm"
-            onClick={onAddService}
-            className="shrink-0 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white gap-1.5 text-xs">
-            <Plus size={13} />
-            Add service
+            onClick={onManageServices}
+            className="shrink-0 bg-zinc-900 hover:bg-zinc-700 dark:bg-zinc-100 dark:hover:bg-zinc-300 dark:text-zinc-900 text-white gap-1.5 text-xs">
+            <Settings2 size={13} />
+            Manage services
           </Button>
         </div>
 
@@ -358,16 +362,39 @@ export function ServicesCard({
 
       <CardContent className="pt-0">
         {validServices.length === 0 ? (
-          <EmptyState onAdd={onAddService} />
+          <EmptyState onManage={onManageServices} />
         ) : (
           <div className="space-y-4">
-            {/* ── Active services ── */}
-            {showActive && (
+            {/* ── Live services ── */}
+            {showLive && (
               <div className="space-y-1.5">
-                {visibleActive.length === 0 && search ? (
+                {visibleLive.length === 0 && search ? (
                   <NoResults query={search} />
                 ) : (
-                  visibleActive.map((s) => (
+                  visibleLive.map((s) => (
+                    <ServiceRow
+                      key={s._id.toString()}
+                      service={s}
+                      onArchive={onArchiveService}
+                      onRestore={onRestoreService}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* ── Pending approval ── */}
+            {showPending && pending.length > 0 && (
+              <div className="space-y-1.5">
+                {(filter === "all" || filter === "pending") && (
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 px-1">
+                    Awaiting approval
+                  </p>
+                )}
+                {visiblePending.length === 0 && search ? (
+                  <NoResults query={search} />
+                ) : (
+                  visiblePending.map((s) => (
                     <ServiceRow
                       key={s._id.toString()}
                       service={s}

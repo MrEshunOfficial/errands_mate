@@ -109,6 +109,16 @@ function isWithinSlot(slot: { start: string; end: string }): boolean {
   return cur >= slot.start && cur <= slot.end;
 }
 
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m ?? 0);
+}
+
+function currentMinutes(): number {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
+
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
 /** Recomputes the "now" needle percentage every minute */
@@ -150,23 +160,88 @@ function deriveLiveStatus(
     return { isOpen: true, label: "Always Available", variant: "green" };
   }
 
-  const todaySlot = (
-    workingHours as Record<string, { start: string; end: string }> | undefined
-  )?.[todayDayName()];
-
-  if (todaySlot && isWithinSlot(todaySlot)) {
-    return {
-      isOpen: true,
-      label: `Open until ${fmt12(todaySlot.end)}`,
-      variant: "green",
-    };
-  }
-
-  // Find next open day
   const todayIdx = todayDayIndex();
   const wh = workingHours as
     | Record<string, { start: string; end: string }>
     | undefined;
+  const todaySlot = wh?.[todayDayName()];
+  const curMins = currentMinutes();
+
+  if (todaySlot) {
+    const startMins = timeToMinutes(todaySlot.start);
+    const endMins = timeToMinutes(todaySlot.end);
+
+    if (curMins < startMins) {
+      // Before today's opening window
+      const minsUntilOpen = startMins - curMins;
+      if (minsUntilOpen <= 30) {
+        return {
+          isOpen: false,
+          label: `Opens soon · ${fmt12(todaySlot.start)}`,
+          variant: "amber",
+        };
+      }
+      return {
+        isOpen: false,
+        label: `Opens today at ${fmt12(todaySlot.start)}`,
+        variant: "gray",
+      };
+    }
+
+    if (curMins <= endMins) {
+      // Currently open — check if closing soon
+      const minsLeft = endMins - curMins;
+      if (minsLeft <= 30) {
+        return {
+          isOpen: true,
+          label: `Closing soon · ${fmt12(todaySlot.end)}`,
+          variant: "amber",
+        };
+      }
+      return {
+        isOpen: true,
+        label: `Open until ${fmt12(todaySlot.end)}`,
+        variant: "green",
+      };
+    }
+
+    // Past today's closing time — build elapsed label
+    const minsSinceClosed = curMins - endMins;
+    let closedLabel: string;
+    let closedVariant: LiveStatusVariant;
+    if (minsSinceClosed < 1) {
+      closedLabel = "Closed just now";
+      closedVariant = "red";
+    } else if (minsSinceClosed < 60) {
+      closedLabel = `Closed ${minsSinceClosed}m ago`;
+      closedVariant = minsSinceClosed < 30 ? "red" : "gray";
+    } else {
+      const hrs = Math.floor(minsSinceClosed / 60);
+      closedLabel = `Closed ${hrs}h ago`;
+      closedVariant = "gray";
+    }
+
+    // Append next opening time
+    for (let i = 1; i <= 7; i++) {
+      const idx = (todayIdx + i) % 7;
+      const day = DAYS[idx];
+      const slot = wh?.[day];
+      if (slot) {
+        const reopenLabel =
+          i === 1
+            ? `tomorrow at ${fmt12(slot.start)}`
+            : `${DAY_ABBR[day]} at ${fmt12(slot.start)}`;
+        return {
+          isOpen: false,
+          label: `${closedLabel} · Opens ${reopenLabel}`,
+          variant: closedVariant,
+        };
+      }
+    }
+    return { isOpen: false, label: closedLabel, variant: closedVariant };
+  }
+
+  // No slot today — find next open day
   for (let i = 1; i <= 7; i++) {
     const idx = (todayIdx + i) % 7;
     const day = DAYS[idx];
@@ -174,13 +249,13 @@ function deriveLiveStatus(
     if (slot) {
       const label =
         i === 1
-          ? `Opens tomorrow ${fmt12(slot.start)}`
-          : `Opens ${DAY_ABBR[day]}`;
+          ? `Opens tomorrow at ${fmt12(slot.start)}`
+          : `Opens ${DAY_ABBR[day]} at ${fmt12(slot.start)}`;
       return { isOpen: false, label, variant: "gray" };
     }
   }
 
-  return { isOpen: false, label: "Closed Today", variant: "gray" };
+  return { isOpen: false, label: "Closed today", variant: "gray" };
 }
 
 /** Live status pill — re-evaluates every minute */
