@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/auth/useAuth";
 
@@ -137,7 +137,7 @@ const CredentialsLogin = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, isLoading, error, clearError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,9 +157,11 @@ const CredentialsLogin = () => {
         localStorage.removeItem("rememberedEmail");
       }
 
-      // Show success toast and redirect
+      // Show success toast and redirect — full page navigation so the
+      // middleware sees the freshly-set authToken cookie.
       toast.success("Welcome back! You've successfully logged in.");
-      router.push("/profile");
+      const destination = searchParams.get("redirect") || "/profile";
+      window.location.href = destination;
     } catch (error) {
       console.error("Login error:", error);
 

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useOAuth } from "@/hooks/auth/useOauth";
 
 interface GoogleSignInProps {
@@ -12,7 +12,7 @@ interface GoogleSignInProps {
 
 export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
   const { googleAuth, isLoading, error, clearError } = useOAuth();
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isGoogleReady, setIsGoogleReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
@@ -38,7 +38,8 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
             onSuccess();
           }
 
-          router.push("/profile");
+          const destination = searchParams.get("redirect") || "/profile";
+          window.location.href = destination;
         } else {
           const errorMsg = "Google authentication failed. Please try again.";
           if (onError) {
