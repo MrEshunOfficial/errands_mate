@@ -149,9 +149,9 @@ export default function ProviderDashboard() {
         {/* Primary CTA */}
         <div className="w-full mt-6">
           <button
-            onClick={() => router.push("/profile")}
+            onClick={() => router.push("/provider/dashboard")}
             className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
-            View Business Profile
+            Open Dashboard
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>

@@ -53,7 +53,7 @@ export default function TaskOpportunities({
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-          Task Opportunities
+          Service Stats
         </h3>
         <button
           onClick={() => router.push("/provider/tasks/available")}
