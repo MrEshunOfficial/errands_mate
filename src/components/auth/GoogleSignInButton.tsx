@@ -19,7 +19,8 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
 
   const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-  // Handle Google authentication response
+  // Keep a stable ref to the latest handler so we never re-initialize the SDK
+  // just because a closure dependency changed.
   const handleGoogleResponse = useCallback(
     async (response: { credential: string }) => {
       try {
@@ -29,11 +30,6 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
         const result = await googleAuth({ idToken: response.credential });
 
         if (result) {
-          console.log("Google auth successful:", {
-            user: result.user,
-            isNewUser: mode === "register",
-          });
-
           if (onSuccess) {
             onSuccess();
           }
@@ -57,10 +53,14 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
         setIsProcessing(false);
       }
     },
-    [googleAuth, router, mode, onSuccess, onError, clearError],
+    [googleAuth, mode, onSuccess, onError, clearError, searchParams],
   );
 
-  // Initialize Google Sign-In with button rendering
+  const handleGoogleResponseRef = useRef(handleGoogleResponse);
+  handleGoogleResponseRef.current = handleGoogleResponse;
+
+  // Initialize the Google SDK exactly once. The callback delegates to the ref
+  // so it always uses the latest handler without triggering a re-init.
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) {
       console.error("GOOGLE_CLIENT_ID not found in environment variables");
@@ -70,16 +70,14 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
     const initializeGoogle = () => {
       if (window.google && googleButtonRef.current) {
         try {
-          // Initialize Google Sign-In
           window.google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
-            callback: handleGoogleResponse,
+            callback: (r) => handleGoogleResponseRef.current(r),
             auto_select: false,
             cancel_on_tap_outside: true,
             use_fedcm_for_prompt: false,
           });
 
-          // Render the Google button (hidden, we'll trigger it programmatically)
           window.google.accounts.id.renderButton(googleButtonRef.current, {
             theme: "outline",
             size: "large",
@@ -116,9 +114,9 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
         clearTimeout(timeout);
       };
     }
-  }, [GOOGLE_CLIENT_ID, handleGoogleResponse]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [GOOGLE_CLIENT_ID]);
 
-  // Trigger the hidden Google button
   const handleGoogleSignIn = () => {
     if (!isGoogleReady) {
       console.error("Google Sign-In not ready");
@@ -127,14 +125,12 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
 
     clearError();
 
-    // Click the hidden Google button
     const googleButton = googleButtonRef.current?.querySelector(
       "div[role='button']",
     ) as HTMLElement;
     if (googleButton) {
       googleButton.click();
     } else {
-      // Fallback to prompt if button not found
       if (window.google) {
         window.google.accounts.id.prompt();
       }
