@@ -22,10 +22,14 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
+    const backendURL =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:5000"
+        : (process.env.NEXT_PUBLIC_BACKEND_URL ?? "https://mate-backend-api.onrender.com");
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:5000/api/:path*",
+        destination: `${backendURL}/api/:path*`,
       },
     ];
   },
