@@ -539,7 +539,7 @@ export function usePermanentlyDeleteService() {
  *
  * @example
  * const { mutateAsync } = useBulkUpdateServices();
- * await mutateAsync({ ids: ["svc_1", "svc_2"], updates: { isActive: false } });
+ * await mutateAsync({ serviceIds: ["svc_1", "svc_2"], updates: { isActive: false } });
  */
 export function useBulkUpdateServices() {
   return useMutation<{ modifiedCount: number }, [BulkUpdatePayload]>(
