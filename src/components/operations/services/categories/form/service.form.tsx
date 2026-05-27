@@ -299,7 +299,7 @@ function SectionCard({
             <ChevronDown className="w-4 h-4 opacity-60" />
           ))}
       </button>
-      {open && <div className="p-5 space-y-4">{children}</div>}
+      {open && <div className="p-4 sm:p-5 space-y-4">{children}</div>}
     </div>
   );
 }
@@ -541,7 +541,7 @@ export default function ServiceForm({
       <div className="flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-lg w-full overflow-hidden">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3 mb-1">
               <div className="w-7 h-7 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
                 <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -556,7 +556,7 @@ export default function ServiceForm({
           </div>
 
           {/* Auto-activation notice */}
-          <div className="px-6 py-5">
+          <div className="px-4 sm:px-6 py-4 sm:py-5">
             <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
               <svg
                 className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"
@@ -578,7 +578,7 @@ export default function ServiceForm({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-end">
+          <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-end">
             <button
               type="button"
               onClick={() => {
@@ -600,12 +600,12 @@ export default function ServiceForm({
       <div className="flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-lg w-full overflow-hidden">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3 mb-1">
               <div className="w-7 h-7 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
                 <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                 Service created — add a cover
               </h2>
             </div>
@@ -616,7 +616,7 @@ export default function ServiceForm({
           </div>
 
           {/* Auto-activation notice */}
-          <div className="mx-6 mt-4 flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+          <div className="mx-4 sm:mx-6 mt-4 flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
             <svg
               className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"
               fill="none"
@@ -634,7 +634,7 @@ export default function ServiceForm({
           </div>
 
           {/* Uploader */}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <CoverUploader
               context="service"
               coverRecord={coverRecord}
@@ -655,7 +655,7 @@ export default function ServiceForm({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
+          <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => {
@@ -685,10 +685,10 @@ export default function ServiceForm({
 
   // ── Form ─────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full max-w-xl">
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg flex flex-col">
+    <div className="w-full max-w-xl flex flex-col h-full">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg flex flex-col flex-1 min-h-0">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             {mode === "create" ? "Create New Service" : "Edit Service"}
           </h1>
@@ -700,11 +700,11 @@ export default function ServiceForm({
         </div>
 
         {/* Scrollable body */}
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <form
             id={formId}
             onSubmit={handleSubmit}
-            className="p-6 space-y-5 h-[calc(96vh-220px)] overflow-auto hide-scrollbar">
+            className="p-4 sm:p-6 space-y-5">
             {/* ─── Cover image (edit mode only) ────────────────────────── */}
             {mode === "edit" && (
               <SectionCard title="Cover Image">
@@ -767,7 +767,7 @@ export default function ServiceForm({
                 title="Admin Settings"
                 collapsible
                 defaultOpen={false}>
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       Private listing
@@ -811,7 +811,7 @@ export default function ServiceForm({
         </ScrollArea>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t rounded-b-md border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-end gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-4 border-t rounded-b-md border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-end gap-3 shrink-0">
           <button
             type="button"
             onClick={handleCancel}

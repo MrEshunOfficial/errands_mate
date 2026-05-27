@@ -253,14 +253,14 @@ function CollapsibleSection({
 }) {
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
-        <div>
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-gray-900 dark:text-white">{label}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
         </div>
-        <Switch checked={enabled} onCheckedChange={onToggle} />
+        <Switch checked={enabled} onCheckedChange={onToggle} className="shrink-0" />
       </div>
-      {enabled && <div className="p-4 space-y-3">{children}</div>}
+      {enabled && <div className="p-3 sm:p-4 space-y-3">{children}</div>}
     </div>
   );
 }
@@ -614,7 +614,7 @@ export function ServicePricingForm({
               <div
                 key={tier._key}
                 className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FieldRow label="Label">
                     <TextInput
                       name={`tier-label-${tier._key}`}
@@ -670,40 +670,41 @@ export function ServicePricingForm({
             enabled={p.feesEnabled}
             onToggle={(v) => patch({ feesEnabled: v, additionalFees: v ? p.additionalFees : [] })}>
             {p.additionalFees.map((fee) => (
-              <div
-                key={fee._key}
-                className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2">
+              <div key={fee._key} className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <TextInput
                   name={`fee-label-${fee._key}`}
                   value={fee.label}
                   onChange={(e) => updateFee(fee._key, { label: e.target.value })}
                   placeholder="e.g. Travel Fee"
+                  className="flex-1"
                 />
-                <TextInput
-                  name={`fee-amount-${fee._key}`}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={fee.amount.toString()}
-                  onChange={(e) => updateFee(fee._key, { amount: parseFloat(e.target.value) || 0 })}
-                  placeholder="Amount"
-                  className="w-24"
-                />
-                <label className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={fee.isOptional}
-                    onChange={(e) => updateFee(fee._key, { isOptional: e.target.checked })}
-                    className="rounded border-gray-300"
+                <div className="flex items-center gap-2 shrink-0">
+                  <TextInput
+                    name={`fee-amount-${fee._key}`}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={fee.amount.toString()}
+                    onChange={(e) => updateFee(fee._key, { amount: parseFloat(e.target.value) || 0 })}
+                    placeholder="Amount"
+                    className="w-24"
                   />
-                  Optional
-                </label>
-                <button
-                  type="button"
-                  onClick={() => removeFee(fee._key)}
-                  className="p-1 text-red-500 hover:text-red-700 transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  <label className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={fee.isOptional}
+                      onChange={(e) => updateFee(fee._key, { isOptional: e.target.checked })}
+                      className="rounded border-gray-300"
+                    />
+                    Optional
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => removeFee(fee._key)}
+                    className="p-1 text-red-500 hover:text-red-700 transition-colors shrink-0">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             ))}
             <button
