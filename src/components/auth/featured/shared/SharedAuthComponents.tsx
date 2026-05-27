@@ -3,10 +3,12 @@
 import { JSX, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { TermsAndPrivacy } from "../TermsandConditions";
 import CredentialsLogin from "../CredentialsLogin";
 import CredentialsRegister from "../CredentialsRegister";
 import { GoogleSignIn } from "@/components/auth/GoogleSignInButton";
+import { saveAuthToken } from "@/lib/auth/token";
 
 // types/auth.ts
 export type AuthMethod = "google" | "email";
@@ -187,6 +189,25 @@ export function BaseAuthForm({
   defaultMethod = "email",
 }: BaseAuthFormProps): JSX.Element {
   const [authMethod, setAuthMethod] = useState<AuthMethod>(defaultMethod);
+  const searchParams = useSearchParams();
+
+  // If the user has a valid token in localStorage but no cookie (common after
+  // mobile browsers clear session cookies), restore the cookie and skip login.
+  useEffect(() => {
+    if (mode !== "login") return;
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const expired = payload.exp && Math.floor(Date.now() / 1000) > payload.exp;
+      if (expired) return;
+      saveAuthToken(token);
+      const destination = searchParams.get("redirect") || "/profile";
+      window.location.href = destination;
+    } catch {
+      // Malformed token — let user log in normally
+    }
+  }, [mode, searchParams]);
 
   return (
     <div className="w-full p-2 shadow">
