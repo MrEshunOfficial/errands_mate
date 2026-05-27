@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   Search,
   X,
@@ -679,6 +679,7 @@ export default function ServicesListPage(): React.ReactElement {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [page, setPage] = useState<number>(1);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const { preference, addFavoriteService, removeFavoriteService } =
     useClientPreference();
@@ -821,6 +822,15 @@ export default function ServicesListPage(): React.ReactElement {
     setPage(1);
   };
 
+  // ── Scroll detection ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const onScroll = () => setScrolled(el.scrollTop > 120);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
   // ── Action handlers ───────────────────────────────────────────────────────────
   const handleView = (id: string): void => {
     const service = services.find((s) => s._id.toString() === id);
@@ -859,6 +869,49 @@ export default function ServicesListPage(): React.ReactElement {
     <main
       ref={mainRef}
       className="h-full overflow-y-auto bg-stone-50 dark:bg-stone-950">
+      {/* ── Sticky search bar (scroll reveal) ───────────────────────────────── */}
+      <div
+        className={`fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${
+          scrolled ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+        }`}>
+        <div className="bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-stone-200 dark:border-stone-800 px-3 py-2.5 shadow-sm">
+          <div className="max-w-6xl mx-auto flex items-center gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+              />
+              <input
+                value={filters.searchQuery}
+                onChange={(e) => updateFilter("searchQuery", e.target.value)}
+                placeholder="Search services…"
+                className="w-full pl-9 pr-8 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
+              />
+              {filters.searchQuery && (
+                <button
+                  onClick={() => updateFilter("searchQuery", "")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setFilterSheetOpen(true)}
+              className={`relative flex items-center justify-center w-9 h-9 rounded-xl border transition-all shrink-0 ${
+                filterCount > 0
+                  ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                  : "border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-500"
+              }`}>
+              <SlidersHorizontal size={14} />
+              {filterCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 text-white text-[8px] font-black flex items-center justify-center">
+                  {filterCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
       {/* ── Hero ────────────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden bg-white dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800">
         {/* Dot-grid texture */}
@@ -1018,10 +1071,10 @@ export default function ServicesListPage(): React.ReactElement {
 
               {/* Quick category pills */}
               {categories.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                <div className="flex flex-nowrap overflow-x-auto scrollbar-none sm:flex-wrap sm:overflow-x-visible gap-1.5 sm:gap-2 pb-0.5 sm:pb-0">
                   <button
                     onClick={() => updateFilter("selectedCategory", "")}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
+                    className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
                       !filters.selectedCategory
                         ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
                         : "border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-stone-300 bg-white dark:bg-stone-800/80"
@@ -1032,7 +1085,7 @@ export default function ServicesListPage(): React.ReactElement {
                     <button
                       key={c.id}
                       onClick={() => updateFilter("selectedCategory", c.id)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
+                      className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
                         filters.selectedCategory === c.id
                           ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
                           : "border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-stone-300 bg-white dark:bg-stone-800/80"
