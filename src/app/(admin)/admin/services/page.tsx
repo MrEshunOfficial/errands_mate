@@ -66,7 +66,7 @@ type SingleActionType =
 
 type BulkActionType = "bulk-activate" | "bulk-deactivate" | "bulk-delete";
 type ActionType = SingleActionType | BulkActionType | null;
-type StatusTab = "active" | "inactive" | "deleted";
+type StatusTab = "active" | "pending" | "inactive" | "deleted";
 
 // =============================================================================
 // Helpers
@@ -112,11 +112,32 @@ function StatusBadge({ service }: { service: ServiceWithVirtuals }) {
       </span>
     );
 
-  if (service.isActive)
+  if (service.isRejected)
     return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-orange-100 text-orange-700 border border-orange-200 dark:bg-orange-500/15 dark:text-orange-400 dark:border-orange-500/25">
+        <Ban className="w-3 h-3" />
+        Rejected
+      </span>
+    );
+
+  if (service.isPending)
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/25">
+        <Clock className="w-3 h-3" />
+        Pending Review
+      </span>
+    );
+
+  if (service.isActive)
+    return service.approvedBy ? (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/25">
         <CheckCircle className="w-3 h-3" />
-        Active
+        Active · Verified
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-teal-100 text-teal-700 border border-teal-200 dark:bg-teal-500/15 dark:text-teal-400 dark:border-teal-500/25">
+        <CheckCircle className="w-3 h-3" />
+        Active · Unverified
       </span>
     );
 
@@ -152,11 +173,11 @@ function StatsBar() {
       bg: "bg-emerald-50 dark:bg-emerald-500/10",
     },
     {
-      label: "Inactive",
+      label: "Pending",
       value: s?.pendingApproval ?? "—",
-      icon: ToggleLeft,
-      color: "text-zinc-600 dark:text-zinc-400",
-      bg: "bg-zinc-50 dark:bg-zinc-500/10",
+      icon: Clock,
+      color: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-50 dark:bg-amber-500/10",
     },
     {
       label: "Deleted",
@@ -472,6 +493,23 @@ function ActionsDropdown({ service, onAction }: ActionsDropdownProps) {
               />
             </>
           )}
+          {service.isActive && !service.approvedBy && (
+            <>
+              <MenuSection title="Moderation" />
+              <MenuItem
+                icon={CheckCircle}
+                label="Approve (Verify)"
+                onClick={() => trigger("approve")}
+                variant="success"
+              />
+              <MenuItem
+                icon={XCircle}
+                label="Reject with Reason"
+                onClick={() => trigger("reject")}
+                variant="warning"
+              />
+            </>
+          )}
           {service.isApproved && (
             <>
               <MenuSection title="Visibility" />
@@ -609,10 +647,18 @@ function EmptyState({
       ? "No deleted services found."
       : tab === "inactive"
         ? "No inactive services found."
-        : "No active services found.";
+        : tab === "pending"
+          ? "No services pending approval — all caught up."
+          : "No active services found.";
 
   const Icon =
-    tab === "deleted" ? Archive : tab === "inactive" ? ToggleLeft : Briefcase;
+    tab === "deleted"
+      ? Archive
+      : tab === "inactive"
+        ? ToggleLeft
+        : tab === "pending"
+          ? Clock
+          : Briefcase;
 
   return (
     <div className="flex flex-col items-center justify-center py-16 sm:py-20 text-center">
@@ -872,6 +918,11 @@ export default function AdminServicesPage() {
     .filter((s) => {
       if (statusTab === "deleted") return s.isDeleted === true;
       if (statusTab === "active") return !s.isDeleted && s.isActive === true;
+      if (statusTab === "pending")
+        return (
+          !s.isDeleted &&
+          (s.isPending || (s.isActive === true && !s.approvedBy))
+        );
       return !s.isDeleted && s.isActive !== true; // "inactive" tab
     });
 
@@ -1001,13 +1052,25 @@ export default function AdminServicesPage() {
     } catch {}
   };
 
+  const pendingCount = services.filter(
+    (s) => !s.isDeleted && (s.isPending || (s.isActive === true && !s.approvedBy)),
+  ).length;
+
   const tabs: {
     key: StatusTab;
     label: string;
     shortLabel: string;
     icon: React.ElementType;
+    badge?: number;
   }[] = [
     { key: "active", label: "Active", shortLabel: "Active", icon: Activity },
+    {
+      key: "pending",
+      label: "Pending Approval",
+      shortLabel: "Pending",
+      icon: Clock,
+      badge: pendingCount,
+    },
     {
       key: "inactive",
       label: "Inactive",
@@ -1122,20 +1185,31 @@ export default function AdminServicesPage() {
 
             {/* ── Tabs ── */}
             <div className="flex gap-0 -mb-px overflow-x-auto scrollbar-none">
-              {tabs.map(({ key, label, shortLabel, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => handleTabChange(key)}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                    statusTab === key
-                      ? "border-teal-500 text-teal-600 dark:text-teal-400"
-                      : "border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600"
-                  }`}>
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="sm:hidden">{shortLabel}</span>
-                  <span className="hidden sm:inline">{label}</span>
-                </button>
-              ))}
+              {tabs.map(({ key, label, shortLabel, icon: Icon, badge }) => {
+                const isPendingTab = key === "pending";
+                const isActive = statusTab === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => handleTabChange(key)}
+                    className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      isActive
+                        ? isPendingTab
+                          ? "border-amber-500 text-amber-600 dark:text-amber-400"
+                          : "border-teal-500 text-teal-600 dark:text-teal-400"
+                        : "border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600"
+                    }`}>
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                    <span className="sm:hidden">{shortLabel}</span>
+                    <span className="hidden sm:inline">{label}</span>
+                    {badge != null && badge > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-amber-500 text-white">
+                        {badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1274,17 +1348,17 @@ export default function AdminServicesPage() {
                                 </div>
                               )}
                               <div className="min-w-0">
-                                <p className="font-medium text-zinc-900 dark:text-zinc-200 truncate max-w-[180px] lg:max-w-[240px]">
+                                <p className="font-medium text-zinc-900 dark:text-zinc-200 truncate max-w-45 lg:max-w-60">
                                   {service.title}
                                 </p>
-                                <p className="text-xs text-zinc-400 dark:text-zinc-500 truncate max-w-[180px] lg:max-w-[240px] mt-0.5">
+                                <p className="text-xs text-zinc-400 dark:text-zinc-500 truncate max-w-45 lg:max-w-60 mt-0.5">
                                   /{service.slug}
                                 </p>
                               </div>
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 truncate max-w-[120px]">
+                            <span className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 truncate max-w-30">
                               {typeof service.categoryId === "object"
                                 ? ((
                                     service.categoryId as unknown as {
@@ -1351,9 +1425,23 @@ export default function AdminServicesPage() {
 
       {actionType === "approve" && targetService && (
         <ConfirmDialog
-          title="Approve Service"
-          description={`Approve "${targetService.title}"? It will become visible to all users immediately.`}
-          confirmLabel={approving ? "Approving…" : "Approve Service"}
+          title={
+            targetService.isActive && !targetService.approvedBy
+              ? "Verify Service"
+              : "Approve Service"
+          }
+          description={
+            targetService.isActive && !targetService.approvedBy
+              ? `"${targetService.title}" is already live via auto-activation. Approving will add the verified badge visible to customers.`
+              : `Approve "${targetService.title}"? It will become visible to all users immediately.`
+          }
+          confirmLabel={
+            approving
+              ? "Approving…"
+              : targetService.isActive && !targetService.approvedBy
+                ? "Verify Service"
+                : "Approve Service"
+          }
           confirmVariant="primary"
           onConfirm={handleApprove}
           onCancel={closeDialog}
