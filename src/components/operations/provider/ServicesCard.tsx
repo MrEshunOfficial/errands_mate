@@ -11,7 +11,6 @@ import {
   Search,
   ChevronDown,
   CheckCircle2,
-  Clock,
   XCircle,
   Settings2,
 } from "lucide-react";
@@ -50,7 +49,7 @@ interface ServicesCardProps {
   onRestoreService: (id: string) => Promise<void>;
 }
 
-type FilterTab = "all" | "live" | "pending" | "inactive";
+type FilterTab = "all" | "live" | "inactive";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -67,20 +66,12 @@ function serviceStatus(service: Service): {
       icon: <Archive size={9} />,
       className: "text-zinc-500 border-zinc-300 dark:border-zinc-700",
     };
-  if (service.approvedAt)
-    return {
-      label: "Live",
-      variant: "default",
-      icon: <CheckCircle2 size={9} />,
-      className:
-        "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
-    };
   return {
-    label: "Pending",
-    variant: "outline",
-    icon: <Clock size={9} />,
+    label: "Live",
+    variant: "default",
+    icon: <CheckCircle2 size={9} />,
     className:
-      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
+      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
   };
 }
 
@@ -256,8 +247,7 @@ export function ServicesCard({
     (profile.serviceOfferings ?? []) as unknown as Service[]
   ).filter((s) => s._id != null);
 
-  const live = validServices.filter((s) => s.isActive && !!s.approvedAt);
-  const pending = validServices.filter((s) => s.isActive && !s.approvedAt);
+  const live = validServices.filter((s) => s.isActive);
   const archived = validServices.filter((s) => !s.isActive);
 
   const filterFn = (list: Service[]) => {
@@ -275,18 +265,15 @@ export function ServicesCard({
   };
 
   const visibleLive = filterFn(live);
-  const visiblePending = filterFn(pending);
   const visibleArchived = filterFn(archived);
 
   const tabs: { key: FilterTab; label: string; count: number }[] = [
     { key: "all", label: "All", count: validServices.length },
     { key: "live", label: "Live", count: live.length },
-    { key: "pending", label: "Pending", count: pending.length },
     { key: "inactive", label: "Archived", count: archived.length },
   ];
 
   const showLive = filter === "all" || filter === "live";
-  const showPending = filter === "all" || filter === "pending";
   const showArchivedSection = filter === "all" || filter === "inactive";
 
   return (
@@ -302,7 +289,7 @@ export function ServicesCard({
               <CardDescription className="text-xs mt-0.5">
                 {validServices.length === 0
                   ? "No services added yet"
-                  : `${live.length} live · ${pending.length} pending · ${archived.length} archived`}
+                  : `${live.length} live · ${archived.length} archived`}
               </CardDescription>
             </div>
           </div>
@@ -372,29 +359,6 @@ export function ServicesCard({
                   <NoResults query={search} />
                 ) : (
                   visibleLive.map((s) => (
-                    <ServiceRow
-                      key={s._id.toString()}
-                      service={s}
-                      onArchive={onArchiveService}
-                      onRestore={onRestoreService}
-                    />
-                  ))
-                )}
-              </div>
-            )}
-
-            {/* ── Pending approval ── */}
-            {showPending && pending.length > 0 && (
-              <div className="space-y-1.5">
-                {(filter === "all" || filter === "pending") && (
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 px-1">
-                    Awaiting approval
-                  </p>
-                )}
-                {visiblePending.length === 0 && search ? (
-                  <NoResults query={search} />
-                ) : (
-                  visiblePending.map((s) => (
                     <ServiceRow
                       key={s._id.toString()}
                       service={s}
