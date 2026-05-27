@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
-import Link from "next/link";
+import React, { useState, useMemo, useRef } from "react";
 import {
   Search,
   X,
@@ -10,7 +9,6 @@ import {
   Layers,
   Tag,
   ArrowUpRight,
-  ChevronRight,
   Home,
   RefreshCw,
   BadgeCheck,
@@ -692,23 +690,10 @@ export default function ServicesListPage(): React.ReactElement {
       ),
     [preference?.favoriteServices],
   );
-  const [scrolled, setScrolled] = useState(false);
 
   // Refs
   const mainRef = useRef<HTMLElement>(null);
   const heroSearchRef = useRef<HTMLInputElement>(null);
-  const stickySearchRef = useRef<HTMLInputElement>(null);
-
-  // ── Scroll detection on the actual scrolling element ────────────────────────
-  // <main> has overflow-y-auto so window scroll won't fire — listen on the
-  // element itself via a ref.
-  useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
-    const onScroll = () => setScrolled(el.scrollTop > 120);
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
 
   // ── Data fetching ────────────────────────────────────────────────────────────
   const { data: categoriesData } = useActiveCategories();
@@ -874,69 +859,6 @@ export default function ServicesListPage(): React.ReactElement {
     <main
       ref={mainRef}
       className="h-full overflow-y-auto bg-stone-50 dark:bg-stone-950">
-      {/* ── Compact Sticky Bar ──────────────────────────────────────────────── */}
-      <div
-        className={`fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${
-          scrolled ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
-        }`}>
-        <div className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-lg border-b border-stone-200/80 dark:border-stone-800 shadow-sm">
-          <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-8 py-2.5 flex items-center gap-2 sm:gap-3">
-            {/* Search */}
-            <div className="relative flex-1 min-w-0">
-              <Search
-                size={13}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
-              />
-              <input
-                ref={stickySearchRef}
-                value={filters.searchQuery}
-                onChange={(e) => updateFilter("searchQuery", e.target.value)}
-                placeholder="Search services…"
-                className="w-full pl-8 pr-4 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400"
-              />
-              {filters.searchQuery && (
-                <button
-                  onClick={() => updateFilter("searchQuery", "")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-
-            {/* Filter button */}
-            <button
-              onClick={() => setFilterSheetOpen(true)}
-              className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all shrink-0 ${
-                filterCount > 0
-                  ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                  : "border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300"
-              }`}>
-              <SlidersHorizontal size={13} />
-              <span className="hidden sm:inline">Filters</span>
-              {filterCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">
-                  {filterCount}
-                </span>
-              )}
-            </button>
-
-            {/* Count — hidden on xs */}
-            <span className="hidden md:inline text-xs text-stone-400 dark:text-stone-500 shrink-0 tabular-nums">
-              {isLoading
-                ? "…"
-                : `${filteredAndSortedServices.length} service${filteredAndSortedServices.length !== 1 ? "s" : ""}`}
-            </span>
-
-            {/* CTA */}
-            <Link
-              href="/services/request"
-              className="flex items-center gap-1 text-xs font-semibold px-3 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm shrink-0">
-              Request <ChevronRight size={11} />
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* ── Hero ────────────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden bg-white dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800">
         {/* Dot-grid texture */}
