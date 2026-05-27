@@ -220,8 +220,7 @@ export default function AdminBookingsPage() {
   // ── Derive tab counts from stats ───────────────────────────────────────────
   const stats = statsState.data;
   const disputedCount = stats
-    ? (stats.byStatus?.DISPUTED ?? 0) +
-      (stats.byStatus?.REBUTTAL_SUBMITTED ?? 0)
+    ? (stats.DISPUTED ?? 0) + (stats.REBUTTAL_SUBMITTED ?? 0)
     : null;
 
   return (

@@ -115,20 +115,20 @@ export default function AdminDashboardPage() {
           <StatStrip
             label="Active"
             value={
-              (stats.byStatus?.CONFIRMED ?? 0) +
-              (stats.byStatus?.IN_PROGRESS ?? 0) +
-              (stats.byStatus?.AWAITING_VALIDATION ?? 0)
+              (stats.CONFIRMED ?? 0) +
+              (stats.IN_PROGRESS ?? 0) +
+              (stats.AWAITING_VALIDATION ?? 0)
             }
             accent="border-sky-200 dark:border-sky-700/50 text-sky-700 dark:text-sky-300 bg-sky-50/50 dark:bg-sky-900/10"
           />
           <StatStrip
             label="Disputed"
-            value={(stats.byStatus?.DISPUTED ?? 0) + (stats.byStatus?.REBUTTAL_SUBMITTED ?? 0)}
+            value={(stats.DISPUTED ?? 0) + (stats.REBUTTAL_SUBMITTED ?? 0)}
             accent="border-red-200 dark:border-red-700/50 text-red-700 dark:text-red-300 bg-red-50/50 dark:bg-red-900/10"
           />
           <StatStrip
             label="Completed"
-            value={stats.byStatus?.COMPLETED ?? 0}
+            value={stats.COMPLETED ?? 0}
             accent="border-emerald-200 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-900/10"
           />
         </div>

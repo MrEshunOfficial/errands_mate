@@ -6,7 +6,7 @@ import {
   RescheduleBookingRequestBody,
   CancelBookingRequestBody,
 } from "@/types/booking.types";
-import type { BookingStats } from "@/types/booking/booking.types";
+import type { BookingStats, BookingStatsResponse } from "@/types/booking/booking.types";
 import {
   CompletionAttemptListResponse,
   RespondToProofRequestBody,
@@ -135,7 +135,8 @@ export class BookingAPI extends APIClient {
   }
 
   async adminGetStats(): Promise<BookingStats> {
-    return this.get<BookingStats>(`${this.base}/admin/stats`);
+    const res = await this.get<BookingStatsResponse>(`${this.base}/admin/stats`);
+    return res.stats;
   }
 
   async adminCompleteService(

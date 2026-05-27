@@ -194,12 +194,22 @@ export interface BookingDetailResponse {
 
 export interface BookingStats {
   total: number;
-  byStatus?: Partial<Record<BookingStatus, number>>;
-  byPaymentStatus?: Partial<Record<PaymentStatus, number>>;
-  revenue?: {
-    total?: number;
-    currency?: string;
-  };
+  CONFIRMED?: number;
+  IN_PROGRESS?: number;
+  AWAITING_VALIDATION?: number;
+  VALIDATED?: number;
+  DISPUTED?: number;
+  REBUTTAL_SUBMITTED?: number;
+  COMPLETED?: number;
+  RESOLVED?: number;
+  CANCELLED?: number;
+  openDisputes?: number;
+  pendingRebuttals?: number;
+}
+
+export interface BookingStatsResponse {
+  success: boolean;
+  stats: BookingStats;
 }
 
 // ─── Action Input Types ───────────────────────────────────────────────────────

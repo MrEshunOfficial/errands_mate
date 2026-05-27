@@ -104,11 +104,13 @@ function StatBar({
   value,
   total,
   color,
+  hexColor,
 }: {
   label: string;
   value?: number;
   total?: number;
-  color: string;
+  color?: string;
+  hexColor?: string;
 }) {
   const ratio = value && total ? Math.min(value / total, 1) : 0;
   return (
@@ -118,8 +120,11 @@ function StatBar({
       </span>
       <div className="flex-1 h-2 rounded-full bg-stone-100 dark:bg-stone-800 overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${color}`}
-          style={{ width: `${ratio * 100}%` }}
+          className={`h-full rounded-full transition-all ${color ?? ""}`}
+          style={{
+            width: `${ratio * 100}%`,
+            ...(hexColor ? { backgroundColor: hexColor } : {}),
+          }}
         />
       </div>
       <span className="w-12 text-right text-xs font-semibold text-stone-700 dark:text-stone-300 tabular-nums">
@@ -228,29 +233,31 @@ export default function AdminAnalyticsPage() {
     refetchServices();
   };
 
-  // Booking status chart data
-  const bookingStatusData = bookingStats?.byStatus
-    ? Object.entries(bookingStats.byStatus)
-        .filter(([, v]) => (v ?? 0) > 0)
-        .map(([status, count]) => ({
-          name: status.replace(/_/g, " "),
-          value: count ?? 0,
-          color: BOOKING_STATUS_COLORS[status] ?? "#9ca3af",
-        }))
+  const BOOKING_STATUS_KEYS = [
+    "CONFIRMED",
+    "IN_PROGRESS",
+    "AWAITING_VALIDATION",
+    "VALIDATED",
+    "DISPUTED",
+    "REBUTTAL_SUBMITTED",
+    "COMPLETED",
+    "RESOLVED",
+    "CANCELLED",
+  ] as const;
+
+  // Booking status chart data — built from flat stats fields
+  const bookingStatusData = bookingStats
+    ? BOOKING_STATUS_KEYS.map((status) => ({
+        name: status.replace(/_/g, " "),
+        value: bookingStats[status] ?? 0,
+        color: BOOKING_STATUS_COLORS[status] ?? "#9ca3af",
+      }))
+        .filter((d) => d.value > 0)
         .sort((a, b) => b.value - a.value)
     : [];
 
-  // Payment status chart data
-  const paymentStatusData = bookingStats?.byPaymentStatus
-    ? Object.entries(bookingStats.byPaymentStatus)
-        .filter(([, v]) => (v ?? 0) > 0)
-        .map(([status, count]) => ({
-          name: status.replace(/_/g, " "),
-          value: count ?? 0,
-          color: PAYMENT_STATUS_COLORS[status] ?? "#9ca3af",
-        }))
-        .sort((a, b) => b.value - a.value)
-    : [];
+  // Payment status — not currently returned by the stats endpoint
+  const paymentStatusData: { name: string; value: number; color: string }[] = [];
 
   // Task funnel data
   const taskFunnelData = taskStats
@@ -313,17 +320,13 @@ export default function AdminAnalyticsPage() {
             <KpiCard
               label="Total Bookings"
               value={fmt(bookingStats?.total)}
-              sub={`${fmt(bookingStats?.byStatus?.COMPLETED)} completed`}
+              sub={`${fmt(bookingStats?.COMPLETED)} completed`}
               icon={Briefcase}
               accent="bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
             />
             <KpiCard
               label="Revenue"
-              value={
-                bookingStats?.revenue?.total != null
-                  ? `${bookingStats.revenue.currency ?? ""} ${bookingStats.revenue.total.toLocaleString()}`.trim()
-                  : "—"
-              }
+              value="—"
               sub="from completed bookings"
               icon={DollarSign}
               accent="bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400"
@@ -453,29 +456,29 @@ export default function AdminAnalyticsPage() {
                 {
                   label: "Active",
                   value:
-                    (bookingStats.byStatus?.CONFIRMED ?? 0) +
-                    (bookingStats.byStatus?.IN_PROGRESS ?? 0) +
-                    (bookingStats.byStatus?.AWAITING_VALIDATION ?? 0),
+                    (bookingStats.CONFIRMED ?? 0) +
+                    (bookingStats.IN_PROGRESS ?? 0) +
+                    (bookingStats.AWAITING_VALIDATION ?? 0),
                   icon: Clock,
                   color: "text-sky-600 dark:text-sky-400",
                 },
                 {
                   label: "Disputed",
                   value:
-                    (bookingStats.byStatus?.DISPUTED ?? 0) +
-                    (bookingStats.byStatus?.REBUTTAL_SUBMITTED ?? 0),
+                    (bookingStats.DISPUTED ?? 0) +
+                    (bookingStats.REBUTTAL_SUBMITTED ?? 0),
                   icon: AlertTriangle,
                   color: "text-red-600 dark:text-red-400",
                 },
                 {
                   label: "Completed",
-                  value: bookingStats.byStatus?.COMPLETED ?? 0,
+                  value: bookingStats.COMPLETED ?? 0,
                   icon: CheckCircle,
                   color: "text-emerald-600 dark:text-emerald-400",
                 },
                 {
                   label: "Cancelled",
-                  value: bookingStats.byStatus?.CANCELLED ?? 0,
+                  value: bookingStats.CANCELLED ?? 0,
                   icon: XCircle,
                   color: "text-stone-500 dark:text-stone-400",
                 },
@@ -494,15 +497,20 @@ export default function AdminAnalyticsPage() {
               ))}
             </div>
             <div className="space-y-2">
-              {Object.entries(bookingStats.byStatus ?? {})
-                .sort(([, a], [, b]) => (b ?? 0) - (a ?? 0))
-                .map(([status, count]) => (
+              {BOOKING_STATUS_KEYS.filter(
+                (status) => (bookingStats[status] ?? 0) > 0,
+              )
+                .sort(
+                  (a, b) =>
+                    (bookingStats[b] ?? 0) - (bookingStats[a] ?? 0),
+                )
+                .map((status) => (
                   <StatBar
                     key={status}
                     label={status.replace(/_/g, " ")}
-                    value={count ?? 0}
+                    value={bookingStats[status] ?? 0}
                     total={bookingStats.total}
-                    color={`bg-[${BOOKING_STATUS_COLORS[status] ?? "#9ca3af"}]`}
+                    hexColor={BOOKING_STATUS_COLORS[status] ?? "#9ca3af"}
                   />
                 ))}
             </div>
