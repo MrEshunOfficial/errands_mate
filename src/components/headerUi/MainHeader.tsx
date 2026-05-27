@@ -235,7 +235,7 @@ export const MainHeader: React.FC = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className={cn(
-        "sticky top-0 z-40 w-full transition-all duration-300 border rounded-md p-2",
+        "sticky top-0 z-40 w-full transition-all duration-300 border rounded-md p-2 relative",
       )}>
       <div className="container mx-auto">
         <div className="flex items-center justify-between">
@@ -331,7 +331,7 @@ export const MainHeader: React.FC = () => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="xl:hidden overflow-hidden border-t border-border mt-2">
+            className="xl:hidden absolute top-full left-0 right-0 z-50 overflow-hidden border-t border-b border-border bg-background/95 backdrop-blur-sm shadow-lg rounded-b-md">
             <div className="py-3 space-y-0.5">
               {navigationItems.map((item) =>
                 item.children ? (
