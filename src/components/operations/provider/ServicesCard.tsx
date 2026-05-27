@@ -12,6 +12,7 @@ import {
   ChevronDown,
   CheckCircle2,
   XCircle,
+  Clock,
   Settings2,
 } from "lucide-react";
 import {
@@ -49,7 +50,7 @@ interface ServicesCardProps {
   onRestoreService: (id: string) => Promise<void>;
 }
 
-type FilterTab = "all" | "live" | "inactive";
+type FilterTab = "all" | "live" | "attention" | "inactive";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -59,19 +60,50 @@ function serviceStatus(service: Service): {
   icon: React.ReactNode;
   className: string;
 } {
-  if (!service.isActive)
+  const isRejected = !!service.rejectedAt;
+  const isPendingAutoActivation =
+    !!service.scheduledActivationAt &&
+    new Date(service.scheduledActivationAt) > new Date();
+  const isPending =
+    !service.isActive && !service.approvedAt && !service.rejectedAt;
+
+  if (isRejected)
     return {
-      label: "Archived",
-      variant: "secondary",
-      icon: <Archive size={9} />,
-      className: "text-zinc-500 border-zinc-300 dark:border-zinc-700",
+      label: "Rejected",
+      variant: "destructive",
+      icon: <XCircle size={9} />,
+      className:
+        "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800",
+    };
+  if (isPendingAutoActivation)
+    return {
+      label: "Scheduled",
+      variant: "outline",
+      icon: <Clock size={9} />,
+      className:
+        "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/50 dark:text-violet-400 dark:border-violet-800",
+    };
+  if (isPending)
+    return {
+      label: "Under Review",
+      variant: "outline",
+      icon: <Clock size={9} />,
+      className:
+        "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800",
+    };
+  if (service.isActive)
+    return {
+      label: "Live",
+      variant: "default",
+      icon: <CheckCircle2 size={9} />,
+      className:
+        "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
     };
   return {
-    label: "Live",
-    variant: "default",
-    icon: <CheckCircle2 size={9} />,
-    className:
-      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
+    label: "Inactive",
+    variant: "secondary",
+    icon: <Archive size={9} />,
+    className: "text-zinc-500 border-zinc-300 dark:border-zinc-700",
   };
 }
 
@@ -101,12 +133,15 @@ function ServiceRow({
   // Guard: if _id is somehow missing, don't allow archive/restore
   const serviceId = service._id?.toString() ?? "";
 
+  const isInactive =
+    !service.isActive && !!service.approvedAt && !service.rejectedAt;
+
   return (
     <div
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors ${
-        service.isActive
-          ? "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700"
-          : "bg-zinc-50 dark:bg-zinc-900/50 border-zinc-100 dark:border-zinc-800/50 opacity-60"
+        isInactive
+          ? "bg-zinc-50 dark:bg-zinc-900/50 border-zinc-100 dark:border-zinc-800/50 opacity-60"
+          : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700"
       }`}>
       {/* Cover thumbnail */}
       <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800">
@@ -248,7 +283,12 @@ export function ServicesCard({
   ).filter((s) => s._id != null);
 
   const live = validServices.filter((s) => s.isActive);
-  const archived = validServices.filter((s) => !s.isActive);
+  const attention = validServices.filter(
+    (s) => !s.isActive && (!!s.rejectedAt || (!s.approvedAt && !s.rejectedAt)),
+  );
+  const inactive = validServices.filter(
+    (s) => !s.isActive && !!s.approvedAt && !s.rejectedAt,
+  );
 
   const filterFn = (list: Service[]) => {
     const q = search.toLowerCase().trim();
@@ -265,16 +305,21 @@ export function ServicesCard({
   };
 
   const visibleLive = filterFn(live);
-  const visibleArchived = filterFn(archived);
+  const visibleAttention = filterFn(attention);
+  const visibleInactive = filterFn(inactive);
 
   const tabs: { key: FilterTab; label: string; count: number }[] = [
     { key: "all", label: "All", count: validServices.length },
     { key: "live", label: "Live", count: live.length },
-    { key: "inactive", label: "Archived", count: archived.length },
+    ...(attention.length > 0
+      ? [{ key: "attention" as FilterTab, label: "Review", count: attention.length }]
+      : []),
+    { key: "inactive", label: "Inactive", count: inactive.length },
   ];
 
   const showLive = filter === "all" || filter === "live";
-  const showArchivedSection = filter === "all" || filter === "inactive";
+  const showAttentionSection = filter === "all" || filter === "attention";
+  const showInactiveSection = filter === "all" || filter === "inactive";
 
   return (
     <Card className="dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
@@ -289,7 +334,9 @@ export function ServicesCard({
               <CardDescription className="text-xs mt-0.5">
                 {validServices.length === 0
                   ? "No services added yet"
-                  : `${live.length} live · ${archived.length} archived`}
+                  : attention.length > 0
+                    ? `${live.length} live · ${attention.length} need${attention.length === 1 ? "s" : ""} review`
+                    : `${live.length} live · ${inactive.length} inactive`}
               </CardDescription>
             </div>
           </div>
@@ -370,8 +417,33 @@ export function ServicesCard({
               </div>
             )}
 
-            {/* ── Archived services (collapsible) ── */}
-            {showArchivedSection && archived.length > 0 && (
+            {/* ── Attention services (pending / rejected) — shown prominently ── */}
+            {showAttentionSection && attention.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 py-1">
+                  <Clock size={11} />
+                  Needs review
+                  <span className="ml-auto bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full text-[10px]">
+                    {attention.length}
+                  </span>
+                </p>
+                {visibleAttention.length === 0 && search ? (
+                  <NoResults query={search} />
+                ) : (
+                  visibleAttention.map((s) => (
+                    <ServiceRow
+                      key={s._id.toString()}
+                      service={s}
+                      onArchive={onArchiveService}
+                      onRestore={onRestoreService}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* ── Inactive services (collapsible) ── */}
+            {showInactiveSection && inactive.length > 0 && (
               <Collapsible open={showArchived} onOpenChange={setShowArchived}>
                 <CollapsibleTrigger asChild>
                   <button className="flex w-full items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-1">
@@ -379,17 +451,17 @@ export function ServicesCard({
                       size={13}
                       className={`transition-transform duration-200 ${showArchived ? "rotate-180" : ""}`}
                     />
-                    Archived services
+                    Inactive services
                     <span className="ml-auto bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full text-[10px]">
-                      {archived.length}
+                      {inactive.length}
                     </span>
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-1.5 mt-1">
-                  {visibleArchived.length === 0 && search ? (
+                  {visibleInactive.length === 0 && search ? (
                     <NoResults query={search} />
                   ) : (
-                    visibleArchived.map((s) => (
+                    visibleInactive.map((s) => (
                       <ServiceRow
                         key={s._id.toString()}
                         service={s}

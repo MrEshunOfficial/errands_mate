@@ -526,7 +526,7 @@ export default function ServiceForm({
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             {mode === "create"
-              ? "Submitted for review. Redirecting…"
+              ? "Submitted for review — auto-activates in ~15 minutes. Redirecting…"
               : "Changes saved. Redirecting…"}
           </p>
           <Loader2 className="w-6 h-6 animate-spin text-teal-600 mx-auto" />
@@ -553,6 +553,24 @@ export default function ServiceForm({
             <p className="text-xs text-gray-500 dark:text-gray-400 pl-10">
               A great cover image helps your service stand out in listings. You
               can always change it later from the service settings.
+            </p>
+          </div>
+
+          {/* Auto-activation notice */}
+          <div className="mx-6 mt-4 flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+            <svg
+              className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+            <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+              Your service has been submitted for review and will be{" "}
+              <span className="font-semibold">auto-activated within 15 minutes</span>{" "}
+              if no action is taken by an admin.
             </p>
           </div>
 

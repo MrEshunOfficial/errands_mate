@@ -150,23 +150,47 @@ function ProviderServiceCard({
         ? "/unit"
         : "";
 
-  const statusBadge = service.isActive
+  const statusBadge = service.isRejected
     ? {
-        label: "Active",
+        label: "Rejected",
         color:
-          "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
+          "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700/50",
       }
-    : {
-        label: "Inactive",
-        color:
-          "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700",
-      };
+    : service.isPendingAutoActivation
+      ? {
+          label: "Scheduled",
+          color:
+            "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-700/50",
+        }
+      : service.isPending
+        ? {
+            label: "Under Review",
+            color:
+              "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50",
+          }
+        : service.isActive
+          ? {
+              label: "Active",
+              color:
+                "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
+            }
+          : {
+              label: "Inactive",
+              color:
+                "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700",
+            };
 
   return (
     <div className="group relative flex flex-col rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden hover:border-amber-300 dark:hover:border-amber-600/60 hover:shadow-lg hover:shadow-stone-100/80 dark:hover:shadow-stone-950/80 hover:-translate-y-0.5 transition-all duration-200">
       {/* Top accent */}
       {service.isApproved && (
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-400 via-orange-400 to-amber-300 z-10" />
+      )}
+      {service.isRejected && (
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-red-500 to-red-400 z-10" />
+      )}
+      {service.isPending && !service.isRejected && (
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-300 to-amber-200 z-10 opacity-70" />
       )}
 
       {/* Cover image */}
@@ -244,6 +268,34 @@ function ProviderServiceCard({
                 +{service.tags.length - 3}
               </span>
             )}
+          </div>
+        )}
+
+        {/* Moderation status callout */}
+        {service.isRejected && (
+          <div className="flex gap-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/50">
+            <AlertCircle
+              size={12}
+              className="text-red-500 shrink-0 mt-0.5"
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-0.5">
+                Rejected
+              </p>
+              <p className="text-xs text-red-700 dark:text-red-300 leading-relaxed">
+                {service.rejectionReason ?? "No reason provided. Edit and resubmit."}
+              </p>
+            </div>
+          </div>
+        )}
+        {service.isPending && !service.isRejected && (
+          <div className="flex gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50">
+            <Clock size={12} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+              {service.isPendingAutoActivation
+                ? "Scheduled for auto-activation — visible once live."
+                : "Under review — will be visible once approved."}
+            </p>
           </div>
         )}
 
@@ -496,7 +548,9 @@ export default function ServiceList() {
   // ── Stats ─────────────────────────────────────────────────────────────────────
   const total = data?.total ?? services.length;
   const activeCount = services.filter((s) => s.isActive).length;
-  const inactiveCount = services.filter((s) => !s.isActive).length;
+  const pendingCount = services.filter((s) => s.isPending && !s.isPendingAutoActivation).length;
+  const rejectedCount = services.filter((s) => s.isRejected).length;
+  const inactiveCount = services.filter((s) => !s.isActive && !s.isPending && !s.isRejected).length;
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -564,6 +618,42 @@ export default function ServiceList() {
                           </p>
                           <p className="text-[10px] text-stone-400 dark:text-stone-500">
                             active
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {pendingCount > 0 && (
+                    <>
+                      <div className="w-px h-6 bg-stone-200 dark:bg-stone-700" />
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
+                          <Clock size={13} className="text-amber-500" />
+                        </div>
+                        <div>
+                          <p className="text-base font-extrabold text-stone-800 dark:text-stone-100 leading-none">
+                            {pendingCount}
+                          </p>
+                          <p className="text-[10px] text-stone-400 dark:text-stone-500">
+                            under review
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {rejectedCount > 0 && (
+                    <>
+                      <div className="w-px h-6 bg-stone-200 dark:bg-stone-700" />
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                          <AlertCircle size={13} className="text-red-500" />
+                        </div>
+                        <div>
+                          <p className="text-base font-extrabold text-stone-800 dark:text-stone-100 leading-none">
+                            {rejectedCount}
+                          </p>
+                          <p className="text-[10px] text-stone-400 dark:text-stone-500">
+                            rejected
                           </p>
                         </div>
                       </div>

@@ -323,6 +323,22 @@ function ServiceInfoCard({ service }: { service: Service }) {
             </dd>
           </div>
         )}
+        {service.rejectedAt && (
+          <div>
+            <dt className={`${SECTION_LABEL} mb-1`}>Rejected</dt>
+            <dd className="text-sm font-medium text-red-600 dark:text-red-400">
+              {safeFormat(service.rejectedAt, "MMM d, yyyy")}
+            </dd>
+          </div>
+        )}
+        {service.rejectionReason && (
+          <div>
+            <dt className={`${SECTION_LABEL} mb-1`}>Rejection reason</dt>
+            <dd className="text-sm text-red-600 dark:text-red-400 leading-relaxed">
+              {service.rejectionReason}
+            </dd>
+          </div>
+        )}
       </dl>
     </Card>
   );
