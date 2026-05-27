@@ -208,17 +208,27 @@ export class CategoryAPI extends APIClient {
     // and sets Content-Type: application/json, which destroys the multipart
     // boundary. We call fetch directly and let the browser set the correct
     // Content-Type: multipart/form-data; boundary=... header automatically.
-    const response = await fetch(`${this.base}/admin/bulk-import`, {
+    //
+    // Use buildURL() so the request goes directly to the backend (same as all
+    // other methods). A relative URL would hit the Next.js rewrite proxy which
+    // does not forward the auth cookie. Also include the Authorization header
+    // manually since we are bypassing buildHeaders().
+    const url = this.buildURL(`${this.base}/admin/bulk-import`);
+    const headers: Record<string, string> = {};
+    const token = this.getAuthToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, {
       method: "POST",
-      credentials: "include", // forwards the auth cookie, same as the base client
-      body: formData, // no Content-Type header — browser sets it with boundary
+      credentials: "include",
+      headers,
+      body: formData,
     });
 
     if (!response.ok) {
-      const text = await response.text().catch(() => "Unknown error");
-      const error = new Error(text || "Bulk import failed") as APIError;
-      error.status = response.status;
-      throw error;
+      await this.handleErrorResponse(response);
     }
 
     return response.json();
