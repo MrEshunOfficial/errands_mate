@@ -244,14 +244,14 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-4">
-      <div className={`w-1.5 h-5 rounded-full ${accent} mb-3`} />
+    <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-4">
+      <div className={`w-1.5 h-4 rounded-full ${accent} mb-2 sm:mb-3`} />
       {loading ? (
-        <div className="h-8 w-12 rounded-lg bg-stone-100 dark:bg-stone-800 animate-pulse mb-1" />
+        <div className="h-7 w-10 rounded-lg bg-stone-100 dark:bg-stone-800 animate-pulse mb-1" />
       ) : (
-        <p className="text-3xl font-bold text-stone-900 dark:text-stone-50">{value}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-50">{value}</p>
       )}
-      <p className="text-xs text-stone-400 dark:text-stone-500 mt-0.5">{label}</p>
+      <p className="text-[10px] sm:text-xs text-stone-400 dark:text-stone-500 mt-0.5 leading-tight">{label}</p>
     </div>
   );
 }
@@ -527,9 +527,9 @@ export default function ProviderDashboardPage() {
       </div>
 
       {/* Main grid */}
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="grid sm:grid-cols-2 gap-4">
         {/* Recent Jobs */}
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
@@ -587,7 +587,7 @@ export default function ProviderDashboardPage() {
         </div>
 
         {/* Pending Requests */}
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">

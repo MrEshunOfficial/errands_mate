@@ -17,12 +17,12 @@ export default function ProviderSetupPrompt() {
   const router = useRouter();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-teal-100 dark:bg-teal-950 rounded-xl">
+    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-5 sm:p-8">
+      <div className="flex items-start gap-3 mb-6">
+        <div className="p-3 bg-teal-100 dark:bg-teal-950 rounded-xl shrink-0">
           <Briefcase className="w-6 h-6 text-teal-600 dark:text-teal-400" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
           Complete Your Provider Profile
         </h2>
       </div>
