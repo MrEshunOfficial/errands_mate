@@ -81,6 +81,8 @@ export const useAuth = (): AuthState & AuthActions => {
 
         if (response.token) {
           localStorage.setItem("authToken", response.token);
+          const secure = location.protocol === "https:" ? "; Secure" : "";
+          document.cookie = `authToken=${response.token}; path=/; SameSite=Lax${secure}`;
         }
 
         if (response.user) {
@@ -128,6 +130,7 @@ export const useAuth = (): AuthState & AuthActions => {
       console.warn("Logout API call failed:", error);
     } finally {
       localStorage.removeItem("authToken");
+      document.cookie = "authToken=; path=/; max-age=0; SameSite=Lax";
       updateState({ user: null, isAuthenticated: false, error: null });
     }
   }, [updateState]);

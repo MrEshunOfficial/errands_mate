@@ -66,7 +66,7 @@ function getToken(request: NextRequest): string | null {
 
 // ─── Middleware Logic ─────────────────────────────────────────────────────────
 
-export function proxy(request: NextRequest): NextResponse {
+export default function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
   const raw = getToken(request);
