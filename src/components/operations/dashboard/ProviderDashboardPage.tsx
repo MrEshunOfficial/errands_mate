@@ -275,7 +275,7 @@ function RecentJobRow({ booking }: { booking: Booking }) {
         <span className={`w-1 h-8 rounded-full ${cfg.dot} shrink-0`} />
       )}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate">
             {booking.serviceDescription || `Job #${shortId(booking._id)}`}
           </p>
@@ -285,7 +285,7 @@ function RecentJobRow({ booking }: { booking: Booking }) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-0.5">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
           <BookingStatusBadge status={booking.status} />
           <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
             <CalendarDays size={9} />
@@ -315,7 +315,7 @@ function PendingRequestRow({ req }: { req: ProviderRequest }) {
         <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate">
           {req.clientMessage || req.taskTitle || `Request #${shortId(req._id)}`}
         </p>
-        <div className="flex items-center gap-3 mt-0.5">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
           <RequestStatusBadge status={req.status} />
           {req.schedule?.preferredDate && (
             <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
@@ -440,7 +440,7 @@ export default function ProviderDashboardPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
             {avatarUrl ? (
@@ -467,7 +467,7 @@ export default function ProviderDashboardPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
           {statusCfg && (
             <span className={`flex items-center gap-1.5 text-xs font-semibold border rounded-full px-2.5 py-1 ${statusCfg.badge}`}>
               <span className="relative flex h-2 w-2 shrink-0">

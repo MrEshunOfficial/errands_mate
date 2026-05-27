@@ -30,7 +30,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </SheetContent>
       </Sheet>
 
-      <main className="flex-1 min-h-0 overflow-y-auto">
+      <main className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
         {/* Mobile nav trigger */}
         <div className="lg:hidden flex items-center gap-2 px-4 py-2 border-b bg-background sticky top-0 z-30 mb-2">
           <button

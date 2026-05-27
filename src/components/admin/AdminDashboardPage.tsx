@@ -84,20 +84,20 @@ export default function AdminDashboardPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Shield size={20} className="text-blue-600 dark:text-blue-400" />
+            <Shield size={20} className="text-blue-600 dark:text-blue-400 shrink-0" />
             <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">
               Admin Dashboard
             </h1>
           </div>
-          <p className="text-sm text-stone-500 dark:text-stone-400">
+          <p className="text-sm text-stone-500 dark:text-stone-400 break-all">
             {user?.systemRole === "super_admin" ? "Super Admin" : "Admin"} · {user?.email}
           </p>
         </div>
         {totalUrgent > 0 && (
-          <div className="flex items-center gap-1.5 text-[12px] font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 px-3 py-1.5 rounded-xl">
+          <div className="flex items-center gap-1.5 text-[12px] font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 px-3 py-1.5 rounded-xl shrink-0">
             <AlertTriangle size={13} />
             {totalUrgent} item{totalUrgent !== 1 ? "s" : ""} need attention
           </div>

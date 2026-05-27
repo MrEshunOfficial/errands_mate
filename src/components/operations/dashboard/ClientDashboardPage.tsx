@@ -228,7 +228,7 @@ function RecentBookingRow({ booking }: { booking: Booking }) {
         <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate">
           {booking.serviceDescription || `Booking #${shortId(booking._id)}`}
         </p>
-        <div className="flex items-center gap-3 mt-0.5">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
           <BookingStatusBadge status={booking.status} />
           <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
             <CalendarDays size={9} />
@@ -258,7 +258,7 @@ function RecentRequestRow({ req }: { req: ProviderRequest }) {
         <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate">
           {req.clientMessage || req.taskTitle || `Request #${shortId(req._id)}`}
         </p>
-        <div className="flex items-center gap-3 mt-0.5">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
           <RequestStatusBadge status={req.status} />
           <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
             <CalendarDays size={9} />
