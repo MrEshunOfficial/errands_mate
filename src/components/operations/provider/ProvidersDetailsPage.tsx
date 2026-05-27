@@ -1044,7 +1044,7 @@ export default function ProviderProfilePage() {
   const isOpen = isCurrentlyOpen(hours, profile.isAlwaysAvailable);
 
   return (
-    <div>
+    <div className="h-full overflow-y-auto">
       {/* ── Sticky nav ──────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 shrink-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-lg border-b border-stone-200 dark:border-stone-800">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-8 py-3 sm:py-3.5 flex items-center justify-between gap-4">
@@ -1275,19 +1275,9 @@ export default function ProviderProfilePage() {
             </div>
 
             {/* ── Sidebar ── */}
-            <div className="w-full lg:w-80 xl:w-96 shrink-0 self-start">
+            <div className="w-full lg:w-80 xl:w-96 shrink-0 self-start lg:sticky lg:top-14">
               <div className="space-y-4 pb-6">
-                {/* Request CTA — mobile first */}
-                <div className="lg:hidden">
-                  <RequestProviderCTA
-                    providerId={id ?? ""}
-                    isOpen={isOpen}
-                    isBooked={isBooked}
-                    isCustomer={isCustomer}
-                  />
-                </div>
-
-                {/* Desktop request CTA in sidebar */}
+                {/* Request CTA — desktop sidebar only; mobile gets sticky bottom bar */}
                 <div className="hidden lg:block">
                   <RequestProviderCTA
                     providerId={id ?? ""}
@@ -1388,19 +1378,48 @@ export default function ProviderProfilePage() {
                   </div>
                 )}
 
-                <div className="rounded-2xl border border-stone-200 dark:border-stone-700/60 p-4 sm:p-5 space-y-3.5">
-                  <SectionLabel>Gallery</SectionLabel>
-                  {/* Gallery — repositioned here for better visual hierarchy */}
-                  {galleryImages.length >= 0 && (
-                    <GallerySection
-                      images={galleryImages}
-                      providerId={id ?? ""}
-                    />
-                  )}
-                </div>
+                {galleryImages.length > 0 && (
+                  <GallerySection
+                    images={galleryImages}
+                    providerId={id ?? ""}
+                  />
+                )}
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Mobile sticky CTA bar ────────────────────────────────────────── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 px-4 py-3 flex items-center gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="flex-1 min-w-0">
+          <LiveAvailabilityBadge
+            isOpen={isOpen}
+            isAlwaysAvailable={profile.isAlwaysAvailable}
+            hours={hours}
+            status={status}
+          />
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {contact?.mainContact && (
+            <a
+              href={`tel:${contact.mainContact}`}
+              className="flex items-center justify-center w-9 h-9 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:border-amber-300 hover:text-amber-600 transition-all shrink-0">
+              <Phone size={15} />
+            </a>
+          )}
+          {isCustomer && (
+            <Link
+              href={`/requests/provider/${id}`}
+              className={`flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-bold transition-all ${
+                isBooked
+                  ? "bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500 cursor-default pointer-events-none"
+                  : "bg-amber-500 hover:bg-amber-400 text-white shadow-md shadow-amber-900/20"
+              }`}>
+              <Send size={13} />
+              {isBooked ? "Unavailable" : "Request"}
+            </Link>
+          )}
         </div>
       </div>
     </div>
