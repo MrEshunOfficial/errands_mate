@@ -7,6 +7,7 @@ export function saveAuthToken(token: string): void {
 
 export function clearAuthToken(): void {
   localStorage.removeItem("authToken");
+  sessionStorage.removeItem("authToken");
   // Must include "; Secure" on HTTPS to match how the cookie was set — mobile
   // browsers (iOS Safari) won't delete a Secure cookie without it.
   const secure = location.protocol === "https:" ? "; Secure" : "";

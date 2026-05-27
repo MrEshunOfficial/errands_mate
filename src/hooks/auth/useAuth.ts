@@ -85,6 +85,9 @@ export const useAuth = (): AuthState & AuthActions => {
         }
 
         if (response.user) {
+          // User authenticated — clear any pending logout flag so subsequent
+          // bootstraps (e.g. after navigating) restore the session normally.
+          sessionStorage.removeItem("logged_out_at");
           updateState({
             user: response.user,
             isAuthenticated: true,
@@ -129,6 +132,10 @@ export const useAuth = (): AuthState & AuthActions => {
       console.warn("Logout API call failed:", error);
     } finally {
       clearAuthToken();
+      // Record when the user logged out so that any subsequent bootstrap on
+      // the same page (or after a hard reload) skips getCurrentUser() and
+      // doesn't re-authenticate via stale backend session cookies.
+      sessionStorage.setItem("logged_out_at", Date.now().toString());
       updateState({ user: null, isAuthenticated: false, error: null });
     }
   }, [updateState]);
@@ -242,6 +249,17 @@ export const useAuth = (): AuthState & AuthActions => {
     let mounted = true;
 
     const initializeAuth = async () => {
+      // Skip session restore if the user explicitly logged out in this browser
+      // session. This prevents stale backend cookies (sent via credentials:
+      // "include") from re-authenticating the user on the homepage after logout.
+      // The flag is set by logout() and cleared on the next successful login.
+      if (sessionStorage.getItem("logged_out_at")) {
+        if (mounted) {
+          updateState({ user: null, isAuthenticated: false, isLoading: false });
+        }
+        return;
+      }
+
       try {
         const response = await authAPI.getCurrentUser();
 
