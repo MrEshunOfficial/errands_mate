@@ -26,9 +26,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <BackgroundOverlay />
         {/* Content */}
         <main
-          className="w-full h-full overflow-auto
-         flex items-center justify-center border rounded
-        "
+          className="w-full h-full overflow-hidden border rounded"
         >
           {children}
         </main>

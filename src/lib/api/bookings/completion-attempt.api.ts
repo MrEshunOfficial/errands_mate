@@ -2,6 +2,7 @@ import { APIClient } from "@/lib/api/base/api-client";
 import {
   CompletionAttemptResponse,
   CompletionAttemptListResponse,
+  AdminResolveDisputeRequestBody,
 } from "@/types/completion-attempt.types";
 
 export class CompletionAttemptAPI extends APIClient {
@@ -36,6 +37,16 @@ export class CompletionAttemptAPI extends APIClient {
   async adminGetPendingRebuttals(): Promise<CompletionAttemptListResponse> {
     return this.get<CompletionAttemptListResponse>(
       `${this.base}/admin/pending-rebuttals`,
+    );
+  }
+
+  async adminResolveDispute(
+    attemptId: string,
+    body: AdminResolveDisputeRequestBody,
+  ): Promise<CompletionAttemptResponse> {
+    return this.patch<CompletionAttemptResponse>(
+      `${this.base}/${attemptId}/admin-resolve`,
+      body,
     );
   }
 }

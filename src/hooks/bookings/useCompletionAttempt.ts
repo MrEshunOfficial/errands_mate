@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { completionAttemptAPI } from "@/lib/api/bookings/completion-attempt.api";
-import { CompletionAttempt } from "@/types/completion-attempt.types";
+import {
+  CompletionAttempt,
+  AdminResolveDisputeRequestBody,
+  CompletionAttemptResponse,
+} from "@/types/completion-attempt.types";
 
 // ─── Shared Primitives ────────────────────────────────────────────────────────
 
@@ -182,5 +186,15 @@ export function useAdminPendingRebuttals(): QueryResult<CompletionAttempt[]> {
         .adminGetPendingRebuttals()
         .then((res) => (res.attempts as CompletionAttempt[]) ?? []),
     [],
+  );
+}
+
+export function useAdminResolveDispute(
+  callbacks?: MutationCallbacks<CompletionAttemptResponse>,
+): MutationResult<CompletionAttemptResponse, { attemptId: string } & AdminResolveDisputeRequestBody> {
+  return useBaseMutation(
+    ({ attemptId, outcome, notes }) =>
+      completionAttemptAPI.adminResolveDispute(attemptId, { outcome, notes }),
+    callbacks,
   );
 }

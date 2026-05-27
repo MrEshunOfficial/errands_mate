@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   MessageSquare,
@@ -9,9 +10,11 @@ import {
   Inbox,
   Shield,
   Clock,
+  ChevronDown,
 } from "lucide-react";
-import { useAdminPendingRebuttals } from "@/hooks/bookings/useCompletionAttempt";
-import { CompletionAttempt } from "@/types/completion-attempt.types";
+import { toast } from "sonner";
+import { useAdminPendingRebuttals, useAdminResolveDispute } from "@/hooks/bookings/useCompletionAttempt";
+import { CompletionAttempt, AdminResolutionOutcome } from "@/types/completion-attempt.types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,9 +29,163 @@ function fmtDateTime(iso?: string): string {
   });
 }
 
+const OUTCOME_CONFIG: Record<
+  AdminResolutionOutcome,
+  { label: string; description: string; className: string }
+> = {
+  [AdminResolutionOutcome.PROVIDER_FAVOUR]: {
+    label: "Uphold Rebuttal",
+    description: "Provider wins — mark booking complete",
+    className:
+      "border-violet-300 dark:border-violet-700/60 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/40",
+  },
+  [AdminResolutionOutcome.CLIENT_FAVOUR]: {
+    label: "Reject Rebuttal",
+    description: "Client wins — refund / dispute resolved for client",
+    className:
+      "border-red-300 dark:border-red-700/60 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40",
+  },
+  [AdminResolutionOutcome.REDO]: {
+    label: "Order Redo",
+    description: "Provider must redo the errand",
+    className:
+      "border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40",
+  },
+  [AdminResolutionOutcome.SPLIT]: {
+    label: "Split Payment",
+    description: "Partial refund — split between both parties",
+    className:
+      "border-blue-300 dark:border-blue-700/60 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40",
+  },
+};
+
+// ─── Resolve Panel (inline per card) ─────────────────────────────────────────
+
+function ResolvePanel({
+  attemptId,
+  onResolved,
+}: {
+  attemptId: string;
+  onResolved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedOutcome, setSelectedOutcome] =
+    useState<AdminResolutionOutcome | null>(null);
+  const [notes, setNotes] = useState("");
+
+  const { mutate, loading } = useAdminResolveDispute({
+    onSuccess: () => {
+      toast.success("Rebuttal resolved successfully");
+      onResolved();
+    },
+    onError: (err) => toast.error(err),
+  });
+
+  const handleConfirm = async () => {
+    if (!selectedOutcome) return;
+    await mutate({
+      attemptId,
+      outcome: selectedOutcome,
+      notes: notes.trim() || undefined,
+    });
+  };
+
+  return (
+    <div className="border-t border-stone-100 dark:border-stone-800 mt-1 pt-3">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 text-[11px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+      >
+        <Shield size={11} />
+        Admin Resolution
+        <ChevronDown
+          size={11}
+          className={`transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-3">
+          {/* Outcome buttons */}
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.keys(OUTCOME_CONFIG) as AdminResolutionOutcome[]).map(
+              (outcome) => {
+                const cfg = OUTCOME_CONFIG[outcome];
+                const isSelected = selectedOutcome === outcome;
+                return (
+                  <button
+                    key={outcome}
+                    onClick={() =>
+                      setSelectedOutcome(isSelected ? null : outcome)
+                    }
+                    className={`rounded-xl border px-3 py-2 text-left transition-all text-[11px] font-semibold ${cfg.className} ${
+                      isSelected ? "ring-2 ring-offset-1 ring-current" : ""
+                    }`}
+                  >
+                    <span className="block">{cfg.label}</span>
+                    <span className="block font-normal opacity-70 mt-0.5 leading-tight">
+                      {cfg.description}
+                    </span>
+                  </button>
+                );
+              },
+            )}
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-[10px] font-semibold text-stone-400 dark:text-stone-500 mb-1">
+              Admin notes (optional)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="Add resolution notes for the record…"
+              className="w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 px-3 py-2 text-xs text-stone-700 dark:text-stone-300 placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:ring-2 focus:ring-violet-400 dark:focus:ring-violet-600 resize-none"
+            />
+          </div>
+
+          {/* Confirm */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleConfirm}
+              disabled={!selectedOutcome || loading}
+              className="flex items-center gap-1.5 h-8 px-4 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold transition-colors"
+            >
+              {loading ? (
+                <Loader2 size={11} className="animate-spin" />
+              ) : (
+                <Shield size={11} />
+              )}
+              {loading ? "Resolving…" : "Confirm Resolution"}
+            </button>
+            <button
+              onClick={() => {
+                setOpen(false);
+                setSelectedOutcome(null);
+                setNotes("");
+              }}
+              className="h-8 px-3 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 text-[11px] font-semibold hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Attempt card ─────────────────────────────────────────────────────────────
 
-function RebuttalCard({ attempt }: { attempt: CompletionAttempt }) {
+function RebuttalCard({
+  attempt,
+  onResolved,
+}: {
+  attempt: CompletionAttempt;
+  onResolved: () => void;
+}) {
   return (
     <div className="rounded-2xl border border-violet-200 dark:border-violet-800/40 bg-white dark:bg-stone-900 overflow-hidden">
       <div className="h-0.5 bg-linear-to-r from-violet-400 to-purple-400" />
@@ -90,7 +247,9 @@ function RebuttalCard({ attempt }: { attempt: CompletionAttempt }) {
         <div className="flex items-center justify-between pt-1">
           <p className="text-[10px] text-stone-400 dark:text-stone-500">
             Booking:{" "}
-            <span className="font-mono">{attempt.bookingId.slice(-8).toUpperCase()}</span>
+            <span className="font-mono">
+              {attempt.bookingId.slice(-8).toUpperCase()}
+            </span>
           </p>
           <Link
             href={`/admin/bookings/${attempt.bookingId}`}
@@ -100,6 +259,8 @@ function RebuttalCard({ attempt }: { attempt: CompletionAttempt }) {
             View booking
           </Link>
         </div>
+
+        <ResolvePanel attemptId={attempt._id} onResolved={onResolved} />
       </div>
     </div>
   );
@@ -165,14 +326,8 @@ export default function AdminRebuttalsPage() {
 
       {!loading && !error && rebuttals && rebuttals.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1 mb-2">
-            <Shield size={12} className="text-stone-400" />
-            <p className="text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
-              Review both sides, then resolve via the booking page
-            </p>
-          </div>
           {rebuttals.map((attempt) => (
-            <RebuttalCard key={attempt._id} attempt={attempt} />
+            <RebuttalCard key={attempt._id} attempt={attempt} onResolved={refetch} />
           ))}
         </div>
       )}
