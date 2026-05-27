@@ -1023,9 +1023,9 @@ export default function AdminServicesPage() {
     const ids = Array.from(selectedIds);
     try {
       if (actionType === "bulk-activate")
-        await bulkUpdateServices({ ids, update: { isActive: true } });
+        await bulkUpdateServices({ serviceIds: ids, update: { isActive: true } });
       else if (actionType === "bulk-deactivate")
-        await bulkUpdateServices({ ids, update: { isActive: false } });
+        await bulkUpdateServices({ serviceIds: ids, update: { isActive: false } });
       else if (actionType === "bulk-delete")
         await Promise.all(ids.map((id) => deleteService(id)));
       refetchAll();

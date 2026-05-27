@@ -106,7 +106,7 @@ export interface RejectServicePayload {
 }
 
 export interface BulkUpdatePayload {
-  ids: string[];
+  serviceIds: string[];
   update: Partial<{ isActive: boolean; isPrivate: boolean }>;
 }
 
