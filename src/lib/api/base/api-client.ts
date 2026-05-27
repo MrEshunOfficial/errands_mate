@@ -41,6 +41,10 @@ export abstract class APIClient {
       return process.env.NEXT_PUBLIC_API_URL;
     }
 
+    if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+      return process.env.NEXT_PUBLIC_BACKEND_URL;
+    }
+
     // 3. In browser, use current origin (works for both dev and production)
     if (typeof window !== "undefined") {
       return window.location.origin;
