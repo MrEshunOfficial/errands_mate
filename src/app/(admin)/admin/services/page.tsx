@@ -66,7 +66,7 @@ type SingleActionType =
 
 type BulkActionType = "bulk-activate" | "bulk-deactivate" | "bulk-delete";
 type ActionType = SingleActionType | BulkActionType | null;
-type StatusTab = "active" | "pending" | "deleted";
+type StatusTab = "active" | "inactive" | "deleted";
 
 // =============================================================================
 // Helpers
@@ -112,31 +112,7 @@ function StatusBadge({ service }: { service: ServiceWithVirtuals }) {
       </span>
     );
 
-  if (service.isRejected)
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-orange-100 text-orange-600 border border-orange-200 dark:bg-orange-500/15 dark:text-orange-400 dark:border-orange-500/25">
-        <Ban className="w-3 h-3" />
-        Rejected
-      </span>
-    );
-
-  if (service.isPendingAutoActivation)
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/25">
-        <Clock className="w-3 h-3" />
-        Scheduled
-      </span>
-    );
-
-  if (service.isPending)
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-yellow-100 text-yellow-700 border border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500/25">
-        <Clock className="w-3 h-3" />
-        Pending
-      </span>
-    );
-
-  if (service.isApproved && service.isActive)
+  if (service.isActive)
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/25">
         <CheckCircle className="w-3 h-3" />
@@ -144,18 +120,10 @@ function StatusBadge({ service }: { service: ServiceWithVirtuals }) {
       </span>
     );
 
-  if (service.isApproved && !service.isActive)
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-zinc-100 text-zinc-600 border border-zinc-200 dark:bg-zinc-500/15 dark:text-zinc-400 dark:border-zinc-500/25">
-        <ToggleLeft className="w-3 h-3" />
-        Inactive
-      </span>
-    );
-
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-yellow-100 text-yellow-700 border border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500/25">
-      <Clock className="w-3 h-3" />
-      Pending
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide bg-zinc-100 text-zinc-600 border border-zinc-200 dark:bg-zinc-500/15 dark:text-zinc-400 dark:border-zinc-500/25">
+      <ToggleLeft className="w-3 h-3" />
+      Inactive
     </span>
   );
 }
@@ -184,11 +152,11 @@ function StatsBar() {
       bg: "bg-emerald-50 dark:bg-emerald-500/10",
     },
     {
-      label: "Pending",
+      label: "Inactive",
       value: s?.pendingApproval ?? "—",
-      icon: Clock,
-      color: "text-yellow-600 dark:text-yellow-400",
-      bg: "bg-yellow-50 dark:bg-yellow-500/10",
+      icon: ToggleLeft,
+      color: "text-zinc-600 dark:text-zinc-400",
+      bg: "bg-zinc-50 dark:bg-zinc-500/10",
     },
     {
       label: "Deleted",
@@ -639,12 +607,12 @@ function EmptyState({
     ? "No services match your search."
     : tab === "deleted"
       ? "No deleted services found."
-      : tab === "pending"
-        ? "No services awaiting review."
+      : tab === "inactive"
+        ? "No inactive services found."
         : "No active services found.";
 
   const Icon =
-    tab === "deleted" ? Archive : tab === "pending" ? Clock : Briefcase;
+    tab === "deleted" ? Archive : tab === "inactive" ? ToggleLeft : Briefcase;
 
   return (
     <div className="flex flex-col items-center justify-center py-16 sm:py-20 text-center">
@@ -904,7 +872,7 @@ export default function AdminServicesPage() {
     .filter((s) => {
       if (statusTab === "deleted") return s.isDeleted === true;
       if (statusTab === "active") return !s.isDeleted && s.isActive === true;
-      return !s.isDeleted && s.isActive !== true;
+      return !s.isDeleted && s.isActive !== true; // "inactive" tab
     });
 
   const allPageSelected =
@@ -1041,10 +1009,10 @@ export default function AdminServicesPage() {
   }[] = [
     { key: "active", label: "Active", shortLabel: "Active", icon: Activity },
     {
-      key: "pending",
-      label: "Pending Review",
-      shortLabel: "Pending",
-      icon: Clock,
+      key: "inactive",
+      label: "Inactive",
+      shortLabel: "Inactive",
+      icon: ToggleLeft,
     },
     { key: "deleted", label: "Deleted", shortLabel: "Deleted", icon: Archive },
   ];

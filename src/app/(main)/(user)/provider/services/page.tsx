@@ -20,6 +20,7 @@ import {
   RefreshCw,
   X,
   Zap,
+  ToggleLeft,
 } from "lucide-react";
 
 import {
@@ -149,31 +150,17 @@ function ProviderServiceCard({
         ? "/unit"
         : "";
 
-  const statusBadge = service.isApproved
+  const statusBadge = service.isActive
     ? {
         label: "Active",
         color:
           "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
       }
-    : service.isRejected
-      ? {
-          label: "Rejected",
-          color:
-            "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700/50",
-        }
-      : service.isPending
-        ? {
-            label: "Pending",
-            color:
-              "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50",
-          }
-        : service.isPrivate
-          ? {
-              label: "Private",
-              color:
-                "text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
-            }
-          : null;
+    : {
+        label: "Inactive",
+        color:
+          "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700",
+      };
 
   return (
     <div className="group relative flex flex-col rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden hover:border-amber-300 dark:hover:border-amber-600/60 hover:shadow-lg hover:shadow-stone-100/80 dark:hover:shadow-stone-950/80 hover:-translate-y-0.5 transition-all duration-200">
@@ -508,8 +495,8 @@ export default function ServiceList() {
 
   // ── Stats ─────────────────────────────────────────────────────────────────────
   const total = data?.total ?? services.length;
-  const activeCount = services.filter((s) => s.isApproved).length;
-  const pendingCount = services.filter((s) => s.isPending).length;
+  const activeCount = services.filter((s) => s.isActive).length;
+  const inactiveCount = services.filter((s) => !s.isActive).length;
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -582,19 +569,19 @@ export default function ServiceList() {
                       </div>
                     </>
                   )}
-                  {pendingCount > 0 && (
+                  {inactiveCount > 0 && (
                     <>
                       <div className="w-px h-6 bg-stone-200 dark:bg-stone-700" />
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-                          <Clock size={13} className="text-amber-500" />
+                        <div className="w-7 h-7 rounded-lg bg-zinc-50 dark:bg-zinc-900/20 flex items-center justify-center">
+                          <ToggleLeft size={13} className="text-zinc-500" />
                         </div>
                         <div>
                           <p className="text-base font-extrabold text-stone-800 dark:text-stone-100 leading-none">
-                            {pendingCount}
+                            {inactiveCount}
                           </p>
                           <p className="text-[10px] text-stone-400 dark:text-stone-500">
-                            pending
+                            inactive
                           </p>
                         </div>
                       </div>
