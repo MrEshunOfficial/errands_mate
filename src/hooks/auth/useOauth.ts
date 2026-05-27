@@ -7,6 +7,7 @@ import {
   LinkProviderData,
   oAuthAPI,
 } from "@/lib/api/auth/oauth.api";
+import { saveAuthToken } from "@/lib/auth/token";
 
 // ─── Return Type ──────────────────────────────────────────────────────────────
 
@@ -28,14 +29,18 @@ export const useOAuth = (): UseOAuthReturn => {
 
   // ── Shared Action Wrapper ───────────────────────────────────────────────────
 
-  const handleOAuthAction = async <T>(
-    action: () => Promise<T>,
+  const handleOAuthAction = async (
+    action: () => Promise<AuthResponse>,
     fallbackMessage: string,
-  ): Promise<T | null> => {
+  ): Promise<AuthResponse | null> => {
     try {
       setIsLoading(true);
       setError(null);
-      return await action();
+      const response = await action();
+      if (response?.token) {
+        saveAuthToken(response.token);
+      }
+      return response;
     } catch (err) {
       const apiError = err as APIError;
       setError(apiError.message ?? fallbackMessage);
