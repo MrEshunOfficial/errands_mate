@@ -113,10 +113,12 @@ function ServiceHero({
   service,
   categoryName,
   coverImage,
+  onBack,
 }: {
   service: Service;
   categoryName: string | null;
   coverImage: { url?: string } | null;
+  onBack: () => void;
 }) {
   return (
     <div className="relative w-full h-64 sm:h-80 lg:h-96 overflow-hidden bg-gray-950 rounded-none">
@@ -135,6 +137,15 @@ function ServiceHero({
         </div>
       )}
       <div className="absolute inset-0 bg-linear-to-t from-gray-950 via-gray-950/40 to-transparent pointer-events-none" />
+
+      {/* Back button */}
+      <button
+        onClick={onBack}
+        className="absolute top-4 left-4 sm:left-6 z-10 flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-black/25 hover:bg-black/40 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1.5 transition-all">
+        <ArrowLeft size={13} />
+        Back
+      </button>
+
       <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-10">
         {categoryName && (
           <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-blue-300 bg-blue-500/15 border border-blue-400/25 rounded-full px-3 py-1 mb-3">
@@ -534,18 +545,21 @@ export default function ServiceDetailPage() {
     router.push(`/requests/provider/${providerId}${query}`);
   };
 
+  const basePrice = getBasePrice(pricing);
+
   return (
-    <main>
+    <main className="h-full overflow-y-auto">
       {/* ── Hero ── */}
       <ServiceHero
         service={service}
         categoryName={categoryName}
         coverImage={coverImage}
+        onBack={() => router.back()}
       />
       <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-8 pt-6 sm:pt-8 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px] gap-6 lg:gap-8 items-start">
-          {/* Description first on mobile, right column on desktop */}
-          <div className="space-y-4 lg:sticky lg:top-6 self-start order-first lg:order-last">
+          {/* Left column (wide) on desktop — main content */}
+          <div className="space-y-4 min-w-0">
             <DescriptionCard description={service.description} />
             {service.tags?.length ? <TagsCard tags={service.tags} /> : null}
             {hasTiers && pricing?.tiers && (
@@ -560,8 +574,8 @@ export default function ServiceDetailPage() {
             <ServiceInfoCard service={service} />
           </div>
 
-          {/* Pricing + provider second on mobile, left column on desktop */}
-          <div className="space-y-4 min-w-0 order-last lg:order-first">
+          {/* Right column (narrow sidebar) on desktop — hidden on mobile (sticky CTA covers it) */}
+          <div className="hidden lg:block space-y-4 lg:sticky lg:top-6 self-start">
             <PricingPanel
               pricing={pricing}
               onShare={handleShare}
@@ -577,6 +591,58 @@ export default function ServiceDetailPage() {
               />
             )}
           </div>
+        </div>
+
+        {/* Provider panel shown below content on mobile */}
+        {provider && (
+          <div className="lg:hidden mt-4">
+            <ProviderPanel
+              provider={provider}
+              onRequest={() => handleRequest(provider._id)}
+              isCustomer={isCustomer}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Mobile sticky CTA bar ──────────────────────────────────────────── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="flex-1 min-w-0">
+          {basePrice != null ? (
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-50 leading-none tabular-nums">
+              {formatPrice(basePrice, currency)}
+            </p>
+          ) : (
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              Price on request
+            </p>
+          )}
+          {hasTiers && (
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+              starting from
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            onClick={handleShare}
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 rounded-xl border-gray-200 dark:border-gray-700 shrink-0">
+            <Share2 size={14} />
+          </Button>
+          {provider && isCustomer && (
+            <Button
+              onClick={() => handleRequest(provider._id)}
+              disabled={provider.status?.toLowerCase() === "booked"}
+              className={`h-9 px-5 text-sm font-medium rounded-xl shadow-none ${
+                provider.status?.toLowerCase() === "booked"
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-default"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}>
+              {provider.status?.toLowerCase() === "booked" ? "Booked" : "Request"}
+            </Button>
+          )}
         </div>
       </div>
     </main>
