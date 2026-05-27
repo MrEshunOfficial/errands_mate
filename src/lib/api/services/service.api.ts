@@ -121,11 +121,13 @@ export interface BulkUpdatePayload {
  */
 function hydrateService(service: ServiceWithVirtuals): ServiceWithVirtuals {
   // --- Moderation state ---
+  // Always derive from the raw timestamp fields — Mongoose virtuals may not
+  // serialize correctly and the API can return isApproved: false even when
+  // approvedAt is set, which would cause the ?? fallback to be skipped.
   const isDeleted = service.isDeleted ?? false;
-  const isApproved = service.isApproved ?? (!!service.approvedAt && !isDeleted);
-  const isRejected = service.isRejected ?? (!!service.rejectedAt && !isDeleted);
-  const isPending =
-    service.isPending ?? (!isApproved && !isRejected && !isDeleted);
+  const isApproved = !!service.approvedAt && !isDeleted;
+  const isRejected = !!service.rejectedAt && !isDeleted;
+  const isPending = !isApproved && !isRejected && !isDeleted;
   const isPendingAutoActivation =
     service.isPendingAutoActivation ??
     (!!service.scheduledActivationAt &&

@@ -56,7 +56,7 @@ export default function TaskOpportunities({
           Service Stats
         </h3>
         <button
-          onClick={() => router.push("/provider/tasks/available")}
+          onClick={() => router.push("/provider/services")}
           className="inline-flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium transition-colors group">
           View all
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
