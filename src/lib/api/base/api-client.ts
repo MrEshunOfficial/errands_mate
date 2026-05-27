@@ -134,6 +134,7 @@ export abstract class APIClient {
       const response = await fetch(url, {
         ...fetchConfig,
         headers,
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -141,10 +142,6 @@ export abstract class APIClient {
       }
 
       const responseData = await response.json();
-
-      // Unwrap only the standard { data: ... } envelope used by some endpoints.
-      // Do NOT unwrap based on entity keys (e.g. "booking") because sibling
-      // fields like "context" would be silently discarded.
       if (responseData?.data !== undefined) {
         return responseData.data as T;
       }

@@ -1,7 +1,8 @@
 export function saveAuthToken(token: string): void {
   localStorage.setItem("authToken", token);
   const secure = location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `authToken=${token}; path=/; SameSite=Lax${secure}`;
+  // 7-day persistent cookie so mobile browsers don't clear it between sessions
+  document.cookie = `authToken=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax${secure}`;
 }
 
 export function clearAuthToken(): void {

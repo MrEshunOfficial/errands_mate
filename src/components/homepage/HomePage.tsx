@@ -94,7 +94,7 @@ const HERO_VIEWS: Record<"visitor" | "client" | "provider", HeroView> = {
     cta: {
       type: "link",
       label: "Browse available tasks",
-      route: "/tasks",
+      route: "/provider/tasks/available",
     },
   },
 };
