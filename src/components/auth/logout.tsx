@@ -16,7 +16,10 @@ const LogoutPage = () => {
     try {
       await logout();
       toast.success("Logged out successfully.");
-      router.push("/");
+      // Hard redirect instead of client-side push: forces a full page reload so
+      // no stale React auth state or cookies carry over into the homepage bootstrap
+      // (mobile browsers can re-authenticate via a lingering cookie on SPA nav).
+      window.location.replace("/");
     } catch (err) {
       toast.error("Unable to log out. Please try again.");
       setIsLoggingOut(false);
