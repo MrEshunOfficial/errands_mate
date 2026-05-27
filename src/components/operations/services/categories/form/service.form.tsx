@@ -61,7 +61,7 @@ interface ServiceFormState {
 
 type ValidationErrors = BasicInfoValidationErrors & PricingValidationErrors;
 
-type FormStep = "form" | "cover" | "done";
+type FormStep = "form" | "cover" | "info" | "done";
 
 export interface ServiceFormProps {
   mode: "create" | "edit";
@@ -496,9 +496,9 @@ export default function ServiceForm({
         };
 
         result = await updateService(activeServiceId, editPayload);
+        setCreatedService(result);
         toast.success("Service updated");
-        setStep("done");
-        onSuccess?.(result);
+        setStep("info");
       }
     } catch (err) {
       toast.error(
@@ -530,6 +530,65 @@ export default function ServiceForm({
               : "Changes saved. Redirecting…"}
           </p>
           <Loader2 className="w-6 h-6 animate-spin text-teal-600 mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Info step (edit mode only, after successful update) ──────────────────
+  if (step === "info") {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-lg w-full overflow-hidden">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-7 h-7 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
+                <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                Service updated
+              </h2>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 pl-10">
+              Your changes have been saved and submitted for review.
+            </p>
+          </div>
+
+          {/* Auto-activation notice */}
+          <div className="px-6 py-5">
+            <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+              <svg
+                className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                If your changes require re-approval, the service will be{" "}
+                <span className="font-semibold">
+                  auto-activated within 15 minutes
+                </span>{" "}
+                if no action is taken by an admin.
+              </p>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                if (createdService) onSuccess?.(createdService);
+                setStep("done");
+              }}
+              className="px-5 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
+              Got it
+            </button>
+          </div>
         </div>
       </div>
     );
