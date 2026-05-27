@@ -43,9 +43,9 @@ export default function TaskOpportunities({
       color: "text-gray-700 dark:text-gray-300",
     },
     {
-      value: services.filter((s) => !!(s.approvedAt && !s.rejectedAt)).length,
-      label: "Approved",
-      color: "text-emerald-600 dark:text-emerald-400",
+      value: services.filter((s) => !s.isActive).length,
+      label: "Inactive",
+      color: "text-rose-600 dark:text-rose-400",
     },
   ];
 
