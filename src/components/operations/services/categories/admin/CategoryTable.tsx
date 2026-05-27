@@ -136,23 +136,167 @@ function SkeletonTableRow() {
           <Skeleton className="h-2.5 w-40 rounded" />
         </div>
       </td>
-      <td className="px-2 py-1.5">
+      <td className="hidden lg:table-cell px-2 py-1.5">
         <Skeleton className="h-2.5 w-24 rounded" />
       </td>
       <td className="px-2 py-1.5">
         <Skeleton className="h-4 w-16 rounded-full" />
       </td>
-      <td className="px-2 py-1.5">
+      <td className="hidden lg:table-cell px-2 py-1.5">
         <Skeleton className="h-4 w-24 rounded-full" />
       </td>
-      <td className="px-2 py-1.5">
+      <td className="hidden lg:table-cell px-2 py-1.5">
         <Skeleton className="h-2.5 w-20 rounded" />
-      </td>
-      <td className="px-2 py-1.5">
-        <Skeleton className="h-4 w-10 rounded-full" />
       </td>
       <td className="px-2 py-1.5" />
     </tr>
+  );
+}
+
+// ─── CategoryCard (mobile) ────────────────────────────────────────────────────
+
+function CategoryCard({
+  category,
+  selected,
+  onSelect,
+  onEditDetails,
+  onToggleActive,
+  onDelete,
+  onRestore,
+  onPermanentDelete,
+  isMutating,
+  allCategories,
+  onUploadCover,
+  onCoverLinked,
+  coverUrlOverride,
+}: CategoryTableRowProps) {
+  const status: RowStatus = category.isDeleted
+    ? "deleted"
+    : category.isActive
+      ? "active"
+      : "inactive";
+
+  const parentName = useMemo(
+    () =>
+      category.parentCategoryId
+        ? (allCategories.find((c) => c._id === category.parentCategoryId)
+            ?.catName ?? null)
+        : null,
+    [allCategories, category.parentCategoryId],
+  );
+
+  const effectiveCoverUrl =
+    coverUrlOverride ?? category.catCoverId?.url ?? null;
+
+  return (
+    <div
+      className={cn(
+        "flex items-start gap-3 px-4 py-3.5 border-b border-border/50 transition-colors last:border-0",
+        selected ? "bg-primary/5" : "hover:bg-accent/30",
+        category.isDeleted && "opacity-60",
+      )}>
+      {/* Checkbox */}
+      <div className="mt-0.5 shrink-0">
+        <Checkbox checked={selected} onCheckedChange={onSelect} />
+      </div>
+
+      {/* Cover thumbnail */}
+      <div className="shrink-0">
+        <CategoryCoverChangeMicro
+          cover={effectiveCoverUrl}
+          disabled={category.isDeleted}
+          sizeClass="w-12 h-8"
+          onUpload={onUploadCover}
+          onSuccess={(result) => onCoverLinked(result.fileId, result.file.url)}
+        />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-semibold tracking-tight capitalize">
+              {category.catName}
+            </p>
+            {category.catDesc && (
+              <p className="truncate text-[11px] text-muted-foreground mt-0.5">
+                {category.catDesc}
+              </p>
+            )}
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0"
+                disabled={isMutating}>
+                <MoreHorizontal className="size-4" />
+                <span className="sr-only">Actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {category.isDeleted ? (
+                <>
+                  <DropdownMenuItem onClick={onRestore}>
+                    <RotateCcw className="mr-2 size-3.5" />
+                    Restore
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={onPermanentDelete}
+                    className="text-destructive focus:text-destructive">
+                    <Trash2 className="mr-2 size-3.5" />
+                    Delete permanently
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem onClick={onEditDetails}>
+                    <Pencil className="mr-2 size-3.5" />
+                    Edit details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onToggleActive}>
+                    {category.isActive ? (
+                      <ToggleLeft className="mr-2 size-3.5" />
+                    ) : (
+                      <ToggleRight className="mr-2 size-3.5" />
+                    )}
+                    {category.isActive ? "Deactivate" : "Activate"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={onDelete}
+                    className="text-destructive focus:text-destructive">
+                    <Trash2 className="mr-2 size-3.5" />
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+          <StatusBadge status={status} />
+          {typeof category.servicesCount === "number" && (
+            <Badge
+              variant="outline"
+              className="gap-1 text-[11px] font-medium border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              {category.servicesCount}{" "}
+              <span className="font-normal opacity-70">
+                {category.servicesCount === 1 ? "service" : "services"}
+              </span>
+            </Badge>
+          )}
+          {parentName && (
+            <span className="text-[11px] text-muted-foreground">
+              ↳ {parentName}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -256,7 +400,7 @@ function CategoryTableRow({
       </td>
 
       {/* Slug */}
-      <td className="max-w-35 px-3 py-1.5">
+      <td className="hidden lg:table-cell max-w-35 px-3 py-1.5">
         <Link
           href={`/categories/${category.slug}`}
           target="_blank"
@@ -272,7 +416,7 @@ function CategoryTableRow({
       </td>
 
       {/* Parent */}
-      <td className="max-w-35 px-3 py-1.5">
+      <td className="hidden lg:table-cell max-w-35 px-3 py-1.5">
         {parentName ? (
           <span className="truncate text-[12px] text-muted-foreground">
             {parentName}
@@ -283,7 +427,7 @@ function CategoryTableRow({
       </td>
 
       {/* Services count */}
-      <td className="w-20 px-3 py-1.5">
+      <td className="hidden lg:table-cell w-20 px-3 py-1.5">
         {typeof category.servicesCount === "number" ? (
           <Badge
             variant="outline"
@@ -405,9 +549,82 @@ export function CategoryTable({
   onRestore,
   onPermanentDelete,
 }: CategoryTableProps) {
+  const sharedRowProps = (cat: PopulatedCategory) => ({
+    category: cat,
+    selected: selectedIds.includes(cat._id),
+    onSelect: () => onToggleSelect(cat._id),
+    onEditDetails: () => onEditDetails(cat._id),
+    onToggleActive: () => onToggleActive(cat._id),
+    onDelete: () => onDelete(cat._id),
+    onRestore: () => onRestore(cat._id),
+    onPermanentDelete: () => onPermanentDelete(cat._id),
+    isMutating,
+    allCategories,
+    onUploadCover,
+    onCoverLinked: (fileId: string, cloudinaryUrl: string) =>
+      onCoverLinked(cat._id, fileId, cloudinaryUrl),
+    coverUrlOverride: coverUrlOverrides[cat._id],
+  });
+
+  const emptyState = (
+    <div className="flex flex-col items-center gap-3 py-20 text-center">
+      <div className="rounded-full border bg-muted p-4">
+        <Search className="size-7 text-muted-foreground/40" />
+      </div>
+      <p className="text-sm font-semibold text-muted-foreground">
+        No categories found
+      </p>
+    </div>
+  );
+
   return (
     <div className="flex-1 overflow-auto rounded-xl border">
-      <table className="w-full border-collapse text-sm">
+      {/* ── Mobile card list (< md) ── */}
+      <div className="md:hidden">
+        {/* Select-all bar */}
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50 bg-muted/40">
+          <Checkbox
+            checked={allPageSelected}
+            onCheckedChange={() => onToggleSelectAll(paginated)}
+          />
+          <span className="text-xs text-muted-foreground ml-1">Select all</span>
+          <span className="ml-auto text-[11px] text-muted-foreground/60 tabular-nums">
+            {paginated.length} item{paginated.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        {isLoading && (
+          <div className="divide-y divide-border/50">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3 px-4 py-3.5 animate-pulse">
+                <div className="size-4 rounded bg-muted mt-0.5 shrink-0" />
+                <div className="w-12 h-8 rounded bg-muted shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-32 rounded bg-muted" />
+                  <div className="h-2.5 w-48 rounded bg-muted" />
+                  <div className="flex gap-2 mt-1">
+                    <div className="h-4 w-16 rounded-full bg-muted" />
+                    <div className="h-4 w-20 rounded-full bg-muted" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && paginated.length === 0 && emptyState}
+
+        {!isLoading && (
+          <div className="divide-y divide-border/50">
+            {paginated.map((cat) => (
+              <CategoryCard key={cat._id} {...sharedRowProps(cat)} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Desktop table (>= md) ── */}
+      <table className="hidden md:table w-full border-collapse text-sm">
         <thead className="sticky top-0 z-10 border-b border-border/60 backdrop-blur">
           <tr>
             <th className="w-8 px-2 py-2">
@@ -428,7 +645,8 @@ export function CategoryTable({
               field="slug"
               sortField={sortField}
               sortDir={sortDir}
-              onSort={onSort}>
+              onSort={onSort}
+              className="hidden lg:table-cell">
               Slug
             </SortableTh>
             <SortableTh
@@ -439,10 +657,10 @@ export function CategoryTable({
               className="w-24">
               Status
             </SortableTh>
-            <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <th className="hidden lg:table-cell px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Parent
             </th>
-            <th className="w-20 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <th className="hidden lg:table-cell w-20 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Services
             </th>
             <th className="w-10 px-2 py-2" />
@@ -458,14 +676,7 @@ export function CategoryTable({
           {!isLoading && paginated.length === 0 && (
             <tr>
               <td colSpan={8} className="py-20 text-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="rounded-full border bg-muted p-4">
-                    <Search className="size-7 text-muted-foreground/40" />
-                  </div>
-                  <p className="text-sm font-semibold text-muted-foreground">
-                    No categories found
-                  </p>
-                </div>
+                {emptyState}
               </td>
             </tr>
           )}
@@ -473,24 +684,7 @@ export function CategoryTable({
           {paginated.map((cat) => (
             <CategoryTableRow
               key={cat._id}
-              category={cat}
-              selected={selectedIds.includes(cat._id)}
-              onSelect={() => onToggleSelect(cat._id)}
-              onEditDetails={() => onEditDetails(cat._id)}
-              onToggleActive={() => onToggleActive(cat._id)}
-              onDelete={() => onDelete(cat._id)}
-              onRestore={() => onRestore(cat._id)}
-              onPermanentDelete={() => onPermanentDelete(cat._id)}
-              isMutating={isMutating}
-              allCategories={allCategories}
-              onUploadCover={onUploadCover}
-              // Prepend categoryId here so CategoryTableRow's onCoverLinked
-              // stays a simple (fileId, url) callback — categoryId is already
-              // known in this scope via cat._id.
-              onCoverLinked={(fileId, cloudinaryUrl) =>
-                onCoverLinked(cat._id, fileId, cloudinaryUrl)
-              }
-              coverUrlOverride={coverUrlOverrides[cat._id]}
+              {...sharedRowProps(cat)}
             />
           ))}
         </tbody>

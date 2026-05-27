@@ -1291,16 +1291,16 @@ export default function AdminServicesPage() {
                       </th>
                       {[
                         { label: "Service", width: "" },
-                        { label: "Category", width: "w-32" },
+                        { label: "Category", width: "w-32", hide: "hidden lg:table-cell" },
                         { label: "Status", width: "w-28" },
-                        { label: "Price", width: "w-28" },
-                        { label: "Provider Earnings", width: "w-36" },
-                        { label: "Created", width: "w-28" },
+                        { label: "Price", width: "w-28", hide: "hidden lg:table-cell" },
+                        { label: "Provider Earnings", width: "w-36", hide: "hidden xl:table-cell" },
+                        { label: "Created", width: "w-28", hide: "hidden xl:table-cell" },
                         { label: "", width: "w-12" },
-                      ].map(({ label, width }) => (
+                      ].map(({ label, width, hide }) => (
                         <th
                           key={label || "actions"}
-                          className={`px-4 py-2.5 text-left text-[10px] font-bold tracking-widest text-zinc-400 dark:text-zinc-500 uppercase ${width}`}>
+                          className={`px-4 py-2.5 text-left text-[10px] font-bold tracking-widest text-zinc-400 dark:text-zinc-500 uppercase ${width} ${hide ?? ""}`}>
                           {label}
                         </th>
                       ))}
@@ -1357,7 +1357,7 @@ export default function AdminServicesPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="hidden lg:table-cell px-4 py-3">
                             <span className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 truncate max-w-30">
                               {typeof service.categoryId === "object"
                                 ? ((
@@ -1371,12 +1371,12 @@ export default function AdminServicesPage() {
                           <td className="px-4 py-3">
                             <StatusBadge service={service} />
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="hidden lg:table-cell px-4 py-3">
                             <span className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">
                               {formatPrice(service)}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="hidden xl:table-cell px-4 py-3">
                             {service.providerEarnings != null ? (
                               <span className="text-teal-600 dark:text-teal-400 font-semibold tabular-nums">
                                 {service.servicePricing?.currency}{" "}
@@ -1388,7 +1388,7 @@ export default function AdminServicesPage() {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="hidden xl:table-cell px-4 py-3">
                             <span className="text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
                               {formatDate(service.createdAt)}
                             </span>
