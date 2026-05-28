@@ -63,7 +63,7 @@ function shortId(id: string): string {
   return id.slice(-6).toUpperCase();
 }
 
-// ─── Booking status config ────────────────────────────────────────────────────
+// ─── Status configs ───────────────────────────────────────────────────────────
 
 const BOOKING_STATUS_CFG: Record<
   BookingStatus,
@@ -172,8 +172,6 @@ const REQUEST_STATUS_CFG: Record<
   },
 };
 
-// ─── Provider status config ────────────────────────────────────────────────────
-
 interface StatusVisual {
   label: string;
   dot: string;
@@ -213,9 +211,8 @@ const PROVIDER_STATUS_CFG: Record<string, StatusVisual> = {
 function BookingStatusBadge({ status }: { status: BookingStatus }) {
   const cfg = BOOKING_STATUS_CFG[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${cfg.classes}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.icon}
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>
   );
@@ -224,9 +221,8 @@ function BookingStatusBadge({ status }: { status: BookingStatus }) {
 function RequestStatusBadge({ status }: { status: RequestStatus }) {
   const cfg = REQUEST_STATUS_CFG[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${cfg.classes}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.icon}
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>
   );
@@ -244,14 +240,16 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-4">
-      <div className={`w-1.5 h-4 rounded-full ${accent} mb-2 sm:mb-3`} />
+    <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-4 min-w-0">
+      <div className={`w-1 h-4 rounded-full ${accent} mb-2`} />
       {loading ? (
-        <div className="h-7 w-10 rounded-lg bg-stone-100 dark:bg-stone-800 animate-pulse mb-1" />
+        <div className="h-6 w-8 rounded bg-stone-100 dark:bg-stone-800 animate-pulse mb-1" />
       ) : (
-        <p className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-50">{value}</p>
+        <p className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-50 tabular-nums leading-none">
+          {value}
+        </p>
       )}
-      <p className="text-[10px] sm:text-xs text-stone-400 dark:text-stone-500 mt-0.5 leading-tight">{label}</p>
+      <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1 leading-tight">{label}</p>
     </div>
   );
 }
@@ -267,7 +265,7 @@ function RecentJobRow({ booking }: { booking: Booking }) {
   return (
     <Link
       href={`/bookings/${booking._id}`}
-      className="group flex items-center gap-3 py-3 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+      className="group flex items-center gap-2.5 py-2.5 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
     >
       {cfg.accent ? (
         <span className={`w-1 h-8 rounded-full bg-linear-to-b ${cfg.accent} shrink-0`} />
@@ -275,31 +273,35 @@ function RecentJobRow({ booking }: { booking: Booking }) {
         <span className={`w-1 h-8 rounded-full ${cfg.dot} shrink-0`} />
       )}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate leading-snug">
             {booking.serviceDescription || `Job #${shortId(booking._id)}`}
           </p>
           {needsAction && (
-            <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400">
+            <span className="hidden sm:inline shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400">
               Action
             </span>
           )}
         </div>
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
+        <div className="flex items-center gap-2 mt-0.5">
           <BookingStatusBadge status={booking.status} />
-          <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
+          <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
             <CalendarDays size={9} />
             {fmtDate(booking.scheduledDate)}
           </span>
           {(booking.finalPrice ?? booking.estimatedPrice) !== undefined && (
-            <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
+            <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
               <DollarSign size={9} />
-              {booking.currency} {(booking.finalPrice ?? booking.estimatedPrice)!.toLocaleString()}
+              {booking.currency}{" "}
+              {(booking.finalPrice ?? booking.estimatedPrice)!.toLocaleString()}
             </span>
           )}
         </div>
       </div>
-      <ChevronRight size={14} className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0" />
+      <ChevronRight
+        size={14}
+        className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0"
+      />
     </Link>
   );
 }
@@ -308,23 +310,21 @@ function PendingRequestRow({ req }: { req: ProviderRequest }) {
   return (
     <Link
       href={`/requests/${req._id}`}
-      className="group flex items-center gap-3 py-3 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+      className="group flex items-center gap-2.5 py-2.5 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
     >
       <span className="w-1 h-8 rounded-full bg-amber-400 shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate">
+        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate leading-snug">
           {req.clientMessage || req.taskTitle || `Request #${shortId(req._id)}`}
         </p>
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
+        <div className="flex items-center gap-2 mt-0.5">
           <RequestStatusBadge status={req.status} />
-          {req.schedule?.preferredDate && (
-            <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
-              <CalendarDays size={9} />
-              {fmtDate(req.schedule.preferredDate)}
-            </span>
-          )}
+          <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
+            <CalendarDays size={9} />
+            {fmtDate(req.schedule?.preferredDate)}
+          </span>
           {req.serviceLocation?.ghanaPostGPS && (
-            <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
+            <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
               <MapPin size={9} />
               {req.serviceLocation.ghanaPostGPS}
             </span>
@@ -332,7 +332,8 @@ function PendingRequestRow({ req }: { req: ProviderRequest }) {
         </div>
       </div>
       <span className="shrink-0 text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-        Respond <ArrowRight size={11} />
+        <span className="hidden sm:inline">Respond</span>
+        <ArrowRight size={12} />
       </span>
     </Link>
   );
@@ -347,26 +348,35 @@ function ActionBanner({
   activeJobsCount: number;
   disputedCount: number;
 }) {
-  if (pendingCount === 0 && activeJobsCount === 0 && disputedCount === 0) return null;
+  if (pendingCount === 0 && activeJobsCount === 0 && disputedCount === 0)
+    return null;
   return (
-    <div className="rounded-2xl border border-sky-200 dark:border-sky-700/50 bg-sky-50 dark:bg-sky-900/20 px-4 py-3 flex items-start gap-3">
-      <Bell size={16} className="text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+    <div className="rounded-xl border border-sky-200 dark:border-sky-700/50 bg-sky-50 dark:bg-sky-900/20 px-3 sm:px-4 py-3 flex items-start gap-3">
+      <Bell
+        size={15}
+        className="text-sky-600 dark:text-sky-400 shrink-0 mt-0.5"
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">You have items needing attention</p>
+        <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
+          You have items needing attention
+        </p>
         <ul className="mt-1 space-y-0.5">
           {pendingCount > 0 && (
             <li className="text-xs text-sky-700 dark:text-sky-400">
-              {pendingCount} new client request{pendingCount > 1 ? "s" : ""} waiting for your response
+              {pendingCount} new client request{pendingCount > 1 ? "s" : ""}{" "}
+              waiting for your response
             </li>
           )}
           {activeJobsCount > 0 && (
             <li className="text-xs text-sky-700 dark:text-sky-400">
-              {activeJobsCount} active job{activeJobsCount > 1 ? "s" : ""} in progress
+              {activeJobsCount} active job{activeJobsCount > 1 ? "s" : ""} in
+              progress
             </li>
           )}
           {disputedCount > 0 && (
             <li className="text-xs text-sky-700 dark:text-sky-400">
-              {disputedCount} disputed booking{disputedCount > 1 ? "s" : ""} — consider submitting a rebuttal
+              {disputedCount} disputed booking
+              {disputedCount > 1 ? "s" : ""} — consider submitting a rebuttal
             </li>
           )}
         </ul>
@@ -375,20 +385,109 @@ function ActionBanner({
   );
 }
 
+function SectionCard({
+  icon,
+  title,
+  count,
+  countBg,
+  href,
+  loading,
+  error,
+  empty,
+  children,
+  iconBg = "bg-stone-100 dark:bg-stone-800",
+}: {
+  icon: React.ReactNode;
+  title: string;
+  count?: number;
+  countBg?: string;
+  href: string;
+  loading: boolean;
+  error?: string | null;
+  empty: React.ReactNode;
+  children: React.ReactNode;
+  iconBg?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <div
+            className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}
+          >
+            {icon}
+          </div>
+          <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50 truncate">
+            {title}
+          </h2>
+          {count != null && count > 0 && (
+            <span
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                countBg ??
+                "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400"
+              }`}
+            >
+              {count}
+            </span>
+          )}
+        </div>
+        <Link
+          href={href}
+          className="text-[11px] font-semibold text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 flex items-center gap-0.5 transition-colors shrink-0 ml-2"
+        >
+          All <ChevronRight size={11} />
+        </Link>
+      </div>
+
+      {loading && (
+        <div className="space-y-2.5">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-11 rounded-lg bg-stone-50 dark:bg-stone-800 animate-pulse"
+            />
+          ))}
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/10 px-3 py-2.5">
+          <AlertCircle size={13} className="text-red-500 shrink-0" />
+          <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && empty}
+      {!loading && !error && children}
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProviderDashboardPage() {
-  const { data: providerProfile, loading: profileLoading } = useMyProviderProfile();
+  const { data: providerProfile, loading: profileLoading } =
+    useMyProviderProfile();
   const profileId = providerProfile?._id ? String(providerProfile._id) : null;
   const { data: services } = useServiceOfferings(profileId);
   const { profile: userProfile } = useProfile();
   const avatarUrl = isPopulatedPicture(userProfile?.profilePictureId)
-    ? userProfile.profilePictureId.thumbnailUrl || userProfile.profilePictureId.url
+    ? userProfile.profilePictureId.thumbnailUrl ||
+      userProfile.profilePictureId.url
     : undefined;
 
-  const { data: bookings, loading: bookingsLoading, error: bookingsError } = useProviderBookings();
-  const { data: pendingRequests, loading: pendingLoading, error: pendingError } = useMyPendingRequests();
-  const { data: allRequests, loading: allRequestsLoading } = useMyRequestsAsProvider();
+  const {
+    data: bookings,
+    loading: bookingsLoading,
+    error: bookingsError,
+  } = useProviderBookings();
+  const {
+    data: pendingRequests,
+    loading: pendingLoading,
+    error: pendingError,
+  } = useMyPendingRequests();
+  const { data: allRequests, loading: allRequestsLoading } =
+    useMyRequestsAsProvider();
 
   if (profileLoading) {
     return (
@@ -417,18 +516,16 @@ export default function ProviderDashboardPage() {
   const pendingCount = pendingRequests?.length ?? 0;
   const totalRequests = allRequests?.length ?? 0;
 
-  const recentBookings = bookings?.slice(0, 4) ?? [];
+  const recentBookings = bookings?.slice(0, 5) ?? [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawStatus = (providerProfile as any).status ?? (providerProfile as any).ProviderStatus;
-  const statusCfg = rawStatus ? PROVIDER_STATUS_CFG[String(rawStatus).toLowerCase()] ?? null : null;
+  const statusCfg = rawStatus
+    ? PROVIDER_STATUS_CFG[String(rawStatus).toLowerCase()] ?? null
+    : null;
 
-  const businessName =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (providerProfile as any).businessName ??
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (providerProfile as any).displayName ??
-    "Provider";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const businessName = (providerProfile as any).businessName ?? (providerProfile as any).displayName ?? "Provider";
 
   const initials = businessName
     .split(" ")
@@ -438,58 +535,73 @@ export default function ProviderDashboardPage() {
     .toUpperCase();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="relative shrink-0">
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt={businessName}
-                className="w-12 h-12 rounded-2xl object-cover border border-stone-200 dark:border-stone-700"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border border-stone-200 dark:border-stone-700">
-                <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{initials}</span>
-              </div>
-            )}
-            {statusCfg && (
-              <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-stone-900 ${statusCfg.dot}`} />
-            )}
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">
-              {getGreeting()}
-            </h1>
-            <p className="text-xs text-stone-400 dark:text-stone-500">{businessName}</p>
-          </div>
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className="flex items-start gap-3">
+        {/* Avatar */}
+        <div className="relative shrink-0">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt={businessName}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover border border-stone-200 dark:border-stone-700"
+            />
+          ) : (
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-100 dark:bg-blue-900/30 border border-stone-200 dark:border-stone-700 flex items-center justify-center">
+              <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
+                {initials}
+              </span>
+            </div>
+          )}
+          {statusCfg && (
+            <span
+              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-stone-900 ${statusCfg.dot}`}
+            />
+          )}
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Name + status */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-50 leading-snug">
+                {getGreeting()}
+              </h1>
+              <p className="text-xs text-stone-400 dark:text-stone-500 truncate">
+                {businessName}
+              </p>
+            </div>
+            <Link
+              href="/profile"
+              className="shrink-0 inline-flex items-center gap-1 h-7 px-2.5 rounded-lg border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+            >
+              <ExternalLink size={11} />
+              <span className="hidden sm:inline">Profile</span>
+            </Link>
+          </div>
           {statusCfg && (
-            <span className={`flex items-center gap-1.5 text-xs font-semibold border rounded-full px-2.5 py-1 ${statusCfg.badge}`}>
-              <span className="relative flex h-2 w-2 shrink-0">
+            <span
+              className={`mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold border rounded-full px-2 py-0.5 ${statusCfg.badge}`}
+            >
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
                 {statusCfg.pulse && (
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusCfg.dot}`} />
+                  <span
+                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusCfg.dot}`}
+                  />
                 )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${statusCfg.dot}`} />
+                <span
+                  className={`relative inline-flex rounded-full h-1.5 w-1.5 ${statusCfg.dot}`}
+                />
               </span>
               {statusCfg.label}
             </span>
           )}
-          <Link
-            href="/profile"
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
-          >
-            <ExternalLink size={12} />
-            Profile
-          </Link>
         </div>
       </div>
 
-      {/* Action banner */}
+      {/* ── Action banner ────────────────────────────────────────────────── */}
       {!bookingsLoading && !pendingLoading && (
         <ActionBanner
           pendingCount={pendingCount}
@@ -498,8 +610,8 @@ export default function ProviderDashboardPage() {
         />
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* ── Stats ────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <StatCard
           label="Active Jobs"
           value={activeJobs}
@@ -526,173 +638,131 @@ export default function ProviderDashboardPage() {
         />
       </div>
 
-      {/* Main grid */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        {/* Recent Jobs */}
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5 overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
-                <Briefcase size={14} className="text-stone-500 dark:text-stone-400" />
+      {/* ── Activity panels ──────────────────────────────────────────────── */}
+      <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
+        <SectionCard
+          icon={<Briefcase size={14} className="text-stone-500 dark:text-stone-400" />}
+          title="Recent Jobs"
+          count={bookings?.length}
+          href="/provider/bookings"
+          loading={bookingsLoading}
+          error={bookingsError}
+          empty={
+            recentBookings.length === 0 && !bookingsLoading && !bookingsError ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
+                  <Inbox size={18} className="text-stone-400" />
+                </div>
+                <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+                  No jobs yet
+                </p>
+                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-[180px] leading-relaxed">
+                  Accept a client request to get your first booking
+                </p>
               </div>
-              <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">Recent Jobs</h2>
-              {(bookings?.length ?? 0) > 0 && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400">
-                  {bookings?.length}
-                </span>
-              )}
-            </div>
-            <Link
-              href="/provider/bookings"
-              className="text-[11px] font-semibold text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 flex items-center gap-1 transition-colors"
-            >
-              View all <ChevronRight size={11} />
-            </Link>
-          </div>
-
-          {bookingsLoading && (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 rounded-xl bg-stone-50 dark:bg-stone-800 animate-pulse" />
-              ))}
-            </div>
-          )}
-
-          {bookingsError && !bookingsLoading && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/10 px-3 py-2.5">
-              <AlertCircle size={13} className="text-red-500 shrink-0" />
-              <p className="text-xs text-red-600 dark:text-red-400">{bookingsError}</p>
-            </div>
-          )}
-
-          {!bookingsLoading && !bookingsError && recentBookings.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
-                <Inbox size={18} className="text-stone-400" />
-              </div>
-              <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">No jobs yet</p>
-              <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-48 leading-relaxed">
-                Accept a client request to get your first booking
-              </p>
-            </div>
-          )}
-
-          {!bookingsLoading && !bookingsError && recentBookings.length > 0 && (
+            ) : null
+          }
+        >
+          {recentBookings.length > 0 && (
             <div className="divide-y divide-stone-100 dark:divide-stone-800">
               {recentBookings.map((b) => (
                 <RecentJobRow key={b._id} booking={b} />
               ))}
             </div>
           )}
-        </div>
+        </SectionCard>
 
-        {/* Pending Requests */}
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5 overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-                <Send size={14} className="text-amber-600 dark:text-amber-400" />
+        <SectionCard
+          icon={<Send size={14} className="text-amber-600 dark:text-amber-400" />}
+          title="Pending Requests"
+          count={pendingCount}
+          countBg="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+          href="/provider/requests"
+          loading={pendingLoading}
+          error={pendingError}
+          iconBg="bg-amber-50 dark:bg-amber-900/20"
+          empty={
+            pendingCount === 0 && !pendingLoading && !pendingError ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
+                  <Inbox size={18} className="text-stone-400" />
+                </div>
+                <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+                  No pending requests
+                </p>
+                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-[180px] leading-relaxed">
+                  New client requests will appear here
+                </p>
               </div>
-              <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">Pending Requests</h2>
-              {pendingCount > 0 && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-                  {pendingCount}
-                </span>
-              )}
-            </div>
-            <Link
-              href="/provider/requests"
-              className="text-[11px] font-semibold text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 flex items-center gap-1 transition-colors"
-            >
-              View all <ChevronRight size={11} />
-            </Link>
-          </div>
-
-          {pendingLoading && (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 rounded-xl bg-stone-50 dark:bg-stone-800 animate-pulse" />
-              ))}
-            </div>
-          )}
-
-          {pendingError && !pendingLoading && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/10 px-3 py-2.5">
-              <AlertCircle size={13} className="text-red-500 shrink-0" />
-              <p className="text-xs text-red-600 dark:text-red-400">{pendingError}</p>
-            </div>
-          )}
-
-          {!pendingLoading && !pendingError && (pendingRequests?.length ?? 0) === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
-                <Inbox size={18} className="text-stone-400" />
-              </div>
-              <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">No pending requests</p>
-              <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-48 leading-relaxed">
-                New client requests will appear here
-              </p>
-            </div>
-          )}
-
-          {!pendingLoading && !pendingError && (pendingRequests?.length ?? 0) > 0 && (
+            ) : null
+          }
+        >
+          {(pendingRequests?.length ?? 0) > 0 && (
             <div className="divide-y divide-stone-100 dark:divide-stone-800">
-              {(pendingRequests ?? []).slice(0, 4).map((r) => (
+              {(pendingRequests ?? []).slice(0, 5).map((r) => (
                 <PendingRequestRow key={r._id} req={r} />
               ))}
             </div>
           )}
-        </div>
+        </SectionCard>
       </div>
 
-      {/* Quick actions */}
-      <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
-        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Link
-            href="/provider/requests"
-            className="flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 transition-colors">
-              <Send size={16} className="text-amber-600 dark:text-amber-400" />
-            </div>
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">My Requests</span>
-          </Link>
-
-          <Link
-            href="/provider/bookings"
-            className="flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-900/20 flex items-center justify-center group-hover:bg-sky-100 dark:group-hover:bg-sky-900/40 transition-colors">
-              <Play size={16} className="text-sky-600 dark:text-sky-400" />
-            </div>
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">My Jobs</span>
-          </Link>
-
-          <Link
-            href="/provider/services"
-            className="flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40 transition-colors">
-              <FileCheck size={16} className="text-violet-600 dark:text-violet-400" />
-            </div>
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">My Services</span>
-            {(services?.length ?? 0) > 0 && (
-              <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400">
-                {services?.length} listed
+      {/* ── Quick actions ─────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-4 sm:p-5">
+        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50 mb-3">
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          {[
+            {
+              href: "/provider/requests",
+              bg: "bg-amber-50 dark:bg-amber-900/20 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40",
+              icon: <Send size={15} className="text-amber-600 dark:text-amber-400" />,
+              label: "My Requests",
+              badge: pendingCount > 0 ? pendingCount : undefined,
+            },
+            {
+              href: "/provider/bookings",
+              bg: "bg-sky-50 dark:bg-sky-900/20 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/40",
+              icon: <Play size={15} className="text-sky-600 dark:text-sky-400" />,
+              label: "My Jobs",
+              badge: activeJobs > 0 ? activeJobs : undefined,
+            },
+            {
+              href: "/provider/services",
+              bg: "bg-violet-50 dark:bg-violet-900/20 group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40",
+              icon: <FileCheck size={15} className="text-violet-600 dark:text-violet-400" />,
+              label: "My Services",
+              badge: undefined,
+            },
+            {
+              href: "/profile",
+              bg: "bg-emerald-50 dark:bg-emerald-900/20 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40",
+              icon: <ExternalLink size={15} className="text-emerald-600 dark:text-emerald-400" />,
+              label: "Business Profile",
+              badge: undefined,
+            },
+          ].map((action) => (
+            <Link
+              key={action.href}
+              href={action.href}
+              className="group relative flex flex-col items-center gap-2 py-3 sm:py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
+            >
+              {action.badge != null && (
+                <span className="absolute top-2 right-2 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-1 leading-none">
+                  {action.badge}
+                </span>
+              )}
+              <div
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-colors ${action.bg}`}
+              >
+                {action.icon}
+              </div>
+              <span className="text-[11px] sm:text-xs font-semibold text-stone-700 dark:text-stone-300 text-center leading-tight px-1">
+                {action.label}
               </span>
-            )}
-          </Link>
-
-          <Link
-            href="/profile"
-            className="flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40 transition-colors">
-              <ExternalLink size={16} className="text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Business Profile</span>
-          </Link>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

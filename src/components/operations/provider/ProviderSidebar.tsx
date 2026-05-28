@@ -31,10 +31,8 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import type {
-  PopulatedUserProfile,
-  ProviderProfile,
-} from "@/types/provider.profile.types";
+import type { ProviderProfile } from "@/types/provider.profile.types";
+import { useProfile } from "@/hooks/profiles/useCoreUserProfile";
 import { ProviderStatus } from "@/types/provider.profile.types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -259,12 +257,15 @@ function ProfileCompletion({ profile }: { profile: ProviderProfile }) {
 export function ProviderSidebarSkeleton() {
   return (
     <Card className="overflow-hidden dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-      <div className="h-24 bg-linear-to-br from-zinc-200 to-zinc-300 dark:from-zinc-800 dark:to-zinc-700" />
-      <CardContent className="pt-0 -mt-10 space-y-4">
-        <div className="flex flex-col items-center text-center gap-2">
-          <Skeleton className="w-20 h-20 rounded-2xl ring-4 ring-background" />
-          <Skeleton className="h-5 w-36" />
-          <Skeleton className="h-4 w-24 rounded-full" />
+      <CardContent className="pt-5 space-y-4">
+        <div className="flex flex-col items-center text-center gap-3">
+          <Skeleton className="w-16 h-16 rounded-2xl" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-3 w-20 mx-auto" />
+            <Skeleton className="h-5 w-36 mx-auto" />
+            <Skeleton className="h-3 w-24 mx-auto" />
+          </div>
+          <Skeleton className="h-5 w-24 rounded-full" />
         </div>
         <Separator />
         <div className="space-y-2">
@@ -293,11 +294,8 @@ export interface ProviderSidebarProps {
 
 export function ProviderSidebar({ profile }: ProviderSidebarProps) {
   const st = deriveStatus(profile);
-
-  const contactInfo =
-    typeof profile.profile === "object" && profile.profile !== null
-      ? ((profile.profile as PopulatedUserProfile).contactInfo ?? null)
-      : null;
+  const { profile: userProfile } = useProfile(true);
+  const contactInfo = userProfile?.contactInfo ?? null;
   const serviceCount = profile.serviceOfferings?.length ?? 0;
   const workingDays = profile.isAlwaysAvailable
     ? "24/7"
@@ -305,28 +303,27 @@ export function ProviderSidebar({ profile }: ProviderSidebarProps) {
 
   return (
     <Card className="overflow-hidden bg-white/10 dark:bg-zinc-900/10 backdrop-blur-2xl shadow-lg border border-white/20 dark:border-white/10 sticky top-6">
-      <CardContent className="pt-0 pb-5 backdrop-blur-2xl">
+      <CardContent className="pt-5 pb-5 backdrop-blur-2xl">
         {/* ── Avatar + identity ────────────────────────────────────────── */}
-        <div className=" mb-3 flex flex-col items-center text-center gap-2">
-          {/* ── Page heading ─────────────────────────────────────────────── */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-black tracking-widest text-emerald-600 dark:text-emerald-400 uppercase mb-1.5">
-                {profile.businessName}&apos;s Business Profile
-              </p>
-              <h1 className="text-2xl font-black text-foreground leading-tight">
-                {profile?.businessName ?? "Your Business"}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Member since{" "}
-                {new Date(profile.createdAt).toLocaleDateString(undefined, {
-                  month: "short",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
+        <div className="mb-4 flex flex-col items-center text-center gap-3">
+          <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xl font-black ring-4 ring-background shrink-0">
+            {businessInitials(profile.businessName)}
           </div>
-
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+              Business Profile
+            </p>
+            <h2 className="text-lg font-bold text-foreground mt-0.5 leading-tight">
+              {profile.businessName ?? "Your Business"}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Member since{" "}
+              {new Date(profile.createdAt).toLocaleDateString(undefined, {
+                month: "short",
+                year: "numeric",
+              })}
+            </p>
+          </div>
           <Badge
             variant={st.variant}
             className={`text-xs gap-1 ${

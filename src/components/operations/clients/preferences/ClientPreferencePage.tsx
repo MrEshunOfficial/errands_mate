@@ -28,6 +28,7 @@ import {
   Lock,
   Eye,
   EyeOff,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -64,10 +65,12 @@ import {
   LABEL_CONFIG,
 } from "./ClientAddressForm";
 import type { AddressFormValues } from "./ClientAddressForm";
+import ClientProfileTab from "./ClientProfileTab";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Tab =
+  | "profile"
   | "addresses"
   | "services"
   | "providers"
@@ -81,6 +84,10 @@ type Tab =
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TAB_META: Record<Tab, { title: string; description: string }> = {
+  profile: {
+    title: "My Profile",
+    description: "Update your profile picture and contact information.",
+  },
   addresses: {
     title: "Saved Addresses",
     description: "Your default address is pre-filled when posting a task.",
@@ -836,7 +843,7 @@ export default function ClientPreferencePage() {
   const locations = Array.isArray(rawLocations) ? rawLocations : [];
 
   // ── Tab state ─────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<Tab>("addresses");
+  const [activeTab, setActiveTab] = useState<Tab>("profile");
 
   // ── Add new address popover ────────────────────────────────────────────────
   const [newAddressOpen, setNewAddressOpen] = useState(false);
@@ -1192,6 +1199,7 @@ export default function ClientPreferencePage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 lg:py-8">
           {/* Mobile horizontal tab strip */}
           <div className="flex lg:hidden gap-1 overflow-x-auto pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 scrollbar-none">
+            <TabButton compact active={activeTab === "profile"} onClick={() => setActiveTab("profile")} icon={User} label="Profile" />
             <TabButton compact active={activeTab === "addresses"} onClick={() => setActiveTab("addresses")} icon={MapPin} label="Addresses" count={locations.length} />
             <TabButton compact active={activeTab === "services"} onClick={() => setActiveTab("services")} icon={Tag} label="Services" count={favoriteServices.length} />
             <TabButton compact active={activeTab === "providers"} onClick={() => setActiveTab("providers")} icon={Users} label="Providers" count={favoriteProviders.length} />
@@ -1207,6 +1215,7 @@ export default function ClientPreferencePage() {
             {/* Desktop sidebar */}
             <aside className="hidden lg:block w-52 shrink-0 bg-white dark:bg-zinc-900 rounded-2xl border border-border p-2 sticky top-4">
               <nav className="flex flex-col gap-0.5">
+                <TabButton active={activeTab === "profile"} onClick={() => setActiveTab("profile")} icon={User} label="Profile" />
                 <TabButton active={activeTab === "addresses"} onClick={() => setActiveTab("addresses")} icon={MapPin} label="Addresses" count={locations.length} />
                 <TabButton active={activeTab === "services"} onClick={() => setActiveTab("services")} icon={Tag} label="Services" count={favoriteServices.length} />
                 <TabButton active={activeTab === "providers"} onClick={() => setActiveTab("providers")} icon={Users} label="Providers" count={favoriteProviders.length} />
@@ -1234,6 +1243,9 @@ export default function ClientPreferencePage() {
 
               {/* Panel content */}
               <div className="px-4 sm:px-6 py-4 sm:py-6">
+
+                {/* ══ Profile ═════════════════════════════════════════════════ */}
+                {activeTab === "profile" && <ClientProfileTab />}
 
                 {/* ══ Addresses ══════════════════════════════════════════════ */}
                 {activeTab === "addresses" && (

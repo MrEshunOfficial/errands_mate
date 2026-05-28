@@ -1,5 +1,5 @@
 "use client";
-import ProviderSettings from "@/components/operations/provider/ProviderSettings";
+import ProviderProfile from "@/components/operations/provider/ProviderProfile";
 import { EmptyState } from "@/components/ui/EmptyState";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { useProfile } from "@/hooks/profiles/useCoreUserProfile";
@@ -30,19 +30,14 @@ export default function Page() {
     );
   }
 
-  if (profile.role === UserRole.PROVIDER) {
-    return (
-      <main className="w-full h-full overflow-auto hide-scrollbar">
-        <ProviderSettings />
-      </main>
-    );
+  if (profile.role !== UserRole.PROVIDER) {
+    router.replace("/client/preferences");
+    return null;
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="w-1/2 h-1/2 flex items-center justify-center shadow-md border-dashed rounded-md text-muted-foreground">
-        client dashboard component here
-      </div>
-    </div>
+    <main className="w-full h-full overflow-auto hide-scrollbar">
+      <ProviderProfile />
+    </main>
   );
 }

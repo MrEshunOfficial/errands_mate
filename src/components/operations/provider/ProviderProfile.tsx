@@ -13,14 +13,14 @@
  * All header / sidebar content now lives in <ProviderSidebar />.
  */
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect } from "react";
 import {
   Building2,
   CheckCircle2,
-  XCircle,
   Pencil,
   Loader2,
   AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 
 import {
@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -41,9 +40,19 @@ import type {
   ProviderProfile,
   UpdateBusinessNameBody,
 } from "@/types/provider.profile.types";
+import type { IFile } from "@/types/files.types";
 
 import { useProviderProfileManager } from "@/hooks/profiles/useProviderProfile";
+import { useProfile } from "@/hooks/profiles/useCoreUserProfile";
+import {
+  FieldLabel,
+  ReadValue,
+  SectionIcon,
+  InlineFeedback,
+  type InlineFeedbackProps,
+} from "@/components/operations/profile/shared";
 import { LocationCard } from "./LocationCard";
+import { IdImageUploader } from "@/components/files/user-profile/IdImageUploader";
 import { AvailabilityCard } from "./AvailabilityCard";
 import { ProviderSidebar, ProviderSidebarSkeleton } from "./ProviderSidebar";
 import { ServicesCard } from "./ServicesCard";
@@ -115,89 +124,6 @@ function CompletionBanner({ profile }: { profile: ProviderProfile }) {
       </div>
     </div>
   );
-}
-
-// ─── Shared primitives ────────────────────────────────────────────────────────
-
-function FieldLabel({ children }: { children: ReactNode }) {
-  return (
-    <Label className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">
-      {children}
-    </Label>
-  );
-}
-
-function ReadValue({
-  label,
-  value,
-  empty = "Not set",
-}: {
-  label: string;
-  value?: string | null;
-  empty?: string;
-}) {
-  return (
-    <div className="space-y-0.5">
-      <p className="text-xs text-muted-foreground font-medium">{label}</p>
-      <p
-        className={
-          value
-            ? "text-sm font-semibold text-foreground"
-            : "text-sm italic text-muted-foreground/60"
-        }>
-        {value || empty}
-      </p>
-    </div>
-  );
-}
-
-function SectionIcon({
-  icon: Icon,
-  className,
-}: {
-  icon: React.ElementType;
-  className?: string;
-}) {
-  return (
-    <span
-      className={`inline-flex items-center justify-center w-9 h-9 rounded-xl shrink-0 ${className}`}>
-      <Icon size={16} />
-    </span>
-  );
-}
-
-interface InlineFeedbackProps {
-  loading: boolean;
-  error: string | null;
-  success: boolean;
-  successMsg?: string;
-}
-
-function InlineFeedback({
-  loading,
-  error,
-  success,
-  successMsg = "Saved",
-}: InlineFeedbackProps) {
-  if (loading)
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Loader2 size={12} className="animate-spin" /> Saving…
-      </span>
-    );
-  if (error)
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-destructive">
-        <XCircle size={12} /> {error}
-      </span>
-    );
-  if (success)
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-        <CheckCircle2 size={12} /> {successMsg}
-      </span>
-    );
-  return null;
 }
 
 // ─── Business Identity Card ───────────────────────────────────────────────────
@@ -307,6 +233,161 @@ function BusinessIdentityCard({
   );
 }
 
+// ─── Identity Card ────────────────────────────────────────────────────────────
+
+function IdentityCard() {
+  const {
+    profile: userProfile,
+    loading: uLoading,
+    errors: uErrors,
+    fetchProfile,
+    updateIdDetails,
+  } = useProfile(false);
+
+  const [editing, setEditing] = useState(false);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardSuccess, setCardSuccess] = useState(false);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    if (!editing) {
+      setCardNumber(userProfile?.idDetails?.ghana_card_number ?? "");
+    }
+  }, [userProfile?.idDetails?.ghana_card_number, editing]);
+
+  const hasData =
+    !!userProfile?.idDetails?.ghana_card_number ||
+    (userProfile?.idDetails?.ghana_card_image?.length ?? 0) > 0;
+  const imageCount = userProfile?.idDetails?.ghana_card_image?.length ?? 0;
+
+  const openEdit = () => {
+    setCardNumber(userProfile?.idDetails?.ghana_card_number ?? "");
+    setEditing(true);
+  };
+
+  const saveCardNumber = async () => {
+    await updateIdDetails({ ghana_card_number: cardNumber.trim() });
+    setCardSuccess(true);
+    setTimeout(() => setCardSuccess(false), 3000);
+    setEditing(false);
+  };
+
+  const handleImagesUploaded = async (files: IFile[]) => {
+    const existingIds = (
+      userProfile?.idDetails?.ghana_card_image ?? []
+    ) as string[];
+    await updateIdDetails({
+      ghana_card_image: [
+        ...existingIds,
+        ...files.map((f) => String(f._id)),
+      ],
+    });
+    await fetchProfile();
+  };
+
+  const isProfileLoading = uLoading.profile || uLoading.exists;
+
+  return (
+    <Card className="dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <SectionIcon
+              icon={ShieldCheck}
+              className="bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-900"
+            />
+            <div>
+              <CardTitle className="text-base">Identity Verification</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                Your Ghana Card details for verification
+              </CardDescription>
+            </div>
+          </div>
+          {!editing && !isProfileLoading && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1.5 shrink-0"
+              onClick={openEdit}>
+              <Pencil size={12} />
+              {hasData ? "Edit" : "Add"}
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        {isProfileLoading ? (
+          <div className="space-y-2.5">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        ) : editing ? (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <FieldLabel>Ghana Card Number</FieldLabel>
+              <Input
+                value={cardNumber}
+                onChange={(e) => setCardNumber(e.target.value)}
+                placeholder="e.g. GHA-123456789-0"
+                className="dark:bg-zinc-800 dark:border-zinc-700"
+              />
+            </div>
+            <div className="space-y-2">
+              <FieldLabel>Card Images</FieldLabel>
+              <IdImageUploader onUploadSuccess={handleImagesUploaded} />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <ReadValue
+              label="Ghana Card Number"
+              value={userProfile?.idDetails?.ghana_card_number}
+            />
+            <ReadValue
+              label="Card Images"
+              value={
+                imageCount > 0
+                  ? `${imageCount} image${imageCount !== 1 ? "s" : ""} uploaded`
+                  : null
+              }
+            />
+          </div>
+        )}
+      </CardContent>
+
+      {editing && (
+        <CardFooter className="flex justify-between gap-3 pt-0 border-t border-zinc-100 dark:border-zinc-800 mt-2">
+          <InlineFeedback
+            loading={uLoading.updatingIdDetails}
+            error={uErrors.mutation}
+            success={cardSuccess}
+            successMsg="Details updated"
+          />
+          <div className="flex gap-2 ml-auto">
+            <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={uLoading.updatingIdDetails}
+              onClick={saveCardNumber}
+              className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white">
+              {uLoading.updatingIdDetails ? (
+                <Loader2 size={13} className="animate-spin mr-1.5" />
+              ) : null}
+              Save
+            </Button>
+          </div>
+        </CardFooter>
+      )}
+    </Card>
+  );
+}
+
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
 function SettingsSkeleton() {
@@ -337,7 +418,7 @@ function SettingsSkeleton() {
 
 // ─── Root Component ───────────────────────────────────────────────────────────
 
-export default function ProviderSettings() {
+export default function ProviderProfile() {
   const {
     profile,
     loading,
@@ -355,10 +436,6 @@ export default function ProviderSettings() {
     updateWorkingHours,
     updateWorkingHoursState,
   } = useProviderProfileManager();
-
-  console.log("ProviderSettings render", {
-    profile,
-  });
 
   const router = useRouter();
   const { mutateAsync: archiveServiceAsync } = useDeleteService();
@@ -411,6 +488,8 @@ export default function ProviderSettings() {
                   updateBusinessName={updateBusinessName}
                   updateBusinessNameState={updateBusinessNameState}
                 />
+
+                <IdentityCard />
 
                 {/* Services — new card */}
                 <ServicesCard

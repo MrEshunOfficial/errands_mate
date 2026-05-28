@@ -21,7 +21,6 @@ import { UserRole } from "@/types/base.types";
 // =============================================================================
 
 export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
-  // Client: single top-level dashboard link — no dedicated profile page
   {
     id: "client-dashboard",
     label: "Dashboard",

@@ -52,7 +52,7 @@ function shortId(id: string): string {
   return id.slice(-6).toUpperCase();
 }
 
-// ─── Booking status config ────────────────────────────────────────────────────
+// ─── Status configs ───────────────────────────────────────────────────────────
 
 const BOOKING_STATUS_CFG: Record<
   BookingStatus,
@@ -73,7 +73,7 @@ const BOOKING_STATUS_CFG: Record<
     accent: "from-sky-400 to-blue-400",
   },
   [BookingStatus.AWAITING_VALIDATION]: {
-    label: "Awaiting Your Review",
+    label: "Awaiting Review",
     icon: <Clock size={11} />,
     classes: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50",
     dot: "bg-amber-500 animate-pulse",
@@ -112,8 +112,6 @@ const BOOKING_STATUS_CFG: Record<
     dot: "bg-stone-300 dark:bg-stone-600",
   },
 };
-
-// ─── Request status config ────────────────────────────────────────────────────
 
 const REQUEST_STATUS_CFG: Record<
   RequestStatus,
@@ -168,9 +166,8 @@ const REQUEST_STATUS_CFG: Record<
 function BookingStatusBadge({ status }: { status: BookingStatus }) {
   const cfg = BOOKING_STATUS_CFG[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${cfg.classes}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.icon}
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>
   );
@@ -179,9 +176,8 @@ function BookingStatusBadge({ status }: { status: BookingStatus }) {
 function RequestStatusBadge({ status }: { status: RequestStatus }) {
   const cfg = REQUEST_STATUS_CFG[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${cfg.classes}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.icon}
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>
   );
@@ -199,14 +195,16 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-4">
-      <div className={`w-1.5 h-5 rounded-full ${accent} mb-3`} />
+    <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-4 min-w-0">
+      <div className={`w-1 h-4 rounded-full ${accent} mb-2`} />
       {loading ? (
-        <div className="h-8 w-12 rounded-lg bg-stone-100 dark:bg-stone-800 animate-pulse mb-1" />
+        <div className="h-6 w-8 rounded bg-stone-100 dark:bg-stone-800 animate-pulse mb-1" />
       ) : (
-        <p className="text-3xl font-bold text-stone-900 dark:text-stone-50">{value}</p>
+        <p className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-50 tabular-nums leading-none">
+          {value}
+        </p>
       )}
-      <p className="text-xs text-stone-400 dark:text-stone-500 mt-0.5">{label}</p>
+      <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1 leading-tight">{label}</p>
     </div>
   );
 }
@@ -216,33 +214,36 @@ function RecentBookingRow({ booking }: { booking: Booking }) {
   return (
     <Link
       href={`/bookings/${booking._id}`}
-      className="group flex items-center gap-3 py-3 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+      className="group flex items-center gap-2.5 py-2.5 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
     >
-      {cfg.accent && (
+      {cfg.accent ? (
         <span className={`w-1 h-8 rounded-full bg-linear-to-b ${cfg.accent} shrink-0`} />
-      )}
-      {!cfg.accent && (
+      ) : (
         <span className={`w-1 h-8 rounded-full ${cfg.dot} shrink-0`} />
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate">
+        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate leading-snug">
           {booking.serviceDescription || `Booking #${shortId(booking._id)}`}
         </p>
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
+        <div className="flex items-center gap-2 mt-0.5">
           <BookingStatusBadge status={booking.status} />
-          <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
+          <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
             <CalendarDays size={9} />
             {fmtDate(booking.scheduledDate)}
           </span>
           {(booking.finalPrice ?? booking.estimatedPrice) !== undefined && (
-            <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
+            <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
               <DollarSign size={9} />
-              {booking.currency} {(booking.finalPrice ?? booking.estimatedPrice)!.toLocaleString()}
+              {booking.currency}{" "}
+              {(booking.finalPrice ?? booking.estimatedPrice)!.toLocaleString()}
             </span>
           )}
         </div>
       </div>
-      <ChevronRight size={14} className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0" />
+      <ChevronRight
+        size={14}
+        className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0"
+      />
     </Link>
   );
 }
@@ -251,28 +252,33 @@ function RecentRequestRow({ req }: { req: ProviderRequest }) {
   return (
     <Link
       href={`/requests/${req._id}`}
-      className="group flex items-center gap-3 py-3 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+      className="group flex items-center gap-2.5 py-2.5 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
     >
-      <span className={`w-1 h-8 rounded-full ${REQUEST_STATUS_CFG[req.status].dot} shrink-0`} />
+      <span
+        className={`w-1 h-8 rounded-full ${REQUEST_STATUS_CFG[req.status].dot} shrink-0`}
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate">
+        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate leading-snug">
           {req.clientMessage || req.taskTitle || `Request #${shortId(req._id)}`}
         </p>
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-0.5">
+        <div className="flex items-center gap-2 mt-0.5">
           <RequestStatusBadge status={req.status} />
-          <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
+          <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
             <CalendarDays size={9} />
             {fmtDate(req.schedule?.preferredDate)}
           </span>
           {req.serviceLocation?.ghanaPostGPS && (
-            <span className="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
+            <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
               <MapPin size={9} />
               {req.serviceLocation.ghanaPostGPS}
             </span>
           )}
         </div>
       </div>
-      <ChevronRight size={14} className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0" />
+      <ChevronRight
+        size={14}
+        className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0"
+      />
     </Link>
   );
 }
@@ -286,19 +292,26 @@ function AlertBanner({
 }) {
   if (bookingsNeedReview === 0 && reschedulePending === 0) return null;
   return (
-    <div className="rounded-2xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 flex items-start gap-3">
-      <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+    <div className="rounded-xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 px-3 sm:px-4 py-3 flex items-start gap-3">
+      <AlertTriangle
+        size={15}
+        className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Action required</p>
+        <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+          Action required
+        </p>
         <ul className="mt-1 space-y-0.5">
           {bookingsNeedReview > 0 && (
             <li className="text-xs text-amber-700 dark:text-amber-400">
-              {bookingsNeedReview} booking{bookingsNeedReview > 1 ? "s need" : " needs"} your review — provider submitted proof
+              {bookingsNeedReview} booking
+              {bookingsNeedReview > 1 ? "s need" : " needs"} your review
             </li>
           )}
           {reschedulePending > 0 && (
             <li className="text-xs text-amber-700 dark:text-amber-400">
-              {reschedulePending} reschedule proposal{reschedulePending > 1 ? "s" : ""} waiting for your response
+              {reschedulePending} reschedule proposal
+              {reschedulePending > 1 ? "s" : ""} awaiting response
             </li>
           )}
         </ul>
@@ -309,6 +322,79 @@ function AlertBanner({
       >
         View <ArrowRight size={11} />
       </Link>
+    </div>
+  );
+}
+
+function SectionCard({
+  icon,
+  title,
+  count,
+  href,
+  loading,
+  error,
+  empty,
+  children,
+  iconBg = "bg-stone-100 dark:bg-stone-800",
+  iconColor = "text-stone-500 dark:text-stone-400",
+}: {
+  icon: React.ReactNode;
+  title: string;
+  count?: number;
+  href: string;
+  loading: boolean;
+  error?: string | null;
+  empty: React.ReactNode;
+  children: React.ReactNode;
+  iconBg?: string;
+  iconColor?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <div
+            className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}
+          >
+            <span className={iconColor}>{icon}</span>
+          </div>
+          <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50 truncate">
+            {title}
+          </h2>
+          {count != null && count > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 shrink-0">
+              {count}
+            </span>
+          )}
+        </div>
+        <Link
+          href={href}
+          className="text-[11px] font-semibold text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 flex items-center gap-0.5 transition-colors shrink-0 ml-2"
+        >
+          All <ChevronRight size={11} />
+        </Link>
+      </div>
+
+      {loading && (
+        <div className="space-y-2.5">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-11 rounded-lg bg-stone-50 dark:bg-stone-800 animate-pulse"
+            />
+          ))}
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/10 px-3 py-2.5">
+          <AlertCircle size={13} className="text-red-500 shrink-0" />
+          <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && empty}
+      {!loading && !error && children}
     </div>
   );
 }
@@ -333,32 +419,31 @@ export default function ClientDashboardPage() {
 
   const isLoading = bookingsLoading || requestsLoading;
 
-  // Computed stats
-  // (profile used for future personalization; currently only loaded to warm cache)
   const totalBookings = bookings?.length ?? 0;
   const activeBookings =
     bookings?.filter((b) =>
       [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS].includes(b.status),
     ).length ?? 0;
   const awaitingReview =
-    bookings?.filter((b) => b.status === BookingStatus.AWAITING_VALIDATION).length ?? 0;
+    bookings?.filter((b) => b.status === BookingStatus.AWAITING_VALIDATION)
+      .length ?? 0;
   const pendingRequests =
     requests?.filter((r) => r.status === RequestStatus.PENDING).length ?? 0;
   const completedBookings =
     bookings?.filter((b) => b.status === BookingStatus.COMPLETED).length ?? 0;
-
   const reschedulePending =
     requests?.filter((r) => r.status === RequestStatus.RESCHEDULED).length ?? 0;
 
-  const recentBookings = bookings?.slice(0, 4) ?? [];
-  const recentRequests = requests?.slice(0, 4) ?? [];
+  const recentBookings = bookings?.slice(0, 5) ?? [];
+  const recentRequests = requests?.slice(0, 5) ?? [];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">
+          <h1 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-50">
             {getGreeting()}
           </h1>
           <p className="text-xs text-stone-400 dark:text-stone-500 mt-0.5">
@@ -367,14 +452,14 @@ export default function ClientDashboardPage() {
         </div>
         <Link
           href="/providers"
-          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-stone-900 dark:bg-stone-50 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-700 dark:hover:bg-stone-200 transition-colors"
+          className="shrink-0 inline-flex items-center gap-1.5 h-8 sm:h-9 px-3 sm:px-4 rounded-xl bg-stone-900 dark:bg-stone-50 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-700 dark:hover:bg-stone-200 transition-colors"
         >
           <Search size={13} />
-          Find a provider
+          <span className="hidden sm:inline">Find a provider</span>
         </Link>
       </div>
 
-      {/* Action banner */}
+      {/* ── Action banner ────────────────────────────────────────────────── */}
       {!isLoading && (
         <AlertBanner
           bookingsNeedReview={awaitingReview}
@@ -382,8 +467,8 @@ export default function ClientDashboardPage() {
         />
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* ── Stats ────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <StatCard
           label="Active Bookings"
           value={activeBookings}
@@ -410,168 +495,120 @@ export default function ClientDashboardPage() {
         />
       </div>
 
-      {/* Main grid */}
-      <div className="grid md:grid-cols-2 gap-5">
-        {/* Recent Bookings */}
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
-                <BookOpen size={14} className="text-stone-500 dark:text-stone-400" />
+      {/* ── Activity panels ──────────────────────────────────────────────── */}
+      <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
+        <SectionCard
+          icon={<BookOpen size={14} />}
+          title="Recent Bookings"
+          count={totalBookings}
+          href="/my-bookings"
+          loading={bookingsLoading}
+          error={bookingsError}
+          empty={
+            recentBookings.length === 0 && !bookingsLoading && !bookingsError ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
+                  <Inbox size={18} className="text-stone-400" />
+                </div>
+                <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+                  No bookings yet
+                </p>
+                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-[180px] leading-relaxed">
+                  Find a provider and send a request to get started
+                </p>
               </div>
-              <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">Recent Bookings</h2>
-              {totalBookings > 0 && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400">
-                  {totalBookings}
-                </span>
-              )}
-            </div>
-            <Link
-              href="/my-bookings"
-              className="text-[11px] font-semibold text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 flex items-center gap-1 transition-colors"
-            >
-              View all <ChevronRight size={11} />
-            </Link>
-          </div>
-
-          {bookingsLoading && (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 rounded-xl bg-stone-50 dark:bg-stone-800 animate-pulse" />
-              ))}
-            </div>
-          )}
-
-          {bookingsError && !bookingsLoading && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/10 px-3 py-2.5">
-              <AlertCircle size={13} className="text-red-500 shrink-0" />
-              <p className="text-xs text-red-600 dark:text-red-400">{bookingsError}</p>
-            </div>
-          )}
-
-          {!bookingsLoading && !bookingsError && recentBookings.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
-                <Inbox size={18} className="text-stone-400" />
-              </div>
-              <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">No bookings yet</p>
-              <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-48 leading-relaxed">
-                Find a provider and send a request to get started
-              </p>
-            </div>
-          )}
-
-          {!bookingsLoading && !bookingsError && recentBookings.length > 0 && (
+            ) : null
+          }
+        >
+          {recentBookings.length > 0 && (
             <div className="divide-y divide-stone-100 dark:divide-stone-800">
               {recentBookings.map((b) => (
                 <RecentBookingRow key={b._id} booking={b} />
               ))}
             </div>
           )}
-        </div>
+        </SectionCard>
 
-        {/* Recent Requests */}
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
-                <Send size={14} className="text-stone-500 dark:text-stone-400" />
+        <SectionCard
+          icon={<Send size={14} />}
+          title="Recent Requests"
+          count={requests?.length}
+          href="/my-requests"
+          loading={requestsLoading}
+          error={requestsError}
+          empty={
+            recentRequests.length === 0 && !requestsLoading && !requestsError ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
+                  <Inbox size={18} className="text-stone-400" />
+                </div>
+                <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+                  No requests sent
+                </p>
+                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-[180px] leading-relaxed">
+                  Browse providers and send a service request
+                </p>
               </div>
-              <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50">Recent Requests</h2>
-              {(requests?.length ?? 0) > 0 && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400">
-                  {requests?.length}
-                </span>
-              )}
-            </div>
-            <Link
-              href="/my-requests"
-              className="text-[11px] font-semibold text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 flex items-center gap-1 transition-colors"
-            >
-              View all <ChevronRight size={11} />
-            </Link>
-          </div>
-
-          {requestsLoading && (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 rounded-xl bg-stone-50 dark:bg-stone-800 animate-pulse" />
-              ))}
-            </div>
-          )}
-
-          {requestsError && !requestsLoading && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/10 px-3 py-2.5">
-              <AlertCircle size={13} className="text-red-500 shrink-0" />
-              <p className="text-xs text-red-600 dark:text-red-400">{requestsError}</p>
-            </div>
-          )}
-
-          {!requestsLoading && !requestsError && recentRequests.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
-                <Inbox size={18} className="text-stone-400" />
-              </div>
-              <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">No requests sent</p>
-              <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-48 leading-relaxed">
-                Browse providers and send a service request
-              </p>
-            </div>
-          )}
-
-          {!requestsLoading && !requestsError && recentRequests.length > 0 && (
+            ) : null
+          }
+        >
+          {recentRequests.length > 0 && (
             <div className="divide-y divide-stone-100 dark:divide-stone-800">
               {recentRequests.map((r) => (
                 <RecentRequestRow key={r._id} req={r} />
               ))}
             </div>
           )}
-        </div>
+        </SectionCard>
       </div>
 
-      {/* Quick actions */}
-      <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
-        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Link
-            href="/providers"
-            className="flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
-              <Search size={16} className="text-blue-600 dark:text-blue-400" />
-            </div>
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Find Provider</span>
-          </Link>
-
-          <Link
-            href="/services"
-            className="flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40 transition-colors">
-              <PlusCircle size={16} className="text-violet-600 dark:text-violet-400" />
-            </div>
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Browse Services</span>
-          </Link>
-
-          <Link
-            href="/my-bookings"
-            className="flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40 transition-colors">
-              <BookOpen size={16} className="text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">My Bookings</span>
-          </Link>
-
-          <Link
-            href="/my-requests"
-            className="flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 transition-colors">
-              <Send size={16} className="text-amber-600 dark:text-amber-400" />
-            </div>
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">My Requests</span>
-          </Link>
+      {/* ── Quick actions ─────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-4 sm:p-5">
+        <h2 className="text-sm font-bold text-stone-900 dark:text-stone-50 mb-3">
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          {[
+            {
+              href: "/providers",
+              bg: "bg-blue-50 dark:bg-blue-900/20 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40",
+              icon: <Search size={15} className="text-blue-600 dark:text-blue-400" />,
+              label: "Find Provider",
+            },
+            {
+              href: "/services",
+              bg: "bg-violet-50 dark:bg-violet-900/20 group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40",
+              icon: <PlusCircle size={15} className="text-violet-600 dark:text-violet-400" />,
+              label: "Browse Services",
+            },
+            {
+              href: "/my-bookings",
+              bg: "bg-emerald-50 dark:bg-emerald-900/20 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40",
+              icon: <BookOpen size={15} className="text-emerald-600 dark:text-emerald-400" />,
+              label: "My Bookings",
+            },
+            {
+              href: "/my-requests",
+              bg: "bg-amber-50 dark:bg-amber-900/20 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40",
+              icon: <Send size={15} className="text-amber-600 dark:text-amber-400" />,
+              label: "My Requests",
+            },
+          ].map((action) => (
+            <Link
+              key={action.href}
+              href={action.href}
+              className="group flex flex-col items-center gap-2 py-3 sm:py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
+            >
+              <div
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-colors ${action.bg}`}
+              >
+                {action.icon}
+              </div>
+              <span className="text-[11px] sm:text-xs font-semibold text-stone-700 dark:text-stone-300 text-center leading-tight px-1">
+                {action.label}
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </div>
