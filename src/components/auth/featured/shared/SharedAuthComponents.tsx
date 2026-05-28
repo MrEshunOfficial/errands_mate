@@ -8,10 +8,11 @@ import { TermsAndPrivacy } from "../TermsandConditions";
 import CredentialsLogin from "../CredentialsLogin";
 import CredentialsRegister from "../CredentialsRegister";
 import { GoogleSignIn } from "@/components/auth/GoogleSignInButton";
+import { FacebookSignIn } from "@/components/auth/FacebookSignInButton";
 import { saveAuthToken } from "@/lib/auth/token";
 
 // types/auth.ts
-export type AuthMethod = "google" | "email";
+export type AuthMethod = "social" | "email";
 export type AuthMode = "login" | "register";
 
 // Auth Method Toggle Component
@@ -34,10 +35,10 @@ export function AuthMethodToggle({
   return (
     <div className="flex space-x-2 mb-4 lg:mb-6">
       <Button
-        variant={authMethod === "google" ? "default" : "outline"}
-        className={buttonClasses(authMethod === "google")}
-        onClick={() => onMethodChange("google")}>
-        Google
+        variant={authMethod === "social" ? "default" : "outline"}
+        className={buttonClasses(authMethod === "social")}
+        onClick={() => onMethodChange("social")}>
+        Social
       </Button>
       <Button
         variant={authMethod === "email" ? "default" : "outline"}
@@ -76,13 +77,27 @@ export function AuthLink({ mode }: AuthLinkProps) {
   );
 }
 
-// Google Auth Button Component
-interface GoogleAuthButtonProps {
+// Social Auth Section — Google + Facebook stacked
+interface SocialAuthSectionProps {
   mode: AuthMode;
 }
 
-export function GoogleAuthButton({ mode }: GoogleAuthButtonProps) {
-  return <GoogleSignIn mode={mode} />;
+export function SocialAuthSection({ mode }: SocialAuthSectionProps) {
+  return (
+    <div className="space-y-6 p-3 lg:p-4">
+      <div className="space-y-3">
+        <GoogleSignIn mode={mode} />
+        <div className="relative flex items-center">
+          <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
+          <span className="mx-3 text-xs text-gray-400 dark:text-gray-500">or</span>
+          <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
+        </div>
+        <FacebookSignIn mode={mode} />
+      </div>
+      <AuthLink mode={mode} />
+      <TermsAndPrivacy />
+    </div>
+  );
 }
 
 // Auth Header Components
@@ -134,21 +149,6 @@ export function AuthHeader({ mode }: AuthHeaderProps) {
   return mode === "login" ? <LoginHeader /> : <RegisterHeader />;
 }
 
-// Auth Section Components
-interface GoogleAuthSectionProps {
-  mode: AuthMode;
-}
-
-export function GoogleAuthSection({ mode }: GoogleAuthSectionProps) {
-  return (
-    <div className="space-y-6 p-3 lg:p-4">
-      <GoogleAuthButton mode={mode} />
-      <AuthLink mode={mode} />
-      <TermsAndPrivacy />
-    </div>
-  );
-}
-
 interface EmailAuthSectionProps {
   mode: AuthMode;
 }
@@ -186,7 +186,7 @@ interface BaseAuthFormProps {
 
 export function BaseAuthForm({
   mode,
-  defaultMethod = "email",
+  defaultMethod = "social",
 }: BaseAuthFormProps): JSX.Element {
   const [authMethod, setAuthMethod] = useState<AuthMethod>(defaultMethod);
   const searchParams = useSearchParams();
@@ -216,8 +216,8 @@ export function BaseAuthForm({
         authMethod={authMethod}
         onMethodChange={setAuthMethod}
       />
-      {authMethod === "google" ? (
-        <GoogleAuthSection mode={mode} />
+      {authMethod === "social" ? (
+        <SocialAuthSection mode={mode} />
       ) : (
         <EmailAuthSection mode={mode} />
       )}

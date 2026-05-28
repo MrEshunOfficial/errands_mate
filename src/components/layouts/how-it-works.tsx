@@ -247,7 +247,7 @@ const ClientGuide: React.FC = () => {
       subtitle: "Sign up and complete your client profile",
       icon: <UserCheck className="w-4 h-4" />,
       details: [
-        "Register via email or connect with Google, Apple, GitHub, or Facebook",
+        "Register via email or connect with Google or Facebook",
         "Add your GhanaPost GPS address and an optional nearby landmark for accurate location matching",
         "Save multiple service addresses and designate a default",
         "Verify your email and mobile number to unlock full platform access",
@@ -410,7 +410,7 @@ const ProviderGuide: React.FC = () => {
       subtitle: "Set up your professional provider presence",
       icon: <ScanLine className="w-4 h-4" />,
       details: [
-        "Sign up via email or connect with Google, Apple, GitHub, or Facebook",
+        "Sign up via email or connect with Google or Facebook",
         "Create your Provider Profile: business name, service offerings, and GhanaPost GPS service area",
         "Submit your Ghana Card — enter your card number and upload clear photos of both sides for identity verification",
         "Configure working hours per day of the week — or mark yourself always available",

@@ -13,7 +13,6 @@ import { useAuth } from "@/hooks/auth/useAuth";
 import type {
   LinkProviderData,
   GoogleAuthData,
-  AppleAuthData,
 } from "@/lib/api/auth/oauth.api";
 import {
   X,
@@ -54,8 +53,6 @@ const OAUTH_PROVIDERS: {
   icon: string;
 }[] = [
   { provider: AuthProvider.GOOGLE, label: "Google", icon: "G" },
-  { provider: AuthProvider.APPLE, label: "Apple", icon: "" },
-  { provider: AuthProvider.GITHUB, label: "GitHub", icon: "" },
   { provider: AuthProvider.FACEBOOK, label: "Facebook", icon: "f" },
 ];
 
@@ -168,7 +165,6 @@ export function UserDetailsModal({
     isLoading: oauthLoading,
     error: oauthError,
     googleAuth,
-    appleAuth,
     linkProvider,
     clearError: clearOAuthError,
   } = useOAuth();
@@ -234,8 +230,6 @@ export function UserDetailsModal({
     try {
       if (provider === AuthProvider.GOOGLE) {
         await googleAuth({ userId: user.id } as unknown as GoogleAuthData);
-      } else if (provider === AuthProvider.APPLE) {
-        await appleAuth({ userId: user.id } as unknown as AppleAuthData);
       } else {
         await linkProvider({
           provider,

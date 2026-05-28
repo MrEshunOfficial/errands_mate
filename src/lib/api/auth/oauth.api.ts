@@ -7,18 +7,12 @@ export interface GoogleAuthData {
   idToken: string;
 }
 
-export interface AppleAuthData {
-  idToken: string;
-  user?: {
-    name?: {
-      firstName: string;
-      lastName: string;
-    };
-  };
+export interface FacebookAuthData {
+  accessToken: string;
 }
 
 export interface LinkProviderData {
-  provider: AuthProvider.GOOGLE | AuthProvider.APPLE;
+  provider: AuthProvider.GOOGLE | AuthProvider.FACEBOOK;
   idToken: string;
 }
 
@@ -31,8 +25,8 @@ export class OAuthAPI extends APIClient {
     return this.post<AuthResponse>(`${this.endpoint}/google`, data);
   }
 
-  async appleAuth(data: AppleAuthData): Promise<AuthResponse> {
-    return this.post<AuthResponse>(`${this.endpoint}/apple`, data);
+  async facebookAuth(data: FacebookAuthData): Promise<AuthResponse> {
+    return this.post<AuthResponse>(`${this.endpoint}/facebook`, data);
   }
 
   async linkProvider(data: LinkProviderData): Promise<AuthResponse> {

@@ -215,7 +215,7 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ userRole = "visitor" }) => {
       badge: "2 minutes",
       badgeVariant: "info",
       details: [
-        "Register with email or Google, Apple, GitHub, or Facebook",
+        "Register with email or Google or Facebook",
         "Add your GhanaPost GPS address for precise matching",
         "Set preferred service categories and communication preferences",
         "Save multiple service addresses and mark a default",
@@ -294,7 +294,7 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ userRole = "visitor" }) => {
       badge: "Ghana Card required",
       badgeVariant: "info",
       details: [
-        "Sign up via email or connect with Google, Apple, GitHub, or Facebook",
+        "Sign up via email or connect with Google or Facebook",
         "Submit your Ghana Card — enter your card number and upload clear photos of both sides",
         "Set your GhanaPost GPS service area for accurate location matching",
         "Configure your weekly working hours — or mark yourself always available",

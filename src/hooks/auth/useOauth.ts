@@ -3,7 +3,7 @@ import type { AuthResponse } from "@/types/user.types";
 import { APIError } from "@/lib/api/base/api-client";
 import {
   GoogleAuthData,
-  AppleAuthData,
+  FacebookAuthData,
   LinkProviderData,
   oAuthAPI,
 } from "@/lib/api/auth/oauth.api";
@@ -15,7 +15,7 @@ interface UseOAuthReturn {
   isLoading: boolean;
   error: string | null;
   googleAuth: (data: GoogleAuthData) => Promise<AuthResponse | null>;
-  appleAuth: (data: AppleAuthData) => Promise<AuthResponse | null>;
+  facebookAuth: (data: FacebookAuthData) => Promise<AuthResponse | null>;
   linkProvider: (data: LinkProviderData) => Promise<AuthResponse | null>;
   clearError: () => void;
   resetState: () => void;
@@ -59,10 +59,10 @@ export const useOAuth = (): UseOAuthReturn => {
       "Google authentication failed",
     );
 
-  const appleAuth = (data: AppleAuthData) =>
+  const facebookAuth = (data: FacebookAuthData) =>
     handleOAuthAction(
-      () => oAuthAPI.appleAuth(data),
-      "Apple authentication failed",
+      () => oAuthAPI.facebookAuth(data),
+      "Facebook authentication failed",
     );
 
   const linkProvider = (data: LinkProviderData) =>
@@ -84,7 +84,7 @@ export const useOAuth = (): UseOAuthReturn => {
     isLoading,
     error,
     googleAuth,
-    appleAuth,
+    facebookAuth,
     linkProvider,
     clearError,
     resetState,

@@ -58,7 +58,6 @@ export enum SystemRole {
 export enum AuthProvider {
   CREDENTIALS = "credentials",
   GOOGLE = "google",
-  APPLE = "apple",
   FACEBOOK = "facebook",
 }
 
