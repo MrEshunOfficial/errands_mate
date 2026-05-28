@@ -83,18 +83,18 @@ function StatCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-4">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+    <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-4">
+      <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+        <p className="text-[10px] sm:text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider leading-tight">
           {label}
         </p>
         <div
-          className={`w-7 h-7 rounded-lg flex items-center justify-center ${accent}`}
+          className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0 ${accent}`}
         >
-          <Icon size={14} />
+          <Icon size={12} />
         </div>
       </div>
-      <p className="text-2xl font-bold text-stone-900 dark:text-stone-50 tabular-nums">
+      <p className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-50 tabular-nums">
         {value}
       </p>
     </div>
@@ -314,31 +314,31 @@ export default function AdminActivityPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Activity size={20} className="text-blue-600 dark:text-blue-400" />
-            <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">
+          <div className="flex items-center gap-2 mb-0.5">
+            <Activity size={18} className="text-blue-600 dark:text-blue-400 shrink-0" />
+            <h1 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-50">
               Activity
             </h1>
           </div>
-          <p className="text-sm text-stone-500 dark:text-stone-400">
+          <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
             Live booking activity, disputes, and rebuttals
           </p>
         </div>
         <button
           onClick={refetchAll}
-          className="flex items-center gap-1.5 text-sm text-stone-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700"
+          className="flex items-center gap-1.5 text-xs sm:text-sm text-stone-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 shrink-0"
         >
-          <RefreshCw size={14} />
-          Refresh
+          <RefreshCw size={13} />
+          <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {statsLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-24" />
@@ -398,7 +398,7 @@ export default function AdminActivityPage() {
       </div>
 
       {/* Open Disputes & Pending Rebuttals */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Open Disputes */}
         <div>
           <p className="text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -464,11 +464,12 @@ export default function AdminActivityPage() {
 
       {/* Recent Bookings Table */}
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3 space-y-2">
           <p className="text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
             Bookings
           </p>
-          <div className="flex flex-wrap gap-1">
+          {/* Filter pills — full width scrollable row on mobile */}
+          <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
             {STATUS_FILTERS.map((f) => (
               <button
                 key={f.value}
@@ -476,7 +477,7 @@ export default function AdminActivityPage() {
                   setStatusFilter(f.value);
                   setPage(0);
                 }}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
                   statusFilter === f.value
                     ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900"
                     : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700"
@@ -506,19 +507,19 @@ export default function AdminActivityPage() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-stone-100 dark:border-stone-800 text-left">
-                      <th className="px-4 py-3 font-semibold text-stone-500 dark:text-stone-400">
+                      <th className="px-3 sm:px-4 py-2.5 font-semibold text-stone-500 dark:text-stone-400">
                         Booking #
                       </th>
-                      <th className="px-4 py-3 font-semibold text-stone-500 dark:text-stone-400">
+                      <th className="px-3 sm:px-4 py-2.5 font-semibold text-stone-500 dark:text-stone-400">
                         Status
                       </th>
-                      <th className="px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 hidden sm:table-cell">
+                      <th className="px-3 sm:px-4 py-2.5 font-semibold text-stone-500 dark:text-stone-400 hidden sm:table-cell">
                         Scheduled
                       </th>
-                      <th className="px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 hidden md:table-cell">
+                      <th className="px-3 sm:px-4 py-2.5 font-semibold text-stone-500 dark:text-stone-400 hidden md:table-cell">
                         Created
                       </th>
-                      <th className="px-4 py-3" />
+                      <th className="px-3 sm:px-4 py-2.5" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
@@ -527,19 +528,19 @@ export default function AdminActivityPage() {
                         key={booking._id}
                         className="hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
                       >
-                        <td className="px-4 py-3 font-mono text-stone-700 dark:text-stone-300">
+                        <td className="px-3 sm:px-4 py-2.5 font-mono text-stone-700 dark:text-stone-300 max-w-[120px] truncate">
                           {booking.bookingNumber ?? "—"}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 sm:px-4 py-2.5">
                           {booking.status && (
                             <span
-                              className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_BADGE[booking.status] ?? "bg-stone-100 text-stone-600"}`}
+                              className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${STATUS_BADGE[booking.status] ?? "bg-stone-100 text-stone-600"}`}
                             >
                               {booking.status.replace(/_/g, " ")}
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-stone-500 dark:text-stone-400 hidden sm:table-cell">
+                        <td className="px-3 sm:px-4 py-2.5 text-stone-500 dark:text-stone-400 hidden sm:table-cell whitespace-nowrap">
                           {booking.scheduledDate
                             ? new Date(booking.scheduledDate).toLocaleDateString(
                                 "en-US",
@@ -547,10 +548,10 @@ export default function AdminActivityPage() {
                               )
                             : "—"}
                         </td>
-                        <td className="px-4 py-3 text-stone-500 dark:text-stone-400 hidden md:table-cell">
+                        <td className="px-3 sm:px-4 py-2.5 text-stone-500 dark:text-stone-400 hidden md:table-cell whitespace-nowrap">
                           {fmtDate(booking.createdAt)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 sm:px-4 py-2.5 text-right">
                           <Link
                             href={`/admin/bookings/${booking._id}`}
                             className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline text-[11px] font-semibold"
@@ -567,10 +568,9 @@ export default function AdminActivityPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-stone-100 dark:border-stone-800">
+                <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-t border-stone-100 dark:border-stone-800">
                   <p className="text-[11px] text-stone-400 dark:text-stone-500">
-                    Page {page + 1} of {totalPages} ·{" "}
-                    {bookingsData.total ?? 0} total
+                    Page {page + 1} of {totalPages} · {bookingsData.total ?? 0} total
                   </p>
                   <div className="flex items-center gap-1">
                     <button
