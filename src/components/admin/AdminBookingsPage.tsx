@@ -290,7 +290,7 @@ export default function AdminBookingsPage() {
           <RevenueStrip bookings={bookings} />
 
           {/* Table */}
-          <div className="overflow-auto max-h-[40vh] sm:max-h-[calc(100vh-420px)] bg-transparent">
+          <div className="overflow-auto max-h-[55vh] sm:max-h-[calc(100vh-420px)] bg-transparent">
             <BookingTable
               bookings={bookings}
               selectedId={selectedBookingId}

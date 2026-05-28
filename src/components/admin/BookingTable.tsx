@@ -207,30 +207,103 @@ export function BookingTable({
   }
 
   return (
-    <Table className="min-w-[640px]">
-      <TableHeader className="sticky top-0 bg-muted/50 z-[1]">
-        <TableRow>
-          {TABLE_HEADERS.map((h) => (
-            <TableHead
-              key={h}
-              className="text-xs font-mono uppercase tracking-wide text-muted-foreground"
-            >
-              {h}
-            </TableHead>
+    <>
+      {/* ── Mobile card list (< sm) ── */}
+      <div className="sm:hidden divide-y divide-border/50">
+        {bookings.map((b, i) => {
+          const selected = selectedId != null && String(b._id) === selectedId;
+          const overdue = isOverdue(b);
+          const price =
+            b.finalPrice != null
+              ? formatPrice(b.finalPrice, b.currency)
+              : b.estimatedPrice != null
+                ? formatPrice(b.estimatedPrice, b.currency, "~")
+                : "—";
+          const scheduledDate = b.scheduledDate
+            ? new Date(b.scheduledDate).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+              })
+            : null;
+
+          return (
+            <div
+              key={String(b._id) || i}
+              onClick={() => onSelect(b)}
+              className={`cursor-pointer px-3 py-3 transition-colors ${
+                selected
+                  ? "bg-accent"
+                  : b.status === BookingStatus.DISPUTED ||
+                      b.status === BookingStatus.REBUTTAL_SUBMITTED
+                    ? "bg-red-50/60 dark:bg-red-950/20"
+                    : overdue
+                      ? "bg-amber-50/60 dark:bg-amber-950/20"
+                      : "hover:bg-muted/40"
+              }`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs text-blue-600 font-semibold">
+                      {b.bookingNumber ?? "N/A"}
+                    </span>
+                    {overdue && (
+                      <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-sm font-medium truncate mt-0.5">
+                    {getClientName(b)}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {getServiceTitle(b)}
+                  </p>
+                </div>
+                <div className="text-right shrink-0 space-y-1">
+                  <p className="text-sm font-semibold">{price}</p>
+                  {scheduledDate && (
+                    <p className="text-[11px] text-muted-foreground">
+                      {scheduledDate}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <BookingStatusBadge status={b.status} />
+                <PaymentStatusBadge status={b.paymentStatus ?? ""} />
+                <span className="text-[11px] text-muted-foreground ml-auto">
+                  {getProviderName(b)}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop table (>= sm) ── */}
+      <Table className="hidden sm:table min-w-[640px]">
+        <TableHeader className="sticky top-0 bg-muted/50 z-[1]">
+          <TableRow>
+            {TABLE_HEADERS.map((h) => (
+              <TableHead
+                key={h}
+                className="text-xs font-mono uppercase tracking-wide text-muted-foreground"
+              >
+                {h}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {bookings.map((b, i) => (
+            <BookingTableRow
+              key={String(b._id) || i}
+              booking={b}
+              selected={selectedId != null && String(b._id) === selectedId}
+              onSelect={onSelect}
+            />
           ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {bookings.map((b, i) => (
-          <BookingTableRow
-            key={String(b._id) || i}
-            booking={b}
-            selected={selectedId != null && String(b._id) === selectedId}
-            onSelect={onSelect}
-          />
-        ))}
-      </TableBody>
-    </Table>
+        </TableBody>
+      </Table>
+    </>
   );
 }
 
@@ -255,25 +328,26 @@ export function BookingPagination({
   const endItem = Math.min(skip + limit, total);
 
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 border-t text-sm text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-t text-sm text-muted-foreground">
       <span className="text-xs">
-        Showing {startItem}–{endItem} of{" "}
+        {startItem}–{endItem} of{" "}
         <span className="font-semibold text-foreground">
           {total.toLocaleString()}
         </span>{" "}
         booking{total !== 1 ? "s" : ""}
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Button
           variant="outline"
           size="sm"
           disabled={page <= 1}
           onClick={() => onChange(Math.max(0, skip - limit))}
         >
-          <ChevronLeft className="h-3.5 w-3.5" /> Prev
+          <ChevronLeft className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline ml-1">Prev</span>
         </Button>
         <span className="text-xs px-1">
-          Page {page} of {totalPages}
+          {page} / {totalPages}
         </span>
         <Button
           variant="outline"
@@ -281,7 +355,8 @@ export function BookingPagination({
           disabled={page >= totalPages}
           onClick={() => onChange(skip + limit)}
         >
-          Next <ChevronRight className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline mr-1">Next</span>
+          <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

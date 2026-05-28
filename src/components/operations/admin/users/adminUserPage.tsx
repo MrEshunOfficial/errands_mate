@@ -304,21 +304,21 @@ export function AdminUsersPage() {
     const showingEnd = Math.min(page * pageSize, pagination.total);
 
     return (
-      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="text-sm text-gray-700 dark:text-gray-300">
-          Showing <span className="font-medium">{showingStart}</span> to{" "}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+        <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+          Showing <span className="font-medium">{showingStart}</span>–
           <span className="font-medium">{showingEnd}</span> of{" "}
           <span className="font-medium">{pagination.total}</span>{" "}
           {isViewingDeleted ? "deleted " : ""}users
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => handlePageChange(page - 1)}
             disabled={page === 1}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 sm:p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             aria-label="Previous page">
-            <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           </button>
 
           <div className="flex items-center gap-1">
@@ -333,7 +333,7 @@ export function AdminUsersPage() {
                 <button
                   key={pageNum}
                   onClick={() => handlePageChange(pageNum)}
-                  className={`min-w-10 h-10 px-3 rounded-lg font-medium transition-colors ${
+                  className={`min-w-8 h-8 px-2 rounded-lg text-sm font-medium transition-colors ${
                     page === pageNum
                       ? "bg-blue-600 dark:bg-blue-500 text-white"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -347,9 +347,9 @@ export function AdminUsersPage() {
           <button
             onClick={() => handlePageChange(page + 1)}
             disabled={page === pages}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 sm:p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             aria-label="Next page">
-            <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           </button>
         </div>
       </div>
@@ -361,72 +361,75 @@ export function AdminUsersPage() {
   return (
     <div className="h-full bg-gray-50 dark:bg-gray-900">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between p-2 gap-2">
-        <div className="flex-1 flex flex-col items-start justify-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            User Management
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {isViewingDeleted
-              ? "Reviewing deleted accounts — restore or permanently remove"
-              : "Manage system users, roles, and permissions"}
-          </p>
+      <div className="p-2 sm:p-3 space-y-2">
+        {/* Title row — always visible; actions sit here on all sizes */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+              User Management
+            </h1>
+            <p className="mt-0.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              {isViewingDeleted
+                ? "Reviewing deleted accounts — restore or permanently remove"
+                : "Manage system users, roles, and permissions"}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="relative">
+              <Button
+                onClick={() => refetch()}
+                disabled={listLoading}
+                size="icon"
+                className="p-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors inline-flex items-center gap-2 disabled:opacity-50">
+                <RefreshCw
+                  className={`w-4 h-4 ${listLoading ? "animate-spin" : ""}`}
+                />
+              </Button>
+              {showReviewBanner && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full" />
+              )}
+            </div>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="relative">
+                  <Filter className="w-4 h-4" />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 dark:bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {(filters.status !== "all" ? 1 : 0) +
+                        (filters.role !== "all" ? 1 : 0)}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-80 p-0 border-none shadow-xl"
+                align="end">
+                <FilterPanel
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onReset={() => {
+                    setFilters({ ...DEFAULT_FILTERS, search: filters.search });
+                    setCurrentPage(1);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
-        {/* ── Search ── */}
-        <div className="flex-1 relative flex items-center justify-center">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+        {/* Search — full width below title */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search by name or email…"
             value={filters.search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white"
+            className="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white"
           />
-        </div>
-
-        {/* ── Actions ── */}
-        <div className="flex-1 flex items-center justify-end gap-2">
-          <div className="relative">
-            <Button
-              onClick={() => refetch()}
-              disabled={listLoading}
-              size="icon"
-              className="p-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors inline-flex items-center gap-2 disabled:opacity-50">
-              <RefreshCw
-                className={`w-4 h-4 ${listLoading ? "animate-spin" : ""}`}
-              />
-            </Button>
-            {showReviewBanner && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full" />
-            )}
-          </div>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="relative">
-                <Filter className="w-4 h-4" />
-                {hasActiveFilters && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 dark:bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">
-                    {(filters.status !== "all" ? 1 : 0) +
-                      (filters.role !== "all" ? 1 : 0)}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-80 p-0 border-none shadow-xl"
-              align="end">
-              <FilterPanel
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onReset={() => {
-                  setFilters({ ...DEFAULT_FILTERS, search: filters.search });
-                  setCurrentPage(1);
-                }}
-              />
-            </PopoverContent>
-          </Popover>
         </div>
       </div>
 

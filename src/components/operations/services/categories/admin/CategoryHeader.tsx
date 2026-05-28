@@ -95,11 +95,11 @@ export function CategoryHeader({
   };
 
   return (
-    <div className="rounded-xl border p-5">
-      <div className="mb-4 flex items-start justify-between gap-4">
+    <div className="rounded-xl border p-3 sm:p-5">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         {/* Status filter */}
-        <div className="flex gap-1">
-          <Badge variant="outline" className="p-2 text-xs">
+        <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+          <Badge variant="outline" className="p-2 text-xs shrink-0">
             Filter By:
           </Badge>
           {(["active", "inactive", "deleted"] as FilterStatus[]).map((s) => (
@@ -116,13 +116,14 @@ export function CategoryHeader({
 
         <Button size="sm" className="shrink-0 gap-1.5" onClick={onNewCategory}>
           <Plus className="size-3.5" />
-          New Category
+          <span className="hidden xs:inline">New Category</span>
+          <span className="xs:hidden">New</span>
         </Button>
       </div>
 
       {/* Search */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-50 flex-1">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search categories…"

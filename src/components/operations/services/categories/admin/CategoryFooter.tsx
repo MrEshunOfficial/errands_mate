@@ -81,28 +81,40 @@ export function CategoryFooter({
   ];
 
   return (
-    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-xl border px-5 py-3">
-      {/* Stats */}
-      <div className="flex gap-5">
-        {statItems.map((s) => (
-          <div key={s.label} className="flex items-baseline gap-1.5">
-            <span
-              className={cn(
-                "font-mono text-lg font-bold leading-none",
-                s.className,
-              )}>
-              {s.value}
-            </span>
-            <span className="text-[11px] text-muted-foreground">{s.label}</span>
-          </div>
-        ))}
+    <div className="shrink-0 rounded-xl border px-3 sm:px-5 py-3 space-y-2">
+      {/* Top row: stats + refresh */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-3 sm:gap-5">
+          {statItems.map((s) => (
+            <div key={s.label} className="flex items-baseline gap-1">
+              <span
+                className={cn(
+                  "font-mono text-base sm:text-lg font-bold leading-none",
+                  s.className,
+                )}>
+                {s.value}
+              </span>
+              <span className="text-[11px] text-muted-foreground">{s.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="shrink-0 gap-1.5">
+          <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
+          <span className="hidden sm:inline">Refresh</span>
+        </Button>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center gap-3">
+      {/* Bottom row: page size + range + page buttons */}
+      <div className="flex flex-wrap items-center gap-2">
         {/* Page size selector */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="whitespace-nowrap">Rows per page</span>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="hidden sm:inline whitespace-nowrap">Rows per page</span>
           <Select
             value={String(pageSize)}
             onValueChange={(v) => {
@@ -128,7 +140,7 @@ export function CategoryFooter({
         </span>
 
         {/* Page buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 ml-auto">
           <Button
             variant="outline"
             size="icon"
@@ -166,16 +178,6 @@ export function CategoryFooter({
             <ChevronDown className="size-3.5 -rotate-90" />
           </Button>
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onRefresh}
-          disabled={isLoading}
-          className="gap-1.5">
-          <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
-          Refresh
-        </Button>
       </div>
     </div>
   );

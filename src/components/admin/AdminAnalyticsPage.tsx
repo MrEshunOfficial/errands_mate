@@ -58,21 +58,21 @@ function KpiCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+    <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-5">
+      <div className="flex items-start justify-between mb-2 sm:mb-3">
+        <p className="text-[10px] sm:text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
           {label}
         </p>
         <div
-          className={`w-8 h-8 rounded-xl flex items-center justify-center ${accent}`}>
-          <Icon size={15} />
+          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center ${accent}`}>
+          <Icon size={13} />
         </div>
       </div>
-      <p className="text-3xl font-bold text-stone-900 dark:text-stone-50 tabular-nums">
+      <p className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-50 tabular-nums">
         {value}
       </p>
       {sub && (
-        <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">{sub}</p>
+        <p className="text-[11px] sm:text-xs text-stone-400 dark:text-stone-500 mt-1">{sub}</p>
       )}
     </div>
   );
@@ -114,8 +114,8 @@ function StatBar({
 }) {
   const ratio = value && total ? Math.min(value / total, 1) : 0;
   return (
-    <div className="flex items-center gap-3">
-      <span className="w-36 shrink-0 text-xs text-stone-600 dark:text-stone-400 truncate">
+    <div className="flex items-center gap-2 sm:gap-3">
+      <span className="w-24 sm:w-36 shrink-0 text-xs text-stone-600 dark:text-stone-400 truncate">
         {label}
       </span>
       <div className="flex-1 h-2 rounded-full bg-stone-100 dark:bg-stone-800 overflow-hidden">
@@ -127,10 +127,10 @@ function StatBar({
           }}
         />
       </div>
-      <span className="w-12 text-right text-xs font-semibold text-stone-700 dark:text-stone-300 tabular-nums">
+      <span className="w-10 sm:w-12 text-right text-xs font-semibold text-stone-700 dark:text-stone-300 tabular-nums">
         {fmt(value)}
       </span>
-      <span className="w-10 text-right text-[11px] text-stone-400 dark:text-stone-500">
+      <span className="hidden sm:block w-10 text-right text-[11px] text-stone-400 dark:text-stone-500">
         {pct(value, total)}
       </span>
     </div>
@@ -282,29 +282,29 @@ export default function AdminAnalyticsPage() {
   //   : [];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-5 sm:py-8 space-y-5 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp
-              size={20}
-              className="text-blue-600 dark:text-blue-400"
+              size={18}
+              className="text-blue-600 dark:text-blue-400 shrink-0"
             />
-            <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">
+            <h1 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-50">
               Analytics
             </h1>
           </div>
-          <p className="text-sm text-stone-500 dark:text-stone-400">
+          <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
             Platform-wide performance overview
           </p>
         </div>
         <button
           onClick={refetchAll}
           disabled={loading}
-          className="flex items-center gap-1.5 text-sm text-stone-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 disabled:opacity-50">
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          Refresh
+          className="flex items-center gap-1.5 text-xs sm:text-sm text-stone-600 dark:text-stone-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 disabled:opacity-50 shrink-0">
+          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+          <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
 
@@ -358,10 +358,10 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* Booking stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Booking status bar chart */}
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
-          <p className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-4">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-5">
+          <p className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 sm:mb-4">
             Bookings by Status
           </p>
           {bookingLoading ? (
@@ -405,8 +405,8 @@ export default function AdminAnalyticsPage() {
         </div>
 
         {/* Payment status pie chart */}
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
-          <p className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-4">
+        <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-5">
+          <p className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 sm:mb-4">
             Payment Status Distribution
           </p>
           {bookingLoading ? (
@@ -450,8 +450,8 @@ export default function AdminAnalyticsPage() {
       {/* Booking quick stats */}
       {!bookingLoading && bookingStats && (
         <Section title="Booking breakdown">
-          <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5 space-y-3">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pb-4 border-b border-stone-100 dark:border-stone-800">
+          <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-5 space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pb-3 sm:pb-4 border-b border-stone-100 dark:border-stone-800">
               {[
                 {
                   label: "Active",
@@ -519,10 +519,10 @@ export default function AdminAnalyticsPage() {
       )}
 
       {/* Tasks + Services side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Task funnel */}
         <Section title="Tasks">
-          <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
+          <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-5">
             {taskLoading ? (
               <Skeleton className="h-40" />
             ) : !taskStats ? (
@@ -577,7 +577,7 @@ export default function AdminAnalyticsPage() {
 
         {/* Services */}
         <Section title="Services">
-          <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
+          <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-5">
             {serviceLoading ? (
               <Skeleton className="h-40" />
             ) : !serviceStats ? (
@@ -647,7 +647,7 @@ export default function AdminAnalyticsPage() {
       {/* Provider stats */}
       {!providerLoading && providerStats && (
         <Section title="Providers">
-          <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
+          <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-5">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               {[
                 {
