@@ -6,7 +6,7 @@ declare global {
       init: (params: FacebookInitConfig) => void;
       login: (
         callback: (response: FacebookLoginResponse) => void,
-        options?: { scope: string },
+        options?: { scope?: string; auth_type?: string },
       ) => void;
       getLoginStatus: (
         callback: (response: FacebookLoginResponse) => void,

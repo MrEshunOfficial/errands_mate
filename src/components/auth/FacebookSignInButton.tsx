@@ -102,7 +102,7 @@ export function FacebookSignIn({
           }
         })();
       },
-      { scope: "public_profile,email" },
+      { scope: "public_profile email" },
     );
   };
 
