@@ -44,7 +44,6 @@ function fmtDate(iso?: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
   });
 }
 
@@ -56,107 +55,107 @@ function shortId(id: string): string {
 
 const BOOKING_STATUS_CFG: Record<
   BookingStatus,
-  { label: string; icon: React.ReactNode; classes: string; dot: string; accent?: string }
+  { label: string; classes: string; dot: string; accent?: string }
 > = {
   [BookingStatus.CONFIRMED]: {
     label: "Confirmed",
-    icon: <CheckCircle2 size={11} />,
-    classes: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
+    classes:
+      "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
     dot: "bg-emerald-500",
     accent: "from-emerald-400 to-teal-400",
   },
   [BookingStatus.IN_PROGRESS]: {
     label: "In Progress",
-    icon: <Wrench size={11} />,
-    classes: "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50",
+    classes:
+      "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50",
     dot: "bg-sky-500 animate-pulse",
     accent: "from-sky-400 to-blue-400",
   },
   [BookingStatus.AWAITING_VALIDATION]: {
     label: "Awaiting Review",
-    icon: <Clock size={11} />,
-    classes: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50",
+    classes:
+      "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50",
     dot: "bg-amber-500 animate-pulse",
     accent: "from-amber-400 to-orange-400",
   },
   [BookingStatus.DISPUTED]: {
     label: "Disputed",
-    icon: <AlertTriangle size={11} />,
-    classes: "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700/50",
+    classes:
+      "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700/50",
     dot: "bg-red-500",
     accent: "from-red-400 to-rose-400",
   },
   [BookingStatus.REBUTTAL_SUBMITTED]: {
     label: "Under Review",
-    icon: <MessageSquare size={11} />,
-    classes: "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-700/50",
+    classes:
+      "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-700/50",
     dot: "bg-violet-500 animate-pulse",
     accent: "from-violet-400 to-purple-400",
   },
   [BookingStatus.COMPLETED]: {
     label: "Completed",
-    icon: <Star size={11} />,
-    classes: "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-700/50",
+    classes:
+      "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-700/50",
     dot: "bg-teal-500",
   },
   [BookingStatus.RESOLVED]: {
     label: "Resolved",
-    icon: <Shield size={11} />,
-    classes: "text-stone-600 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
+    classes:
+      "text-stone-600 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
     dot: "bg-stone-400",
   },
   [BookingStatus.CANCELLED]: {
     label: "Cancelled",
-    icon: <Ban size={11} />,
-    classes: "text-stone-500 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
+    classes:
+      "text-stone-500 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
     dot: "bg-stone-300 dark:bg-stone-600",
   },
 };
 
 const REQUEST_STATUS_CFG: Record<
   RequestStatus,
-  { label: string; icon: React.ReactNode; classes: string; dot: string }
+  { label: string; classes: string; dot: string }
 > = {
   [RequestStatus.PENDING]: {
     label: "Pending",
-    icon: <Clock size={11} />,
-    classes: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50",
+    classes:
+      "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50",
     dot: "bg-amber-500 animate-pulse",
   },
   [RequestStatus.ACCEPTED]: {
     label: "Accepted",
-    icon: <CheckCircle2 size={11} />,
-    classes: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
+    classes:
+      "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
     dot: "bg-emerald-500",
   },
   [RequestStatus.REJECTED]: {
     label: "Rejected",
-    icon: <XCircle size={11} />,
-    classes: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700/50",
+    classes:
+      "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700/50",
     dot: "bg-red-400",
   },
   [RequestStatus.RESCHEDULED]: {
-    label: "Reschedule Proposed",
-    icon: <CalendarDays size={11} />,
-    classes: "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50",
+    label: "Rescheduled",
+    classes:
+      "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50",
     dot: "bg-sky-500 animate-pulse",
   },
   [RequestStatus.EXPIRED]: {
     label: "Expired",
-    icon: <Clock size={11} />,
-    classes: "text-stone-500 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
+    classes:
+      "text-stone-500 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
     dot: "bg-stone-300 dark:bg-stone-600",
   },
   [RequestStatus.CANCELLED]: {
     label: "Cancelled",
-    icon: <Ban size={11} />,
-    classes: "text-stone-500 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
+    classes:
+      "text-stone-500 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-700",
     dot: "bg-stone-300 dark:bg-stone-600",
   },
   [RequestStatus.COMPLETED]: {
     label: "Completed",
-    icon: <Star size={11} />,
-    classes: "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-700/50",
+    classes:
+      "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-700/50",
     dot: "bg-teal-500",
   },
 };
@@ -166,7 +165,9 @@ const REQUEST_STATUS_CFG: Record<
 function BookingStatusBadge({ status }: { status: BookingStatus }) {
   const cfg = BOOKING_STATUS_CFG[status];
   return (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${cfg.classes}`}
+    >
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>
@@ -176,7 +177,9 @@ function BookingStatusBadge({ status }: { status: BookingStatus }) {
 function RequestStatusBadge({ status }: { status: RequestStatus }) {
   const cfg = REQUEST_STATUS_CFG[status];
   return (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${cfg.classes}`}
+    >
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>
@@ -198,13 +201,15 @@ function StatCard({
     <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-3 sm:p-4 min-w-0">
       <div className={`w-1 h-4 rounded-full ${accent} mb-2`} />
       {loading ? (
-        <div className="h-6 w-8 rounded bg-stone-100 dark:bg-stone-800 animate-pulse mb-1" />
+        <div className="h-7 w-10 rounded-lg bg-stone-100 dark:bg-stone-800 animate-pulse mb-1" />
       ) : (
-        <p className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-50 tabular-nums leading-none">
+        <p className="text-2xl font-bold text-stone-900 dark:text-stone-50 tabular-nums leading-none">
           {value}
         </p>
       )}
-      <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1 leading-tight">{label}</p>
+      <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1.5 leading-tight">
+        {label}
+      </p>
     </div>
   );
 }
@@ -214,25 +219,25 @@ function RecentBookingRow({ booking }: { booking: Booking }) {
   return (
     <Link
       href={`/bookings/${booking._id}`}
-      className="group flex items-center gap-2.5 py-2.5 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+      className="group flex items-start gap-3 py-3 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
     >
-      {cfg.accent ? (
-        <span className={`w-1 h-8 rounded-full bg-linear-to-b ${cfg.accent} shrink-0`} />
-      ) : (
-        <span className={`w-1 h-8 rounded-full ${cfg.dot} shrink-0`} />
-      )}
+      <span
+        className={`w-1 mt-1 h-9 rounded-full shrink-0 ${
+          cfg.accent ? `bg-linear-to-b ${cfg.accent}` : cfg.dot
+        }`}
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate leading-snug">
+        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 leading-snug line-clamp-1">
           {booking.serviceDescription || `Booking #${shortId(booking._id)}`}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1.5">
           <BookingStatusBadge status={booking.status} />
-          <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
+          <span className="flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
             <CalendarDays size={9} />
             {fmtDate(booking.scheduledDate)}
           </span>
           {(booking.finalPrice ?? booking.estimatedPrice) !== undefined && (
-            <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
+            <span className="flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
               <DollarSign size={9} />
               {booking.currency}{" "}
               {(booking.finalPrice ?? booking.estimatedPrice)!.toLocaleString()}
@@ -242,7 +247,7 @@ function RecentBookingRow({ booking }: { booking: Booking }) {
       </div>
       <ChevronRight
         size={14}
-        className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0"
+        className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0 mt-1"
       />
     </Link>
   );
@@ -252,23 +257,23 @@ function RecentRequestRow({ req }: { req: ProviderRequest }) {
   return (
     <Link
       href={`/requests/${req._id}`}
-      className="group flex items-center gap-2.5 py-2.5 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+      className="group flex items-start gap-3 py-3 px-3 -mx-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
     >
       <span
-        className={`w-1 h-8 rounded-full ${REQUEST_STATUS_CFG[req.status].dot} shrink-0`}
+        className={`w-1 mt-1 h-9 rounded-full ${REQUEST_STATUS_CFG[req.status].dot} shrink-0`}
       />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 truncate leading-snug">
+        <p className="text-sm font-medium text-stone-800 dark:text-stone-100 leading-snug line-clamp-1">
           {req.clientMessage || req.taskTitle || `Request #${shortId(req._id)}`}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1.5">
           <RequestStatusBadge status={req.status} />
-          <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
+          <span className="flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
             <CalendarDays size={9} />
             {fmtDate(req.schedule?.preferredDate)}
           </span>
           {req.serviceLocation?.ghanaPostGPS && (
-            <span className="hidden sm:flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
+            <span className="flex items-center gap-1 text-[10px] text-stone-400 dark:text-stone-500">
               <MapPin size={9} />
               {req.serviceLocation.ghanaPostGPS}
             </span>
@@ -277,7 +282,7 @@ function RecentRequestRow({ req }: { req: ProviderRequest }) {
       </div>
       <ChevronRight
         size={14}
-        className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0"
+        className="text-stone-300 group-hover:text-stone-500 dark:text-stone-600 dark:group-hover:text-stone-400 transition-colors shrink-0 mt-1"
       />
     </Link>
   );
@@ -292,7 +297,7 @@ function AlertBanner({
 }) {
   if (bookingsNeedReview === 0 && reschedulePending === 0) return null;
   return (
-    <div className="rounded-xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 px-3 sm:px-4 py-3 flex items-start gap-3">
+    <div className="rounded-xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 flex items-start gap-3">
       <AlertTriangle
         size={15}
         className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
@@ -318,7 +323,7 @@ function AlertBanner({
       </div>
       <Link
         href="/my-bookings"
-        className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 hover:underline shrink-0 flex items-center gap-1"
+        className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 hover:underline shrink-0 flex items-center gap-1 mt-0.5"
       >
         View <ArrowRight size={11} />
       </Link>
@@ -351,7 +356,7 @@ function SectionCard({
 }) {
   return (
     <div className="rounded-xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 min-w-0">
           <div
             className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}
@@ -380,7 +385,7 @@ function SectionCard({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-11 rounded-lg bg-stone-50 dark:bg-stone-800 animate-pulse"
+              className="h-14 rounded-xl bg-stone-50 dark:bg-stone-800 animate-pulse"
             />
           ))}
         </div>
@@ -452,10 +457,10 @@ export default function ClientDashboardPage() {
         </div>
         <Link
           href="/providers"
-          className="shrink-0 inline-flex items-center gap-1.5 h-8 sm:h-9 px-3 sm:px-4 rounded-xl bg-stone-900 dark:bg-stone-50 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-700 dark:hover:bg-stone-200 transition-colors"
+          className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 sm:px-4 rounded-xl bg-stone-900 dark:bg-stone-50 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-700 dark:hover:bg-stone-200 transition-colors"
         >
           <Search size={13} />
-          <span className="hidden sm:inline">Find a provider</span>
+          <span>Find a provider</span>
         </Link>
       </div>
 
@@ -496,7 +501,7 @@ export default function ClientDashboardPage() {
       </div>
 
       {/* ── Activity panels ──────────────────────────────────────────────── */}
-      <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
         <SectionCard
           icon={<BookOpen size={14} />}
           title="Recent Bookings"
@@ -505,7 +510,9 @@ export default function ClientDashboardPage() {
           loading={bookingsLoading}
           error={bookingsError}
           empty={
-            recentBookings.length === 0 && !bookingsLoading && !bookingsError ? (
+            recentBookings.length === 0 &&
+            !bookingsLoading &&
+            !bookingsError ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
                   <Inbox size={18} className="text-stone-400" />
@@ -513,7 +520,7 @@ export default function ClientDashboardPage() {
                 <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
                   No bookings yet
                 </p>
-                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-[180px] leading-relaxed">
+                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1 max-w-[200px] leading-relaxed">
                   Find a provider and send a request to get started
                 </p>
               </div>
@@ -521,7 +528,7 @@ export default function ClientDashboardPage() {
           }
         >
           {recentBookings.length > 0 && (
-            <div className="divide-y divide-stone-100 dark:divide-stone-800">
+            <div className="divide-y divide-stone-100 dark:divide-stone-800/80">
               {recentBookings.map((b) => (
                 <RecentBookingRow key={b._id} booking={b} />
               ))}
@@ -537,7 +544,9 @@ export default function ClientDashboardPage() {
           loading={requestsLoading}
           error={requestsError}
           empty={
-            recentRequests.length === 0 && !requestsLoading && !requestsError ? (
+            recentRequests.length === 0 &&
+            !requestsLoading &&
+            !requestsError ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center mb-2.5">
                   <Inbox size={18} className="text-stone-400" />
@@ -545,7 +554,7 @@ export default function ClientDashboardPage() {
                 <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
                   No requests sent
                 </p>
-                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 max-w-[180px] leading-relaxed">
+                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1 max-w-[200px] leading-relaxed">
                   Browse providers and send a service request
                 </p>
               </div>
@@ -553,7 +562,7 @@ export default function ClientDashboardPage() {
           }
         >
           {recentRequests.length > 0 && (
-            <div className="divide-y divide-stone-100 dark:divide-stone-800">
+            <div className="divide-y divide-stone-100 dark:divide-stone-800/80">
               {recentRequests.map((r) => (
                 <RecentRequestRow key={r._id} req={r} />
               ))}
@@ -572,39 +581,53 @@ export default function ClientDashboardPage() {
             {
               href: "/providers",
               bg: "bg-blue-50 dark:bg-blue-900/20 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40",
-              icon: <Search size={15} className="text-blue-600 dark:text-blue-400" />,
+              icon: (
+                <Search size={15} className="text-blue-600 dark:text-blue-400" />
+              ),
               label: "Find Provider",
             },
             {
               href: "/services",
               bg: "bg-violet-50 dark:bg-violet-900/20 group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40",
-              icon: <PlusCircle size={15} className="text-violet-600 dark:text-violet-400" />,
+              icon: (
+                <PlusCircle
+                  size={15}
+                  className="text-violet-600 dark:text-violet-400"
+                />
+              ),
               label: "Browse Services",
             },
             {
               href: "/my-bookings",
               bg: "bg-emerald-50 dark:bg-emerald-900/20 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40",
-              icon: <BookOpen size={15} className="text-emerald-600 dark:text-emerald-400" />,
+              icon: (
+                <BookOpen
+                  size={15}
+                  className="text-emerald-600 dark:text-emerald-400"
+                />
+              ),
               label: "My Bookings",
             },
             {
               href: "/my-requests",
               bg: "bg-amber-50 dark:bg-amber-900/20 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40",
-              icon: <Send size={15} className="text-amber-600 dark:text-amber-400" />,
+              icon: (
+                <Send size={15} className="text-amber-600 dark:text-amber-400" />
+              ),
               label: "My Requests",
             },
           ].map((action) => (
             <Link
               key={action.href}
               href={action.href}
-              className="group flex flex-col items-center gap-2 py-3 sm:py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
+              className="group flex flex-col items-center gap-2 py-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
             >
               <div
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-colors ${action.bg}`}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${action.bg}`}
               >
                 {action.icon}
               </div>
-              <span className="text-[11px] sm:text-xs font-semibold text-stone-700 dark:text-stone-300 text-center leading-tight px-1">
+              <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 text-center leading-tight px-1">
                 {action.label}
               </span>
             </Link>

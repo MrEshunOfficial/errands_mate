@@ -27,7 +27,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-, "src/proxy", "src/components/operations/provider/ProviderSettings.tsx"  ],
+    ".next/dev/types/**/*.ts",
+    "src/proxy",
+    "src/components/operations/provider/ProviderProfile.tsx"
+  ],
   "exclude": ["node_modules"]
 }
