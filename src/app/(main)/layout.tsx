@@ -21,7 +21,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         blowing past the viewport. overflow-hidden seals it so children
         manage their own scroll — the sidebar won't scroll here.
       */}
-      <div className="w-full flex-1 min-h-0 overflow-hidden border rounded">
+      <div className="w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden border rounded">
         {children}
       </div>
     </BaseLayout>

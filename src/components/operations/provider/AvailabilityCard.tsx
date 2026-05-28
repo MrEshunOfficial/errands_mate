@@ -273,7 +273,8 @@ function WeeklyCalendar({ profile }: WeeklyCalendarProps) {
   const isAlways = profile.isAlwaysAvailable;
 
   return (
-    <div className="flex gap-0 select-none">
+    <div className="overflow-x-auto -mx-1 px-1">
+    <div className="flex gap-0 select-none min-w-[320px]">
       {/* ── Hour ruler (left) ── */}
       <div className="relative w-10 shrink-0" style={{ height: 288 }}>
         {HOUR_LABELS.map((h) => {
@@ -401,6 +402,7 @@ function WeeklyCalendar({ profile }: WeeklyCalendarProps) {
           );
         })}
       </div>
+    </div>
     </div>
   );
 }

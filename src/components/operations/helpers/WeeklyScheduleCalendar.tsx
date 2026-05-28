@@ -420,7 +420,8 @@ function TimeGrid({
   const isAlways = !!isAlwaysAvailable;
 
   return (
-    <div className="flex gap-0">
+    <div className="overflow-x-auto -mx-1 px-1">
+    <div className="flex gap-0 min-w-[320px]">
       {/* Hour ruler */}
       <div className="relative w-10 shrink-0" style={{ height: gridHeight }}>
         {HOUR_LABELS.map((h) => (
@@ -532,6 +533,7 @@ function TimeGrid({
           );
         })}
       </div>
+    </div>
     </div>
   );
 }

@@ -439,7 +439,7 @@ function FilterSheet({
           {gpsAvailable && (
             <div>
               <FilterLabel>Search radius</FilterLabel>
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                 {RADIUS_OPTIONS.map((r) => (
                   <button
                     key={r}

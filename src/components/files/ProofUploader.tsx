@@ -272,7 +272,7 @@ export function ProofUploader({
 
             {/* Image previews */}
             {queue.some((q) => q.preview) && (
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                 {queue
                   .filter((q) => q.preview)
                   .map((item) => (

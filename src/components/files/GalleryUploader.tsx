@@ -286,7 +286,7 @@ export function GalleryUploader({
             className={cn(
               "rounded-xl border border-border bg-muted/20 p-2 dark:bg-muted/10",
               "grid gap-1.5",
-              "grid-cols-3 sm:grid-cols-4",
+              "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
             )}
             onDrop={(e) => {
               e.preventDefault();

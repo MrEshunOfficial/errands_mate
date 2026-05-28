@@ -22,11 +22,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <BaseLayout maxWidth="container">
-      <div className="w-full h-screen flex flex-col p-2 relative">
+      <div className="w-full h-dvh flex flex-col p-2 relative">
         <BackgroundOverlay />
         {/* Content */}
         <main
-          className="w-full h-full overflow-hidden border rounded"
+          className="w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden border rounded"
         >
           {children}
         </main>

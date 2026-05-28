@@ -19,7 +19,7 @@ export default function UnauthorizedPage() {
   if (!mounted) return null;
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center px-6 overflow-hidden">
+    <div className="relative min-h-dvh bg-white dark:bg-zinc-950 flex items-center justify-center px-6 overflow-x-hidden">
       <BackgroundOverlay />
 
       <div className="relative z-10 max-w-md w-full">

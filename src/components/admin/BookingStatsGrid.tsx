@@ -206,7 +206,7 @@ export function BookingStatsGrid({ stats, loading }: BookingStatsGridProps) {
       {stats && <AttentionBanner stats={stats} />}
 
       {/* Row 1 — status counts */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {STATUS_CARDS.map((c) => (
           <StatCard
             key={c.label}
@@ -219,7 +219,7 @@ export function BookingStatsGrid({ stats, loading }: BookingStatsGridProps) {
       </div>
 
       {/* Row 2 — more status + payment counts */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {PAYMENT_CARDS.map((c) => (
           <StatCard
             key={c.label}

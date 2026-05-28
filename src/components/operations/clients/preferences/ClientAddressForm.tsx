@@ -161,7 +161,7 @@ export function ClientAddressForm({
       {/* Label picker */}
       <div className="space-y-2">
         <FieldLabel>Label</FieldLabel>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {LABEL_CONFIG.map(({ value, text, icon: Icon }) => (
             <button
               key={value}

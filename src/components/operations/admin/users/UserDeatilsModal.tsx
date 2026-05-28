@@ -399,7 +399,7 @@ export function UserDetailsModal({
           </div>
 
           {/* ── Quick Stats Bar ── */}
-          <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-800 border-b border-gray-100 dark:border-gray-800">
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 dark:divide-gray-800 border-b border-gray-100 dark:border-gray-800">
             {[
               {
                 icon: Activity,

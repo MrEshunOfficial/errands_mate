@@ -648,7 +648,7 @@ export default function AdminAnalyticsPage() {
       {!providerLoading && providerStats && (
         <Section title="Providers">
           <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 p-5">
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               {[
                 {
                   label: "Total",

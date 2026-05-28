@@ -105,7 +105,7 @@ function HeroSkeleton() {
   return (
     <div className="w-full h-full bg-linear-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
       <div className="max-w-6xl mx-auto px-6 md:px-12 pt-16 md:pt-24 pb-12">
-        <div className="grid md:grid-cols-2 gap-12 items-start animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start animate-pulse">
           <div className="space-y-8">
             <div className="space-y-3">
               <div className="h-12 w-3/4 bg-gray-200 dark:bg-gray-800 rounded-xl" />

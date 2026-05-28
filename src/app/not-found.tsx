@@ -19,8 +19,8 @@ export default function NotFound() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-      <div className="h-[calc(100vh-(--spacing(16)))] max-w-2xl mx-auto">
+    <div className="w-full min-h-dvh bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center py-8 overflow-x-hidden">
+      <div className="w-full max-w-2xl mx-auto px-4">
         <div className="w-full text-center">
           {/* Animated 404 Number */}
           <div

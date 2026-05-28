@@ -59,7 +59,7 @@ function StatSkeletonItem() {
 /** 6-card skeleton for client / provider dashboard */
 export function StatStripSkeleton() {
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
       {Array.from({ length: 6 }).map((_, i) => (
         <StatSkeletonItem key={i} />
       ))}
@@ -71,12 +71,12 @@ export function StatStripSkeleton() {
 export function AdminStatStripSkeleton() {
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <StatSkeletonItem key={i} />
         ))}
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <StatSkeletonItem key={i} />
         ))}
