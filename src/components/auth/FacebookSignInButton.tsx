@@ -70,35 +70,37 @@ export function FacebookSignIn({
     setIsProcessing(true);
 
     window.FB.login(
-      async (response) => {
-        try {
-          if (
-            response.status !== "connected" ||
-            !response.authResponse?.accessToken
-          ) {
-            const msg = "Facebook login was cancelled or failed.";
+      (response) => {
+        void (async () => {
+          try {
+            if (
+              response.status !== "connected" ||
+              !response.authResponse?.accessToken
+            ) {
+              const msg = "Facebook login was cancelled or failed.";
+              onError?.(msg);
+              return;
+            }
+
+            const result = await facebookAuth({
+              accessToken: response.authResponse.accessToken,
+            });
+
+            if (result) {
+              onSuccess?.();
+              const destination = searchParams.get("redirect") || "/profile";
+              window.location.href = destination;
+            } else {
+              onError?.("Facebook authentication failed. Please try again.");
+            }
+          } catch (err) {
+            const msg =
+              err instanceof Error ? err.message : "Facebook authentication failed";
             onError?.(msg);
-            return;
+          } finally {
+            setIsProcessing(false);
           }
-
-          const result = await facebookAuth({
-            accessToken: response.authResponse.accessToken,
-          });
-
-          if (result) {
-            onSuccess?.();
-            const destination = searchParams.get("redirect") || "/profile";
-            window.location.href = destination;
-          } else {
-            onError?.("Facebook authentication failed. Please try again.");
-          }
-        } catch (err) {
-          const msg =
-            err instanceof Error ? err.message : "Facebook authentication failed";
-          onError?.(msg);
-        } finally {
-          setIsProcessing(false);
-        }
+        })();
       },
       { scope: "public_profile,email" },
     );
