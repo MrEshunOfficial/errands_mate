@@ -121,8 +121,21 @@ export const useAuth = (): AuthState & AuthActions => {
   );
 
   const signup = useCallback(
-    (userData: SignupData) => handleAuthAction(() => authAPI.signup(userData)),
-    [handleAuthAction],
+    async (userData: SignupData) => {
+      try {
+        updateState({ error: null });
+        await authAPI.signup(userData);
+        // Do NOT save the token or set isAuthenticated here — the user still
+        // needs to verify their email before being treated as authenticated.
+        // Saving the token would cause the middleware to redirect them away
+        // from /verify-email (AUTH_ROUTES blocks authenticated users).
+      } catch (error) {
+        const apiError = error as APIError;
+        updateState({ error: apiError.message ?? "An unexpected error occurred" });
+        throw error;
+      }
+    },
+    [updateState],
   );
 
   const logout = useCallback(async () => {
