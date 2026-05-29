@@ -29,7 +29,7 @@ export interface LocationInput {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const GPS_CODE_PATTERN = /^[A-Za-z]{2}-\d{3,4}-\d{4}$/;
+const GPS_CODE_PATTERN = /^[A-Z]{2}-\d{3,4}-\d{4}$/;
 
 function deriveGpsStatus(
   permission: string,

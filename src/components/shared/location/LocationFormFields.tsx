@@ -82,7 +82,7 @@ export function LocationFormFields({
         {gpsCodeInvalid ? (
           <p className="text-xs text-destructive flex items-center gap-1">
             <XCircle size={11} />
-            Format should be like GA-123-4567
+            Use format XX-123-4567 or XX-1234-5678 (e.g. GA-123-4567)
           </p>
         ) : (
           <p className="text-xs text-muted-foreground">

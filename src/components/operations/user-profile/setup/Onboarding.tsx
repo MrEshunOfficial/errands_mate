@@ -27,6 +27,17 @@ import { UserRole } from "@/types/base.types";
 import { IFile } from "@/types/files.types";
 import { useRouter } from "next/navigation";
 
+// ─── Ghana Card helpers ────────────────────────────────────────────────────────
+
+const GHANA_CARD_PATTERN = /^GHA-\d{9}-\d$/;
+
+function formatGhanaCard(raw: string): string {
+  const clean = raw.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 13);
+  if (clean.length <= 3) return clean;
+  if (clean.length <= 12) return `${clean.slice(0, 3)}-${clean.slice(3)}`;
+  return `${clean.slice(0, 3)}-${clean.slice(3, 12)}-${clean.slice(12)}`;
+}
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type Role = "provider" | "customer";
 type FinalVariant = "provider" | "customer";
@@ -476,11 +487,24 @@ function StepGhanaCard({
               id="card-number"
               value={cardNumber}
               onChange={(e) => {
-                onCardNumber(e.target.value);
+                onCardNumber(formatGhanaCard(e.target.value));
                 pClear("mutation");
               }}
               placeholder="GHA-000000000-0"
+              className={
+                cardNumber.trim().length > 0 &&
+                !GHANA_CARD_PATTERN.test(cardNumber.trim())
+                  ? "border-destructive focus-visible:ring-destructive/30"
+                  : ""
+              }
             />
+            {cardNumber.trim().length > 0 &&
+              !GHANA_CARD_PATTERN.test(cardNumber.trim()) && (
+                <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                  <AlertCircle size={11} />
+                  Must be in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0)
+                </p>
+              )}
           </div>
 
           {pE.mutation && (
@@ -499,7 +523,9 @@ function StepGhanaCard({
             </p>
             <Button
               onClick={handleDetailsContinue}
-              disabled={pL.updatingIdDetails || !cardNumber.trim()}
+              disabled={
+                pL.updatingIdDetails || !GHANA_CARD_PATTERN.test(cardNumber.trim())
+              }
               className="w-full">
               {pL.updatingIdDetails
                 ? "Saving…"

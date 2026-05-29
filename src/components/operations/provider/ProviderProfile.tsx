@@ -21,6 +21,7 @@ import {
   Loader2,
   AlertTriangle,
   ShieldCheck,
+  XCircle,
 } from "lucide-react";
 
 import {
@@ -61,6 +62,17 @@ import {
   useRestoreService,
 } from "@/hooks/services/useServices";
 import { useRouter } from "next/navigation";
+
+// ─── Ghana Card helpers ────────────────────────────────────────────────────────
+
+const GHANA_CARD_PATTERN = /^GHA-\d{9}-\d$/;
+
+function formatGhanaCard(raw: string): string {
+  const clean = raw.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 13);
+  if (clean.length <= 3) return clean;
+  if (clean.length <= 12) return `${clean.slice(0, 3)}-${clean.slice(3)}`;
+  return `${clean.slice(0, 3)}-${clean.slice(3, 12)}-${clean.slice(12)}`;
+}
 
 // ─── Profile completion banner ────────────────────────────────────────────────
 
@@ -331,10 +343,22 @@ function IdentityCard() {
               <FieldLabel>Ghana Card Number</FieldLabel>
               <Input
                 value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
+                onChange={(e) => setCardNumber(formatGhanaCard(e.target.value))}
                 placeholder="e.g. GHA-123456789-0"
-                className="dark:bg-zinc-800 dark:border-zinc-700"
+                className={`dark:bg-zinc-800 dark:border-zinc-700 ${
+                  cardNumber.trim().length > 0 &&
+                  !GHANA_CARD_PATTERN.test(cardNumber.trim())
+                    ? "border-destructive focus-visible:ring-destructive/30"
+                    : ""
+                }`}
               />
+              {cardNumber.trim().length > 0 &&
+                !GHANA_CARD_PATTERN.test(cardNumber.trim()) && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <XCircle size={11} />
+                    Must be in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0)
+                  </p>
+                )}
             </div>
             <div className="space-y-2">
               <FieldLabel>Card Images</FieldLabel>
@@ -373,7 +397,11 @@ function IdentityCard() {
             </Button>
             <Button
               size="sm"
-              disabled={uLoading.updatingIdDetails}
+              disabled={
+                uLoading.updatingIdDetails ||
+                (cardNumber.trim().length > 0 &&
+                  !GHANA_CARD_PATTERN.test(cardNumber.trim()))
+              }
               onClick={saveCardNumber}
               className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white">
               {uLoading.updatingIdDetails ? (
