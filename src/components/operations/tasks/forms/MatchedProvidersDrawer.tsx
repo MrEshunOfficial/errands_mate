@@ -453,13 +453,21 @@ function ProviderCard({
 
 // ─── Summary Pills ────────────────────────────────────────────────────────────
 
-function SummaryPills({ summary }: { summary: MatchingSummary }) {
+function SummaryPills({
+  summary,
+  proximityOnly,
+}: {
+  summary: MatchingSummary;
+  proximityOnly: boolean;
+}) {
   return (
     <div className="flex flex-wrap gap-1.5 mt-2">
       {[
         {
-          icon: <CheckCircle size={10} />,
-          label: `${summary.totalMatches} matched`,
+          icon: proximityOnly ? <Navigation size={10} /> : <CheckCircle size={10} />,
+          label: proximityOnly
+            ? `${summary.totalMatches} nearby`
+            : `${summary.totalMatches} matched`,
         },
         {
           icon: <Navigation size={10} />,
@@ -602,13 +610,15 @@ export function MatchedProvidersDrawer({
             </div>
 
             <SheetTitle className="text-xl font-extrabold text-stone-900 dark:text-stone-50 leading-tight pr-8">
-              Matched Providers
+              {proximityOnly ? "Nearby Providers" : "Matched Providers"}
             </SheetTitle>
             <SheetDescription className="text-xs text-stone-400 dark:text-stone-500 mt-1 truncate max-w-[calc(100%-2rem)]">
               &quot;{taskTitle}&quot;
             </SheetDescription>
 
-            {summary && !matchLoading && <SummaryPills summary={summary} />}
+            {summary && !matchLoading && (
+              <SummaryPills summary={summary} proximityOnly={proximityOnly} />
+            )}
 
             {!editMode && (onRefresh || onEditTask) && (
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-stone-100 dark:border-stone-800">
