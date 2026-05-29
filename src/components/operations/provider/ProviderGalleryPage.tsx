@@ -12,6 +12,7 @@ import {
   X,
   Loader2,
   Upload,
+  AlertCircle,
 } from "lucide-react";
 import { useProviderGallery } from "@/hooks/files/useProviderGallery";
 import { IFile } from "@/types/files.types";
@@ -356,6 +357,7 @@ export default function ProviderGalleryPage() {
     galleryImages,
     isLoading,
     isUploading,
+    error,
     fetchMyGallery,
     uploadGalleryImage,
     uploadMultipleGalleryImages,
@@ -486,9 +488,15 @@ export default function ProviderGalleryPage() {
       </div>
 
       {/* ── Gallery grid ────────────────────────────────────────────────────── */}
+      {error && !isLoading && (
+        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </div>
+      )}
       {isLoading ? (
         <GallerySkeleton />
-      ) : count === 0 ? (
+      ) : count === 0 && !error ? (
         <EmptyGallery />
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">

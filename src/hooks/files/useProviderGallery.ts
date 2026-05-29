@@ -201,10 +201,6 @@ export function useProviderGallery(
 
   const uploadGalleryImage = useCallback(
     async (file: File): Promise<UploadProviderGalleryImageResponse | null> => {
-      if (!providerId) {
-        setError("providerId is required to upload a gallery image");
-        return null;
-      }
       setIsUploading(true);
       setError(null);
       try {
@@ -218,17 +214,13 @@ export function useProviderGallery(
         setIsUploading(false);
       }
     },
-    [providerId],
+    [],
   );
 
   const uploadMultipleGalleryImages = useCallback(
     async (
       files: File[],
     ): Promise<UploadMultipleProviderGalleryImagesResponse | null> => {
-      if (!providerId) {
-        setError("providerId is required to upload gallery images");
-        return null;
-      }
       setIsUploading(true);
       setError(null);
       try {
@@ -243,7 +235,7 @@ export function useProviderGallery(
         setIsUploading(false);
       }
     },
-    [providerId],
+    [],
   );
 
   // ── Cloudinary — reads ───────────────────────────────────────────────────────
