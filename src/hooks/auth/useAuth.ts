@@ -212,7 +212,11 @@ export const useAuth = (): AuthState & AuthActions => {
     () =>
       handleAuthAction(
         () => authAPI.deleteAccount(),
-        () => updateState({ user: null, isAuthenticated: false }),
+        () => {
+          clearAuthToken();
+          sessionStorage.setItem("logged_out_at", Date.now().toString());
+          updateState({ user: null, isAuthenticated: false });
+        },
       ),
     [handleAuthAction, updateState],
   );
@@ -221,7 +225,11 @@ export const useAuth = (): AuthState & AuthActions => {
     () =>
       handleAuthAction(
         () => authAPI.permanentlyDeleteAccount(),
-        () => updateState({ user: null, isAuthenticated: false }),
+        () => {
+          clearAuthToken();
+          sessionStorage.setItem("logged_out_at", Date.now().toString());
+          updateState({ user: null, isAuthenticated: false });
+        },
       ),
     [handleAuthAction, updateState],
   );
