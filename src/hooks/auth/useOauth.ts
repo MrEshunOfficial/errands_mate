@@ -39,6 +39,7 @@ export const useOAuth = (): UseOAuthReturn => {
       const response = await action();
       if (response?.token) {
         saveAuthToken(response.token);
+        sessionStorage.removeItem("logged_out_at");
       }
       return response;
     } catch (err) {
