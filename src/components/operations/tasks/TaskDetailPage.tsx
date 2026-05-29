@@ -39,7 +39,12 @@ import {
   useUpdateTask,
 } from "@/hooks/tasks/useTasks";
 import { useAuth } from "@/hooks/auth/useAuth";
-import { Task, TaskStatus, PopulatedProviderMatchResult } from "@/types/task.types";
+import {
+  Task,
+  TaskStatus,
+  PopulatedProviderMatchResult,
+  resolveTaskLocation,
+} from "@/types/task.types";
 import { useActiveCategories } from "@/hooks/services/categories/useServiceCategory";
 import { Category } from "@/types/services/categories/service.category.types";
 import {
@@ -184,7 +189,7 @@ function LocationSection({
   locationContext: Task["locationContext"];
 }) {
   const { ghanaPostGPS, nearbyLandmark, gpsCoordinates, resolvedAddress } =
-    locationContext;
+    resolveTaskLocation(locationContext);
 
   const hasAny =
     !!ghanaPostGPS || !!nearbyLandmark || !!gpsCoordinates || !!resolvedAddress;
