@@ -37,7 +37,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useActiveCategories } from "@/hooks/services/categories/useServiceCategory";
-import { useCreateTask, useTriggerMatching } from "@/hooks/tasks/useTasks";
+import { useCreateTask, useTriggerMatching, useUpdateTask } from "@/hooks/tasks/useTasks";
 import { useTaskAttachment } from "@/hooks/files/useTaskAttachment";
 import { useClientPreference } from "@/hooks/profiles/useClientPreference";
 import { useLocationForm } from "@/hooks/profiles/useLocationForm";
@@ -84,6 +84,34 @@ interface TaskDraft {
   saveNewLocation: boolean;
   newLocationLabel: LocationLabel;
   newLocationCustomLabel: string;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function normalizeMatchedProviders(matchRes: {
+  matchedProviders?: ProviderMatchResult[];
+  task?: { matchedProviders?: ProviderMatchResult[] };
+}): ProviderMatchResult[] {
+  return (
+    matchRes.matchedProviders?.length
+      ? matchRes.matchedProviders
+      : (matchRes.task?.matchedProviders ?? [])
+  ).map((p) => {
+    const providerId =
+      typeof p.providerId === "string"
+        ? p.providerId
+        : ((p.providerId as unknown as { $oid?: string }).$oid ??
+          String(p.providerId));
+    return {
+      ...p,
+      providerId,
+      matchedServices: (p.matchedServices ?? []).map((s) =>
+        typeof s === "string"
+          ? s
+          : ((s as { $oid?: string }).$oid ?? String(s)),
+      ),
+    };
+  });
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -294,6 +322,10 @@ export default function PostTaskForm() {
 
   const { mutate: triggerMatching, loading: matching } = useTriggerMatching();
 
+  const { mutate: updateTask } = useUpdateTask();
+
+  const [editSaving, setEditSaving] = useState(false);
+
   // ── File attachment hook ─────────────────────────────────────────────────────
   const {
     attachments,
@@ -450,28 +482,7 @@ export default function PostTaskForm() {
       return;
     }
 
-    // Normalise provider IDs — backend may return ObjectId objects
-    const rawProviders: ProviderMatchResult[] = (
-      matchRes.matchedProviders?.length
-        ? matchRes.matchedProviders
-        : (matchRes.task?.matchedProviders ?? [])
-    ).map((p) => {
-      const providerId =
-        typeof p.providerId === "string"
-          ? p.providerId
-          : ((p.providerId as unknown as { $oid?: string }).$oid ??
-            String(p.providerId));
-
-      return {
-        ...p,
-        providerId,
-        matchedServices: (p.matchedServices ?? []).map((s) =>
-          typeof s === "string"
-            ? s
-            : ((s as { $oid?: string }).$oid ?? String(s)),
-        ),
-      };
-    });
+    const rawProviders = normalizeMatchedProviders(matchRes);
 
     setMatchingSummary(matchRes.matchingSummary);
 
@@ -491,6 +502,63 @@ export default function PostTaskForm() {
   async function handleRequest(providerId: string) {
     if (!postedTaskId) return;
     router.push(`requests/provider/${providerId}`);
+  }
+
+  // ── Refresh matched providers ─────────────────────────────────────────────────
+  async function handleRefresh() {
+    if (!postedTaskId) return;
+    const matchRes = await triggerMatching({
+      taskId: postedTaskId,
+      strategy: draft.matchingStrategy,
+    });
+    if (!matchRes) {
+      toast.warning("Couldn't refresh providers. Please try again.");
+      return;
+    }
+    const rawProviders = normalizeMatchedProviders(matchRes);
+    setMatchingSummary(matchRes.matchingSummary);
+    enrichProviders(rawProviders);
+    const count = rawProviders.length;
+    toast.success(
+      count === 0
+        ? "No providers matched right now."
+        : `Refreshed — ${count} provider${count !== 1 ? "s" : ""} found.`,
+    );
+  }
+
+  // ── Edit task and repost ──────────────────────────────────────────────────────
+  async function handleEditTask(data: { title: string; description: string; category?: string }) {
+    if (!postedTaskId) return;
+    setEditSaving(true);
+    try {
+      const updateRes = await updateTask({
+        taskId: postedTaskId,
+        body: { title: data.title, description: data.description, category: data.category },
+      });
+      if (!updateRes) {
+        toast.error("Failed to update task. Please try again.");
+        return;
+      }
+      setDraft((d) => ({ ...d, title: data.title, description: data.description, category: data.category ?? d.category }));
+      toast.success("Task updated! Re-matching providers…");
+
+      const matchRes = await triggerMatching({
+        taskId: postedTaskId,
+        strategy: draft.matchingStrategy,
+      });
+      if (!matchRes) {
+        toast.warning("Task updated, but re-matching failed.");
+        return;
+      }
+      const rawProviders = normalizeMatchedProviders(matchRes);
+      setMatchingSummary(matchRes.matchingSummary);
+      enrichProviders(rawProviders);
+      const count = rawProviders.length;
+      if (count === 0) toast.info("No providers matched with the updated details.");
+      else toast.success(`${count} provider${count !== 1 ? "s" : ""} matched!`);
+    } finally {
+      setEditSaving(false);
+    }
   }
 
   // ── Reset ────────────────────────────────────────────────────────────────────
@@ -1082,9 +1150,14 @@ export default function PostTaskForm() {
         summary={matchingSummary}
         matchLoading={matching}
         taskTitle={draft.title}
+        taskDescription={draft.description}
+        taskCategory={draft.category}
         onClose={() => setDrawerOpen(false)}
         onRequest={handleRequest}
         requestingId={requestingId}
+        onRefresh={handleRefresh}
+        onEditTask={handleEditTask}
+        editSaving={editSaving}
       />
     </div>
   );

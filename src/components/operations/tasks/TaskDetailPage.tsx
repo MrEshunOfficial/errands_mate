@@ -25,6 +25,8 @@ import {
   X,
   Zap,
   Star,
+  Pencil,
+  ChevronDown,
 } from "lucide-react";
 import {
   useTaskById,
@@ -34,9 +36,25 @@ import {
   useTriggerMatching,
   useExpressInterest,
   useWithdrawInterest,
+  useUpdateTask,
 } from "@/hooks/tasks/useTasks";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { Task, TaskStatus, PopulatedProviderMatchResult } from "@/types/task.types";
+import { useActiveCategories } from "@/hooks/services/categories/useServiceCategory";
+import { Category } from "@/types/services/categories/service.category.types";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -391,6 +409,211 @@ function InterestDialog({
   );
 }
 
+// ─── Edit task dialog ─────────────────────────────────────────────────────────
+
+function EditTaskDialog({
+  task,
+  onClose,
+  onSaved,
+}: {
+  task: Task;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description ?? "");
+  const [category, setCategory] = useState(task.category ?? "");
+  const [categoryOpen, setCategoryOpen] = useState(false);
+
+  const { mutate: update, loading, error } = useUpdateTask({ onSuccess: onSaved });
+
+  const { data: categoryData, isLoading: catsLoading } = useActiveCategories();
+  const categories = (categoryData ?? []).map((c: Category) => ({
+    id: c._id,
+    label: c.catName,
+    icon: (c as Category & { icon?: string }).icon ?? "📋",
+  }));
+  const selectedCat = categories.find((c) => c.id === category);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100 dark:border-stone-800">
+          <div className="flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+              <Pencil size={14} className="text-amber-600 dark:text-amber-400" />
+            </span>
+            <div>
+              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+                Edit task
+              </h3>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
+                Providers will be re-matched on save.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg p-1 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
+          {/* Title */}
+          <div>
+            <label className="block text-[11px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1.5">
+              Title
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Fix leaking bathroom pipe"
+              className="w-full text-sm rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-50 placeholder:text-stone-400 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+            />
+            {title.trim().length > 0 && title.trim().length < 3 && (
+              <p className="text-[11px] text-red-500 mt-1">
+                Title must be at least 3 characters.
+              </p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-[11px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1.5">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              placeholder="Details that help providers understand the job…"
+              className="w-full text-sm rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-50 placeholder:text-stone-400 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none transition-all"
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-[11px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1.5">
+              Category
+            </label>
+            {catsLoading ? (
+              <div className="flex items-center gap-2 py-2.5 text-xs text-stone-400 dark:text-stone-500">
+                <Loader2 size={12} className="animate-spin" />
+                Loading categories…
+              </div>
+            ) : (
+              <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-sm transition-all ${
+                      category
+                        ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                        : "border-stone-200 dark:border-stone-700 text-stone-400 dark:text-stone-500 hover:border-stone-300 dark:hover:border-stone-600"
+                    }`}>
+                    <span className="flex items-center gap-2">
+                      {selectedCat ? (
+                        <>
+                          <span className="text-base leading-none">{selectedCat.icon}</span>
+                          <span className="font-medium text-stone-800 dark:text-stone-100">
+                            {selectedCat.label}
+                          </span>
+                        </>
+                      ) : (
+                        "Choose a category…"
+                      )}
+                    </span>
+                    <ChevronDown
+                      size={14}
+                      className={`text-stone-400 transition-transform duration-200 ${categoryOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="p-0 w-[--radix-popover-trigger-width]"
+                  align="start"
+                  sideOffset={6}>
+                  <Command>
+                    <CommandInput placeholder="Search categories…" className="h-9 text-sm" />
+                    <CommandList className="max-h-48">
+                      <CommandEmpty className="py-4 text-xs text-center text-stone-400">
+                        No categories found.
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {categories.map((cat) => (
+                          <CommandItem
+                            key={cat.id}
+                            value={cat.label}
+                            onSelect={() => {
+                              setCategory(cat.id);
+                              setCategoryOpen(false);
+                            }}
+                            className="flex items-center gap-3 px-3 py-2 cursor-pointer">
+                            <span className="text-base leading-none w-5 text-center">
+                              {cat.icon}
+                            </span>
+                            <span className="text-sm">{cat.label}</span>
+                            {category === cat.id && (
+                              <CheckCircle2
+                                size={13}
+                                className="ml-auto text-amber-500 shrink-0"
+                              />
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
+
+          {error && (
+            <p className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+              <AlertCircle size={12} className="shrink-0" />
+              {error}
+            </p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-6 flex gap-2">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 h-10 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors disabled:opacity-50">
+            Cancel
+          </button>
+          <button
+            onClick={() =>
+              update({
+                taskId: task._id,
+                body: {
+                  title: title.trim(),
+                  description: description.trim() || undefined,
+                  category: category || undefined,
+                },
+              })
+            }
+            disabled={loading || title.trim().length < 3}
+            className="flex-1 h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-amber-200">
+            {loading ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <RotateCcw size={13} />
+            )}
+            {loading ? "Saving…" : "Save & Re-match"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Matched provider card ────────────────────────────────────────────────────
 
 function MatchedProviderCard({
@@ -458,6 +681,7 @@ function TaskDetail({
 
   const [showCancel, setShowCancel] = useState(false);
   const [showInterest, setShowInterest] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [hasExpressedInterest, setHasExpressedInterest] = useState(false);
   const [floatLoading, setFloatLoading] = useState(false);
   const [rematchLoading, setRematchLoading] = useState(false);
@@ -607,6 +831,12 @@ function TaskDetail({
                       Open to all providers
                     </button>
                   )}
+                  <button
+                    onClick={() => setShowEdit(true)}
+                    className="flex items-center gap-1.5 h-10 px-4 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-[12px] font-semibold hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+                    <Pencil size={13} />
+                    Edit task
+                  </button>
                   <button
                     onClick={() => {
                       setRematchLoading(true);
@@ -814,6 +1044,16 @@ function TaskDetail({
           onExpressed={() => {
             setHasExpressedInterest(true);
             setShowInterest(false);
+            refetch();
+          }}
+        />
+      )}
+      {showEdit && (
+        <EditTaskDialog
+          task={task}
+          onClose={() => setShowEdit(false)}
+          onSaved={() => {
+            setShowEdit(false);
             refetch();
           }}
         />

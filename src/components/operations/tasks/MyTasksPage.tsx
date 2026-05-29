@@ -18,7 +18,8 @@ import {
   Hourglass,
   RotateCcw,
 } from "lucide-react";
-import { useMyTasks, useMatchedProviders } from "@/hooks/tasks/useTasks";
+import { useMyTasks, useMatchedProviders, useTriggerMatching, useUpdateTask } from "@/hooks/tasks/useTasks";
+import { toast } from "sonner";
 import { Task, TaskStatus } from "@/types/task.types";
 import type { Service } from "@/types/services/service.types";
 import { profilePictureAPI } from "@/lib/api/files/profile/profile-picture.api";
@@ -99,9 +100,13 @@ function StatusBadge({ status }: { status: TaskStatus }) {
 function TaskRow({
   task,
   onViewProviders,
+  onRematch,
+  rematching,
 }: {
   task: Task;
   onViewProviders: (task: Task) => void;
+  onRematch: (task: Task) => void;
+  rematching: boolean;
 }) {
   const canViewProviders =
     task.status === TaskStatus.MATCHED || task.status === TaskStatus.FLOATING;
@@ -165,14 +170,28 @@ function TaskRow({
       {/* Action */}
       <td className="py-3.5 pl-3 pr-5 align-middle text-right whitespace-nowrap">
         {canViewProviders ? (
-          <button
-            type="button"
-            onClick={() => onViewProviders(task)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-stone-900 dark:bg-stone-700 hover:bg-amber-500 dark:hover:bg-amber-500 rounded-xl px-3 py-1.5 transition-all duration-150">
-            <Users size={12} />
-            Providers
-            <ChevronRight size={11} />
-          </button>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => onRematch(task)}
+              disabled={rematching}
+              title="Re-match providers"
+              className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-amber-400 hover:text-amber-600 dark:hover:border-amber-500 dark:hover:text-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              {rematching ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <RotateCcw size={13} />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => onViewProviders(task)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-stone-900 dark:bg-stone-700 hover:bg-amber-500 dark:hover:bg-amber-500 rounded-xl px-3 py-1.5 transition-all duration-150">
+              <Users size={12} />
+              Providers
+              <ChevronRight size={11} />
+            </button>
+          </div>
         ) : (
           <span className="text-xs text-stone-300 dark:text-stone-600">—</span>
         )}
@@ -250,11 +269,15 @@ function TaskTable({
   loading,
   isPast,
   onViewProviders,
+  onRematch,
+  rematchingTaskId,
 }: {
   tasks: Task[];
   loading: boolean;
   isPast?: boolean;
   onViewProviders: (task: Task) => void;
+  onRematch: (task: Task) => void;
+  rematchingTaskId: string | null;
 }) {
   return (
     <table className="w-full text-left border-collapse">
@@ -292,6 +315,8 @@ function TaskTable({
               key={task._id}
               task={task}
               onViewProviders={onViewProviders}
+              onRematch={onRematch}
+              rematching={rematchingTaskId === task._id}
             />
           ))}
       </tbody>
@@ -365,8 +390,14 @@ export default function MyTasksPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [enrichedMatches, setEnrichedMatches] = useState<EnrichedMatch[]>([]);
   const [requestingId, setRequestingId] = useState<string | null>(null);
+  const [drawerRematching, setDrawerRematching] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [rematchingTaskId, setRematchingTaskId] = useState<string | null>(null);
 
-  const { data: matchData, loading: matchLoading } = useMatchedProviders(
+  const { mutate: triggerMatch } = useTriggerMatching();
+  const { mutate: updateTask } = useUpdateTask();
+
+  const { data: matchData, loading: matchLoading, refetch: refetchProviders } = useMatchedProviders(
     drawerOpen ? (activeTask?._id ?? null) : null,
   );
 
@@ -452,6 +483,59 @@ export default function MyTasksPage() {
     );
   }
 
+  async function handleRematch(task: Task) {
+    setRematchingTaskId(task._id);
+    try {
+      const res = await triggerMatch({ taskId: task._id });
+      if (!res) {
+        toast.warning("Re-match failed. Please try again.");
+        return;
+      }
+      const count = (res.matchedProviders ?? res.task?.matchedProviders ?? []).length;
+      toast.success(
+        count === 0
+          ? "No providers matched right now."
+          : `${count} provider${count !== 1 ? "s" : ""} matched!`,
+      );
+      refetch();
+    } finally {
+      setRematchingTaskId(null);
+    }
+  }
+
+  async function handleDrawerRefresh() {
+    if (!activeTask) return;
+    setDrawerRematching(true);
+    try {
+      await triggerMatch({ taskId: activeTask._id });
+      refetchProviders();
+    } finally {
+      setDrawerRematching(false);
+    }
+  }
+
+  async function handleDrawerEdit(data: { title: string; description: string; category?: string }) {
+    if (!activeTask) return;
+    setEditSaving(true);
+    try {
+      const res = await updateTask({
+        taskId: activeTask._id,
+        body: { title: data.title, description: data.description, category: data.category },
+      });
+      if (!res) {
+        toast.error("Failed to update task. Please try again.");
+        return;
+      }
+      setActiveTask((t) => t ? { ...t, title: data.title, description: data.description, category: data.category ?? t.category } : t);
+      toast.success("Task updated! Re-matching providers…");
+      await triggerMatch({ taskId: activeTask._id });
+      refetchProviders();
+      refetch();
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
   const taskList = tasks ?? [];
   const activeTasks = taskList.filter(
     (t) => t.status !== TaskStatus.CANCELLED && t.status !== TaskStatus.EXPIRED,
@@ -514,6 +598,8 @@ export default function MyTasksPage() {
               loading={loading}
               isPast={activeTab === "past"}
               onViewProviders={openDrawer}
+              onRematch={handleRematch}
+              rematchingTaskId={rematchingTaskId}
             />
           </div>
         )}
@@ -523,11 +609,16 @@ export default function MyTasksPage() {
       <MatchedProvidersDrawer
         visible={drawerOpen}
         providers={enrichedMatches}
-        matchLoading={matchLoading}
+        matchLoading={matchLoading || drawerRematching}
         taskTitle={activeTask?.title ?? ""}
+        taskDescription={activeTask?.description ?? ""}
+        taskCategory={activeTask?.category}
         onClose={closeDrawer}
         onRequest={handleRequest}
         requestingId={requestingId}
+        onRefresh={handleDrawerRefresh}
+        onEditTask={handleDrawerEdit}
+        editSaving={editSaving}
       />
     </>
   );

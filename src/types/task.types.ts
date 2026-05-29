@@ -215,6 +215,7 @@ export interface UpdateTaskRequestBody {
   title?: string;
   description?: string;
   tags?: string[];
+  category?: string;
 }
 
 export interface RematchRequestBody {
