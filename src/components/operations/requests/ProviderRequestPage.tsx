@@ -784,6 +784,7 @@ function ProviderRequestInner() {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     null,
   );
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ── Shared location form ──────────────────────────────────────────────────
   const locationForm = useLocationForm();
@@ -811,16 +812,23 @@ function ProviderRequestInner() {
   const { locations, isLoadingLocations, saveAddress } = useClientPreference();
 
   const { mutate: sendBrowseRequest, loading: browseSubmitting } =
-    useCreateServiceBrowseRequest({ onError: (err) => toast.error(err) });
+    useCreateServiceBrowseRequest({
+      onError: (err) => { toast.error(err); setSubmitError(err); },
+    });
 
   const { mutate: sendTaskMatchRequest, loading: taskMatchSubmitting } =
-    useCreateTaskMatchRequest({ onError: (err) => toast.error(err) });
+    useCreateTaskMatchRequest({
+      onError: (err) => { toast.error(err); setSubmitError(err); },
+    });
 
   const { mutate: sendTaskInterestRequest, loading: taskInterestSubmitting } =
-    useCreateTaskInterestRequest({ onError: (err) => toast.error(err) });
+    useCreateTaskInterestRequest({
+      onError: (err) => { toast.error(err); setSubmitError(err); },
+    });
 
   const submitting = browseSubmitting || taskMatchSubmitting || taskInterestSubmitting;
   const isClosed = profile?.status === ProviderStatus.Closed;
+  const isBooked = profile?.status === ProviderStatus.Booked;
 
   const outOfHoursWarning = useMemo(() => {
     if (!profile || profile.isAlwaysAvailable) return null;
@@ -954,6 +962,7 @@ function ProviderRequestInner() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitError(null);
     if (!validate()) return;
 
     // Resolve service location — always includes GPS coordinates when available
@@ -1172,6 +1181,27 @@ function ProviderRequestInner() {
                       browse other providers
                     </Link>
                     .
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isBooked && !isClosed && (
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-300 dark:border-amber-700/40">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertCircle
+                    size={15}
+                    className="text-amber-600 dark:text-amber-400"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
+                    {businessName} is currently booked
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-1 leading-relaxed">
+                    This provider has an active booking session. You can still
+                    send a request — they will respond when their current
+                    session ends.
                   </p>
                 </div>
               </div>
@@ -1444,6 +1474,19 @@ function ProviderRequestInner() {
                 </div>
               </div>
             </SectionCard>
+
+            {/* ── Submit error ────────────────────────────────────── */}
+            {submitError && (
+              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/40">
+                <AlertCircle
+                  size={14}
+                  className="text-red-500 dark:text-red-400 shrink-0 mt-0.5"
+                />
+                <p className="text-xs text-red-600 dark:text-red-400 leading-relaxed">
+                  {submitError}
+                </p>
+              </div>
+            )}
 
             {/* ── Submit ──────────────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">

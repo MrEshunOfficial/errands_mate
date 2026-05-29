@@ -137,6 +137,10 @@ export function RespondDialog({
     }
   };
 
+  const isFlexible =
+    request.schedule?.flexibleDates === true ||
+    !request.schedule?.preferredDate;
+
   const source = SOURCE_CFG[request.source];
   const priority = request.schedule?.priority
     ? PRIORITY_CFG[request.schedule.priority]
@@ -206,15 +210,30 @@ export function RespondDialog({
             )}
           </div>
 
+          {/* Flexible-schedule notice */}
+          {isFlexible && (
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-900/10 border border-sky-200 dark:border-sky-800/40">
+              <CalendarClock size={13} className="text-sky-500 dark:text-sky-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-sky-700 dark:text-sky-300 leading-snug">
+                This request has no fixed schedule. Propose a date &amp; time
+                before accepting so the booking is properly time-bound.
+              </p>
+            </div>
+          )}
+
           {/* Action selection */}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => setAction("accept")}
+              disabled={isFlexible}
+              onClick={() => !isFlexible && setAction("accept")}
+              title={isFlexible ? "A concrete schedule is required before accepting. Use 'Propose a schedule' below." : undefined}
               className={`h-10 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1.5 border transition-colors ${
-                action === "accept"
-                  ? "bg-emerald-600 border-emerald-600 text-white"
-                  : "border-emerald-300 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                isFlexible
+                  ? "border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 bg-stone-50 dark:bg-stone-800/40 cursor-not-allowed"
+                  : action === "accept"
+                    ? "bg-emerald-600 border-emerald-600 text-white"
+                    : "border-emerald-300 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
               }`}>
               <Check size={14} />
               Accept
@@ -232,17 +251,19 @@ export function RespondDialog({
             </button>
           </div>
 
-          {/* Propose reschedule */}
+          {/* Propose reschedule — primary action for flexible requests */}
           <button
             type="button"
             onClick={() => setAction("propose")}
             className={`w-full h-10 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1.5 border transition-colors ${
               action === "propose"
                 ? "bg-sky-600 border-sky-600 text-white"
-                : "border-sky-300 dark:border-sky-700/50 text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                : isFlexible
+                  ? "border-sky-400 dark:border-sky-600 bg-sky-50 dark:bg-sky-900/10 text-sky-700 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/20"
+                  : "border-sky-300 dark:border-sky-700/50 text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20"
             }`}>
             <CalendarClock size={14} />
-            Propose a different schedule
+            {isFlexible ? "Propose a schedule (required)" : "Propose a different schedule"}
           </button>
 
           {/* Propose schedule inputs */}

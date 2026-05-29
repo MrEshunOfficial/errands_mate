@@ -34,6 +34,7 @@ import type {
   BrowseSortBy,
 } from "@/lib/api/profile/business.profile.api";
 import type { ProviderProfile } from "@/types/provider.profile.types";
+import { ProviderStatus } from "@/types/provider.profile.types";
 import type { UserLocation } from "@/types/location.types";
 import { useActiveCategories } from "@/hooks/services/categories/useServiceCategory";
 import type { Category } from "@/types/services/categories/service.category.types";
@@ -195,10 +196,16 @@ function ProviderCard({
   const avatarUrl = isPopulatedPic(picture) ? picture.url : null;
   const avatarThumb = isPopulatedPic(picture) ? picture.thumbnailUrl : null;
 
+  const isBooked = provider.status === ProviderStatus.Booked;
+
   return (
     <Link
       href={`/providers/${String(provider._id)}`}
-      className="group relative flex flex-col rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden hover:border-amber-300 dark:hover:border-amber-600/60 hover:shadow-lg hover:shadow-stone-100/80 dark:hover:shadow-stone-950/80 hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.99]">
+      className={`group relative flex flex-col rounded-2xl border bg-white dark:bg-stone-900 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.99] ${
+        isBooked
+          ? "border-amber-200 dark:border-amber-700/50 hover:border-amber-400 dark:hover:border-amber-500/70 hover:shadow-amber-50 dark:hover:shadow-stone-950/80"
+          : "border-stone-100 dark:border-stone-800 hover:border-amber-300 dark:hover:border-amber-600/60 hover:shadow-stone-100/80 dark:hover:shadow-stone-950/80"
+      }`}>
       {isNearby && (
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-400 via-orange-400 to-amber-300" />
       )}
@@ -274,11 +281,19 @@ function ProviderCard({
         </div>
 
         {/* Badges */}
-        {provider.isAlwaysAvailable && (
+        {(provider.isAlwaysAvailable || isBooked) && (
           <div className="flex flex-wrap gap-1.5">
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-full px-2 py-0.5">
-              <Clock size={8} /> Always available
-            </span>
+            {isBooked && (
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-full px-2 py-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Currently Booked
+              </span>
+            )}
+            {!isBooked && provider.isAlwaysAvailable && (
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-full px-2 py-0.5">
+                <Clock size={8} /> Always available
+              </span>
+            )}
           </div>
         )}
       </div>
