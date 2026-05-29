@@ -56,7 +56,7 @@ import {
   RequestContextAttachment,
   RequestContextServiceDetails,
 } from "@/types/provider.request.types";
-import { TaskPriority } from "@/types/task.types";
+import { TaskPriority, resolveTaskLocation } from "@/types/task.types";
 import type { Task } from "@/types/task.types";
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -403,20 +403,18 @@ function TaskDetailsPopover({
               )}
 
               {/* Location */}
-              {task.locationContext?.ghanaPostGPS && (
-                <div className="flex items-center gap-1.5 text-[11px] text-stone-500 dark:text-stone-400">
-                  <MapPin size={11} className="shrink-0 text-stone-400" />
-                  <span className="font-mono">
-                    {task.locationContext.ghanaPostGPS}
-                  </span>
-                  {task.locationContext.nearbyLandmark && (
-                    <span className="text-stone-400">
-                      {" "}
-                      · {task.locationContext.nearbyLandmark}
-                    </span>
-                  )}
-                </div>
-              )}
+              {(() => {
+                const loc = resolveTaskLocation(task.locationContext);
+                if (!loc.ghanaPostGPS) return null;
+                const detail = loc.resolvedAddress ?? loc.nearbyLandmark;
+                return (
+                  <div className="flex items-center gap-1.5 text-[11px] text-stone-500 dark:text-stone-400">
+                    <MapPin size={11} className="shrink-0 text-stone-400" />
+                    <span className="font-mono">{loc.ghanaPostGPS}</span>
+                    {detail && <span className="text-stone-400"> · {detail}</span>}
+                  </div>
+                );
+              })()}
 
               {/* Attachments */}
               {taskAttachments && taskAttachments.length > 0 && (

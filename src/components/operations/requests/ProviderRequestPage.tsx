@@ -54,7 +54,7 @@ import { useTaskById } from "@/hooks/tasks/useTasks";
 import { useClientPreference } from "@/hooks/profiles/useClientPreference";
 import { useLocationForm } from "@/hooks/profiles/useLocationForm";
 import { profilePictureAPI } from "@/lib/api/files/profile/profile-picture.api";
-import { TaskPriority } from "@/types/task.types";
+import { TaskPriority, resolveTaskLocation } from "@/types/task.types";
 import type { Task } from "@/types/task.types";
 import { RequestSource } from "@/types/provider.request.types";
 import { ProviderStatus } from "@/types/provider.profile.types";
@@ -439,8 +439,8 @@ function ProviderHero({
 function TaskContextCard({ task }: { task: Task | null | undefined }) {
   if (!task) return null;
 
-  const ctx = task.locationContext;
-  const locationLine = [ctx?.ghanaPostGPS, ctx?.nearbyLandmark]
+  const loc = resolveTaskLocation(task.locationContext);
+  const locationLine = [loc.ghanaPostGPS, loc.resolvedAddress ?? loc.nearbyLandmark]
     .filter(Boolean)
     .join(" · ");
 
@@ -883,18 +883,14 @@ function ProviderRequestInner() {
   // Pre-fill location form from task data in task mode
   useEffect(() => {
     if (!isTaskMode || !task?.locationContext) return;
-    const ctx = task.locationContext as Record<string, unknown>;
-    const nested = ctx?.registeredLocation as
-      | Record<string, unknown>
-      | undefined;
-    const gps = (ctx?.ghanaPostGPS ?? nested?.ghanaPostGPS) as
-      | string
-      | undefined;
-    const landmark = (ctx?.nearbyLandmark ?? nested?.nearbyLandmark) as
-      | string
-      | undefined;
-    if (gps || landmark) {
-      locationForm.reset({ ghanaPostGPS: gps ?? "", nearbyLandmark: landmark ?? "" });
+    const { ghanaPostGPS, nearbyLandmark } = resolveTaskLocation(
+      task.locationContext,
+    );
+    if (ghanaPostGPS || nearbyLandmark) {
+      locationForm.reset({
+        ghanaPostGPS: ghanaPostGPS ?? "",
+        nearbyLandmark: nearbyLandmark ?? "",
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, isTaskMode]);

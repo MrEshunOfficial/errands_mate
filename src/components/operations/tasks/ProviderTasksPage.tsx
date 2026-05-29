@@ -27,7 +27,7 @@ import {
   useExpressInterest,
   useWithdrawInterest,
 } from "@/hooks/tasks/useTasks";
-import { Task, TaskPriority } from "@/types/task.types";
+import { Task, TaskPriority, resolveTaskLocation } from "@/types/task.types";
 
 // ─── Priority config ──────────────────────────────────────────────────────────
 
@@ -127,6 +127,8 @@ function ExpressInterestDialog({
     onSuccess: () => { onDone(); onClose(); },
   });
 
+  const taskLoc = resolveTaskLocation(task.locationContext);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-2xl">
@@ -161,11 +163,16 @@ function ExpressInterestDialog({
 
           <div className="rounded-xl border border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/50 px-3 py-2.5 space-y-1">
             <p className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">Task summary</p>
-            {task.locationContext?.ghanaPostGPS && (
+            {taskLoc.ghanaPostGPS && (
               <p className="text-[11px] text-stone-600 dark:text-stone-300 flex items-center gap-1.5">
                 <MapPin size={10} className="shrink-0" />
-                {task.locationContext.ghanaPostGPS}
-                {task.locationContext.nearbyLandmark && ` · ${task.locationContext.nearbyLandmark}`}
+                {taskLoc.ghanaPostGPS}
+                {taskLoc.nearbyLandmark && ` · ${taskLoc.nearbyLandmark}`}
+              </p>
+            )}
+            {taskLoc.resolvedAddress && (
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 pl-[18px]">
+                {taskLoc.resolvedAddress}
               </p>
             )}
             {task.interestedProviders && task.interestedProviders.length > 0 && (
@@ -275,6 +282,7 @@ function TaskCard({
 }) {
   const expiry = fmtExpiry(task.expiresAt);
   const interestCount = task.interestedProviders?.length ?? 0;
+  const taskLoc = resolveTaskLocation(task.locationContext);
 
   return (
     <div className="rounded-2xl border border-stone-200 dark:border-stone-700/50 bg-white dark:bg-stone-900 overflow-hidden hover:shadow-sm hover:border-stone-300 dark:hover:border-stone-600 transition-all">
@@ -328,13 +336,15 @@ function TaskCard({
 
         {/* Meta row */}
         <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-3">
-          {task.locationContext?.ghanaPostGPS && (
+          {taskLoc.ghanaPostGPS && (
             <span className="flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400">
               <MapPin size={10} />
-              {task.locationContext.ghanaPostGPS}
-              {task.locationContext.nearbyLandmark && (
-                <span className="text-stone-400 dark:text-stone-500"> · {task.locationContext.nearbyLandmark}</span>
-              )}
+              {taskLoc.ghanaPostGPS}
+              {taskLoc.resolvedAddress ? (
+                <span className="text-stone-400 dark:text-stone-500"> · {taskLoc.resolvedAddress}</span>
+              ) : taskLoc.nearbyLandmark ? (
+                <span className="text-stone-400 dark:text-stone-500"> · {taskLoc.nearbyLandmark}</span>
+              ) : null}
             </span>
           )}
           {interestCount > 0 && mode !== "applied" && (

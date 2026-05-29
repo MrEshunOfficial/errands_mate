@@ -191,17 +191,93 @@ export interface Task {
   viewCount: number;
 }
 
-/** Matches the backend TaskLocationContext shape. */
-export interface TaskLocationContext {
-  ghanaPostGPS?: string;
+/**
+ * A fully-resolved registered address as stored on a task's locationContext.
+ *
+ * This is where the OSM-enriched fields (region, city, district, locality,
+ * streetName) actually live — they are NOT flattened onto the parent
+ * locationContext. Always read them through `resolveTaskLocation()`.
+ */
+export interface TaskRegisteredLocation {
+  ghanaPostGPS: string;
   nearbyLandmark?: string;
+  region?: string;
+  city?: string;
+  district?: string;
+  locality?: string;
+  streetName?: string;
+  houseNumber?: string;
   gpsCoordinates?: {
     latitude: number;
     longitude: number;
-    accuracy?: number;
   };
+  isAddressVerified?: boolean;
+  sourceProvider?: string;
+}
+
+/**
+ * Matches the backend TaskLocationContext shape.
+ *
+ * The enriched address lives on `registeredLocation` — the previous flat
+ * shape (top-level ghanaPostGPS / resolvedAddress) never existed on the wire,
+ * which is why no enriched detail ever rendered. Consume this via
+ * `resolveTaskLocation()` so every surface shows the same composed address.
+ */
+export interface TaskLocationContext {
+  registeredLocation?: TaskRegisteredLocation;
+  gpsLocationAtPosting?: {
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+    capturedAt?: string;
+  };
+  activeRadiusKm?: number;
+}
+
+/** Flattened, display-ready view of a task's location. */
+export interface ResolvedTaskLocation {
+  ghanaPostGPS?: string;
+  nearbyLandmark?: string;
+  gpsCoordinates?: { latitude: number; longitude: number; accuracy?: number };
+  /**
+   * Enriched OSM address composed to a single line
+   * (street → locality → city → district → region), or undefined when none
+   * of those fields resolved.
+   */
   resolvedAddress?: string;
-  [key: string]: unknown;
+}
+
+/**
+ * Normalises a task's locationContext into a flat, display-ready shape.
+ *
+ * Composes the human-readable address from the enriched OSM fields and falls
+ * back to the live GPS fix captured at posting time when the registered
+ * address has no stored coordinates of its own.
+ */
+export function resolveTaskLocation(
+  ctx: TaskLocationContext | null | undefined,
+): ResolvedTaskLocation {
+  const reg = ctx?.registeredLocation;
+  const live = ctx?.gpsLocationAtPosting;
+
+  const gpsCoordinates = reg?.gpsCoordinates
+    ? { latitude: reg.gpsCoordinates.latitude, longitude: reg.gpsCoordinates.longitude }
+    : live
+      ? { latitude: live.latitude, longitude: live.longitude, accuracy: live.accuracy }
+      : undefined;
+
+  const street = [reg?.houseNumber, reg?.streetName].filter(Boolean).join(" ").trim();
+  const resolvedAddress =
+    [street || undefined, reg?.locality, reg?.city, reg?.district, reg?.region]
+      .filter(Boolean)
+      .join(", ") || undefined;
+
+  return {
+    ghanaPostGPS: reg?.ghanaPostGPS,
+    nearbyLandmark: reg?.nearbyLandmark,
+    gpsCoordinates,
+    resolvedAddress,
+  };
 }
 
 // ─── Request bodies ───────────────────────────────────────────────────────────
