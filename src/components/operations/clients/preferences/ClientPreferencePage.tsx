@@ -29,6 +29,7 @@ import {
   Eye,
   EyeOff,
   User,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -326,25 +327,39 @@ function AddressCard({
   onDelete,
   onSetDefault,
   onUnsetDefault,
+  onReEnrich,
   isSettingDefault,
   isUnsettingDefault,
   isDeleting,
   isSaving,
+  isReEnriching,
 }: {
   loc: Location;
   onUpdate: (values: AddressFormValues) => Promise<boolean>;
   onDelete: () => void;
   onSetDefault: () => void;
   onUnsetDefault: () => void;
+  onReEnrich: () => void;
   isSettingDefault: boolean;
   isUnsettingDefault: boolean;
   isDeleting: boolean;
   isSaving: boolean;
+  isReEnriching: boolean;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const { address } = loc;
+
+  // A location is missing enrichment when none of the OSM-resolved fields are
+  // present — this happens for older records saved before enrichment ran.
+  const needsEnrichment = !(
+    address.streetName ||
+    address.locality ||
+    address.city ||
+    address.district ||
+    address.region
+  );
 
   const handleEdit = async (values: AddressFormValues) => {
     setEditError(null);
@@ -503,6 +518,26 @@ function AddressCard({
             {address.gpsCoordinates.latitude.toFixed(5)},{" "}
             {address.gpsCoordinates.longitude.toFixed(5)}
           </p>
+        )}
+
+        {needsEnrichment && (
+          <div className="flex items-center gap-2 flex-wrap pt-1.5">
+            <p className="text-xs italic text-muted-foreground/60">
+              Address details unavailable
+            </p>
+            <button
+              type="button"
+              onClick={onReEnrich}
+              disabled={isReEnriching}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors disabled:opacity-50">
+              {isReEnriching ? (
+                <Loader2 size={11} className="animate-spin" />
+              ) : (
+                <Sparkles size={11} />
+              )}
+              {isReEnriching ? "Enriching…" : "Enrich details"}
+            </button>
+          </div>
         )}
       </div>
 
@@ -858,6 +893,7 @@ export default function ClientPreferencePage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
   const [unsettingDefaultId, setUnsettingDefaultId] = useState<string | null>(null);
+  const [reEnrichingId, setReEnrichingId] = useState<string | null>(null);
 
   // ── Communication preferences ─────────────────────────────────────────────
   const commSettings = useMemo(
@@ -1095,6 +1131,26 @@ export default function ClientPreferencePage() {
     [unsetDefaultAddress],
   );
 
+  // Re-run server-side OSM enrichment for an address that was saved without it
+  // (e.g. older records, or those persisted via the task-posting flow).
+  const handleReEnrich = useCallback(
+    async (loc: Location) => {
+      const id = loc._id.toString();
+      setReEnrichingId(id);
+      const result = await updateAddress(id, {
+        ghanaPostGPS: loc.address.ghanaPostGPS,
+      });
+      if (result) {
+        toast.success("Address details enriched.");
+        refreshLocations();
+      } else {
+        toast.error("Couldn't enrich this address. Please try again.");
+      }
+      setReEnrichingId(null);
+    },
+    [updateAddress, refreshLocations],
+  );
+
   // ── Favorites handlers ────────────────────────────────────────────────────
   const handleRemoveService = useCallback(
     async (id: string) => {
@@ -1285,10 +1341,12 @@ export default function ClientPreferencePage() {
                             onDelete={() => handleDelete(id)}
                             onSetDefault={() => handleSetDefault(id)}
                             onUnsetDefault={() => handleUnsetDefault(id)}
+                            onReEnrich={() => handleReEnrich(loc)}
                             isSettingDefault={settingDefaultId === id}
                             isUnsettingDefault={unsettingDefaultId === id}
                             isDeleting={deletingId === id}
                             isSaving={isSavingLocation}
+                            isReEnriching={reEnrichingId === id}
                           />
                         );
                       })}

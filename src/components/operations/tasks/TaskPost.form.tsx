@@ -342,6 +342,7 @@ export default function PostTaskForm() {
     locations: rawSavedLocations,
     isLoadingLocations,
     defaultLocation,
+    saveAddress,
   } = useClientPreference();
   const savedLocations = Array.isArray(rawSavedLocations)
     ? rawSavedLocations
@@ -417,21 +418,18 @@ export default function PostTaskForm() {
     const locationPayload = locationForm.toPayload();
     const coords = locationForm.coordinates;
 
+    // Whether the client opted to persist this new address to their address book.
+    // We do NOT use the task endpoint's `saveForLater` flag — it stores a bare,
+    // un-enriched record. Instead we call the dedicated /client/locations endpoint
+    // below, which runs OSM enrichment (region/city/district/locality), matching
+    // the flow already used by ProviderRequestPage.
+    const wantsSaveLocation =
+      draft.locationMode !== "existing" && draft.saveNewLocation;
+
     const location: TaskLocationInput =
       draft.locationMode === "existing" && draft.existingLocationId
         ? { existingLocationId: draft.existingLocationId }
-        : {
-            newLocation: {
-              ...locationPayload,
-              ...(draft.saveNewLocation && {
-                saveForLater: true,
-                label: draft.newLocationLabel,
-                ...(draft.newLocationLabel === LocationLabel.OTHER && {
-                  customLabel: draft.newLocationCustomLabel,
-                }),
-              }),
-            },
-          };
+        : { newLocation: { ...locationPayload } };
 
     const payload: CreateTaskRequestBody = {
       title: draft.title,
@@ -459,6 +457,22 @@ export default function PostTaskForm() {
     }
 
     const { task } = result;
+
+    // Persist the address book entry via the enriching endpoint (OSM-backed).
+    if (wantsSaveLocation) {
+      void saveAddress({
+        label: draft.newLocationLabel,
+        customLabel:
+          draft.newLocationLabel === LocationLabel.OTHER
+            ? draft.newLocationCustomLabel.trim() || undefined
+            : undefined,
+        ghanaPostGPS: locationPayload.ghanaPostGPS,
+        nearbyLandmark: locationPayload.nearbyLandmark,
+        liveCoordinates: coords
+          ? { latitude: coords.latitude, longitude: coords.longitude }
+          : undefined,
+      }).catch(() => {});
+    }
 
     resetCreate();
     setPostedTaskId(task._id);
