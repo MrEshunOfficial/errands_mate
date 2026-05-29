@@ -247,15 +247,25 @@ function TextInput({
 function MatchingStatusPill({
   matching,
   count,
+  proximityOnly,
 }: {
   matching: boolean;
   count: number;
+  proximityOnly: boolean;
 }) {
   if (matching) {
     return (
       <div className="flex items-center gap-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 rounded-full px-2.5 py-1 w-fit mx-auto">
         <Loader2 size={10} className="animate-spin" />
         Finding nearby providers…
+      </div>
+    );
+  }
+  if (count > 0 && proximityOnly) {
+    return (
+      <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-full px-2.5 py-1 w-fit mx-auto">
+        <Navigation size={10} />
+        {count} nearby provider{count !== 1 ? "s" : ""}
       </div>
     );
   }
@@ -501,8 +511,14 @@ export default function PostTaskForm() {
     setMatchingSummary(matchRes.matchingSummary);
 
     const matchedCount = rawProviders.length;
+    const isProximityOnly =
+      matchRes.matchingSummary?.matchOutcome === "proximity_only";
     if (matchedCount === 0) {
       toast.info("No providers matched right now — your task is now floating.");
+    } else if (isProximityOnly) {
+      toast.info(
+        `No exact match — your task is floating to ${matchedCount} nearby provider${matchedCount !== 1 ? "s" : ""}.`,
+      );
     } else {
       toast.success(
         `${matchedCount} provider${matchedCount !== 1 ? "s" : ""} matched!`,
@@ -568,7 +584,13 @@ export default function PostTaskForm() {
       setMatchingSummary(matchRes.matchingSummary);
       enrichProviders(rawProviders);
       const count = rawProviders.length;
+      const isProximityOnly =
+        matchRes.matchingSummary?.matchOutcome === "proximity_only";
       if (count === 0) toast.info("No providers matched with the updated details.");
+      else if (isProximityOnly)
+        toast.info(
+          `No exact match — your task is floating to ${count} nearby provider${count !== 1 ? "s" : ""}.`,
+        );
       else toast.success(`${count} provider${count !== 1 ? "s" : ""} matched!`);
     } finally {
       setEditSaving(false);
@@ -934,7 +956,9 @@ export default function PostTaskForm() {
 
   // ── Derived values ────────────────────────────────────────────────────────────
   const matchedCount = enrichedProviders.length;
-  const hasMatches = matchedCount > 0;
+  const proximityOnly = matchingSummary?.matchOutcome === "proximity_only";
+  // Content-relevant matches only; proximity-only providers are nearby, not matched.
+  const hasMatches = matchedCount > 0 && !proximityOnly;
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
@@ -973,6 +997,7 @@ export default function PostTaskForm() {
                   <MatchingStatusPill
                     matching={matching}
                     count={matchedCount}
+                    proximityOnly={proximityOnly}
                   />
 
                   <div className="flex gap-3 w-full">
@@ -1035,6 +1060,7 @@ export default function PostTaskForm() {
                     <MatchingStatusPill
                       matching={matching}
                       count={matchedCount}
+                      proximityOnly={proximityOnly}
                     />
                     <button
                       type="button"
@@ -1074,7 +1100,9 @@ export default function PostTaskForm() {
                         ? "We're still looking — results will appear in the panel."
                         : hasMatches
                           ? `${matchedCount} provider${matchedCount !== 1 ? "s" : ""} found. Check the panel to request one.`
-                          : "No providers matched right now, but your task is live. Nearby providers will see it and can express interest."}
+                          : proximityOnly && matchedCount > 0
+                            ? `No exact match, but your task is visible to ${matchedCount} nearby provider${matchedCount !== 1 ? "s" : ""} who can express interest.`
+                            : "No providers matched right now, but your task is live. Nearby providers will see it and can express interest."}
                     </p>
                   </div>
 
@@ -1084,7 +1112,7 @@ export default function PostTaskForm() {
                       onClick={() => setDrawerOpen(true)}
                       className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
                       <ChevronRight size={12} />
-                      View matched providers
+                      {proximityOnly ? "View nearby providers" : "View matched providers"}
                     </button>
                   )}
 
