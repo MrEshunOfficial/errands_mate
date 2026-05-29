@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useMyProviderProfile } from "@/hooks/profiles/useProviderProfile";
+import { providerProfileAPI } from "@/lib/api/profile/business.profile.api";
 import {
   X,
   Check,
@@ -86,6 +88,9 @@ export function RespondDialog({
   const [proposedStart, setProposedStart] = useState("");
   const [proposedEnd, setProposedEnd] = useState("");
 
+  const { data: myProfile } = useMyProviderProfile();
+  const myProfileId = myProfile?._id as string | undefined;
+
   const {
     mutate: respond,
     loading: respondLoading,
@@ -118,7 +123,7 @@ export function RespondDialog({
     return true;
   })();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!action) return;
     if (action === "propose") {
       propose({
@@ -130,10 +135,13 @@ export function RespondDialog({
         },
       });
     } else {
-      respond({
+      const result = await respond({
         requestId: request._id,
         body: { action, message: message.trim() || undefined },
       });
+      if (result && action === "accept" && myProfileId) {
+        void providerProfileAPI.updateProviderStatus(myProfileId, { status: "Booked" });
+      }
     }
   };
 

@@ -28,6 +28,8 @@ import {
   useSubmitProof,
   useSubmitRebuttal,
 } from "@/hooks/bookings/useBooking";
+import { useMyProviderProfile } from "@/hooks/profiles/useProviderProfile";
+import { providerProfileAPI } from "@/lib/api/profile/business.profile.api";
 import { Booking, BookingStatus } from "@/types/booking.types";
 import { completionAttemptAPI } from "@/lib/api/bookings/completion-attempt.api";
 import { useTaskCompletionAttachment } from "@/hooks/files/useTaskCompletionAttachment";
@@ -534,6 +536,16 @@ export default function ProviderBookingsPage() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
 
+  const { data: myProfile } = useMyProviderProfile();
+  const myProfileId = myProfile?._id as string | undefined;
+
+  function handleJobDone() {
+    refetch();
+    if (myProfileId) {
+      void providerProfileAPI.updateProviderStatus(myProfileId, { status: "Available" });
+    }
+  }
+
   const filtered =
     !bookings
       ? []
@@ -643,7 +655,7 @@ export default function ProviderBookingsPage() {
         <SubmitProofDialog
           bookingId={activeDialog.bookingId}
           onClose={() => setActiveDialog(null)}
-          onSubmitted={refetch}
+          onSubmitted={handleJobDone}
         />
       )}
       {activeDialog?.type === "rebuttal" && (
