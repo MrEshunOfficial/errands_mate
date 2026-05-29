@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useMyTasks, useMatchedProviders, useTriggerMatching, useUpdateTask } from "@/hooks/tasks/useTasks";
 import { toast } from "sonner";
-import { Task, TaskStatus } from "@/types/task.types";
+import { Task, TaskStatus, MatchingSummary } from "@/types/task.types";
 import type { Service } from "@/types/services/service.types";
 import { profilePictureAPI } from "@/lib/api/files/profile/profile-picture.api";
 import {
@@ -389,6 +389,7 @@ export default function MyTasksPage() {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [enrichedMatches, setEnrichedMatches] = useState<EnrichedMatch[]>([]);
+  const [matchingSummary, setMatchingSummary] = useState<MatchingSummary | undefined>(undefined);
   const [requestingId, setRequestingId] = useState<string | null>(null);
   const [drawerRematching, setDrawerRematching] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
@@ -463,6 +464,24 @@ export default function MyTasksPage() {
   function openDrawer(task: Task) {
     setActiveTask(task);
     setEnrichedMatches([]);
+    // Seed the summary from the task's persisted matching fields so the
+    // proximity-only banner shows immediately, without re-running matching.
+    // A fresh re-match (refresh/edit) overwrites this with a live summary.
+    setMatchingSummary(
+      task.matchOutcome
+        ? {
+            strategy: task.matchingCriteria?.useLocationOnly
+              ? "location-only"
+              : "intelligent",
+            matchOutcome: task.matchOutcome,
+            totalMatches: task.matchedProviders?.length ?? 0,
+            averageMatchScore: 0,
+            searchTermsUsed: task.matchingCriteria?.searchTerms ?? [],
+            radiusUsedKm: task.matchingCriteria?.radiusUsedKm ?? 0,
+            locationSourceUsed: task.matchingCriteria?.locationSourceUsed,
+          }
+        : undefined,
+    );
     setDrawerOpen(true);
   }
 
@@ -507,7 +526,8 @@ export default function MyTasksPage() {
     if (!activeTask) return;
     setDrawerRematching(true);
     try {
-      await triggerMatch({ taskId: activeTask._id });
+      const res = await triggerMatch({ taskId: activeTask._id });
+      if (res?.matchingSummary) setMatchingSummary(res.matchingSummary);
       refetchProviders();
     } finally {
       setDrawerRematching(false);
@@ -528,7 +548,8 @@ export default function MyTasksPage() {
       }
       setActiveTask((t) => t ? { ...t, title: data.title, description: data.description, category: data.category ?? t.category } : t);
       toast.success("Task updated! Re-matching providers…");
-      await triggerMatch({ taskId: activeTask._id });
+      const matchRes = await triggerMatch({ taskId: activeTask._id });
+      if (matchRes?.matchingSummary) setMatchingSummary(matchRes.matchingSummary);
       refetchProviders();
       refetch();
     } finally {
@@ -609,6 +630,7 @@ export default function MyTasksPage() {
       <MatchedProvidersDrawer
         visible={drawerOpen}
         providers={enrichedMatches}
+        summary={matchingSummary}
         matchLoading={matchLoading || drawerRematching}
         taskTitle={activeTask?.title ?? ""}
         taskDescription={activeTask?.description ?? ""}

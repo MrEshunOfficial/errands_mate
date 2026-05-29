@@ -478,6 +478,35 @@ function SummaryPills({ summary }: { summary: MatchingSummary }) {
   );
 }
 
+// ─── Proximity-only Banner ────────────────────────────────────────────────────
+//
+// Shown when the backend reports matchOutcome === "proximity_only": no provider
+// was content-relevant to the task, but nearby providers were attached so the
+// task is FLOATING and discoverable. Sets honest expectations for the client.
+
+function ProximityOnlyBanner({ count }: { count: number }) {
+  return (
+    <div className="flex items-start gap-2.5 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-3.5 py-3">
+      <AlertCircle
+        size={15}
+        className="text-amber-500 shrink-0 mt-0.5"
+      />
+      <div className="space-y-0.5">
+        <p className="text-xs font-bold text-amber-700 dark:text-amber-300">
+          No exact match found
+        </p>
+        <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80 leading-relaxed">
+          No provider matched your task directly, but it&apos;s now visible to{" "}
+          <span className="font-semibold">
+            {count} nearby provider{count !== 1 ? "s" : ""}
+          </span>{" "}
+          who may pick it up. We&apos;ll notify you when one responds.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Matched Providers Drawer ─────────────────────────────────────────────────
 
 export interface MatchedProvidersDrawerProps {
@@ -546,6 +575,7 @@ export function MatchedProvidersDrawer({
 
   const hasProviders = providers.length > 0;
   const someLoading = providers.some((p) => p.profileLoading);
+  const proximityOnly = summary?.matchOutcome === "proximity_only";
 
   return (
     <>
@@ -716,6 +746,10 @@ export function MatchedProvidersDrawer({
               </div>
             ) : null}
 
+            {!editMode && !matchLoading && proximityOnly && hasProviders && (
+              <ProximityOnlyBanner count={summary?.totalMatches ?? providers.length} />
+            )}
+
             {!editMode && matchLoading && (
               <div className="flex flex-col items-center justify-center py-16 gap-5">
                 <div className="relative w-16 h-16">
@@ -767,7 +801,7 @@ export function MatchedProvidersDrawer({
               <div className="space-y-3">
                 <p className="text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider px-1">
                   {providers.length} provider{providers.length !== 1 ? "s" : ""}{" "}
-                  · sorted by score
+                  · {proximityOnly ? "nearby, sorted by distance" : "sorted by score"}
                 </p>
                 {providers.map((p, i) => (
                   <ProviderCard

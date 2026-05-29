@@ -98,6 +98,15 @@ export interface PopulatedProviderMatchResult
 
 export interface MatchingSummary {
   strategy: "intelligent" | "location-only";
+  /**
+   * Explicit outcome of the match so the client doesn't have to infer meaning
+   * from the strategy/status combination:
+   *   "matched"        — at least one content-relevant provider (task MATCHED)
+   *   "proximity_only" — no relevant provider; only nearby ones attached, task FLOATING
+   *   "none"           — no providers at all; task FLOATING
+   * Optional for backwards-compatibility with responses predating the field.
+   */
+  matchOutcome?: "matched" | "proximity_only" | "none";
   totalMatches: number;
   averageMatchScore: number;
   searchTermsUsed: string[];
@@ -162,6 +171,8 @@ export interface Task {
   // Matching outputs
   matchedProviders?: ProviderMatchResult[];
   matchingAttemptedAt?: string;
+  /** Persisted outcome of the most recent matching run. See MatchingSummary.matchOutcome. */
+  matchOutcome?: "matched" | "proximity_only" | "none";
   matchingCriteria?: {
     useLocationOnly: boolean;
     searchTerms?: string[];
