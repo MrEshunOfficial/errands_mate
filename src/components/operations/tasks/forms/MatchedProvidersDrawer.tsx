@@ -18,9 +18,7 @@ import {
   Layers,
   Clock,
   AlertCircle,
-  ExternalLink,
   Building2,
-  Shield,
   Circle,
   RotateCcw,
   Pencil,
@@ -137,11 +135,6 @@ export async function fetchProviderProfile(
   }
 }
 
-const DAY_ORDER = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-const DAY_SHORT: Record<string, string> = {
-  monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu",
-  friday: "Fri", saturday: "Sat", sunday: "Sun",
-};
 
 export function getInitials(businessName?: string): string {
   if (!businessName?.trim()) return "??";
@@ -229,50 +222,6 @@ function Chip({
   );
 }
 
-function Section({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2.5">
-        {icon}
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function InfoRow({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-2.5">
-      <span className="text-stone-300 dark:text-stone-600 mt-0.5 shrink-0">
-        {icon}
-      </span>
-      <div>
-        <p className="text-[10px] text-stone-400 dark:text-stone-500 leading-none mb-0.5">
-          {label}
-        </p>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
 
 function SkeletonCard() {
@@ -294,285 +243,6 @@ function SkeletonCard() {
   );
 }
 
-// ─── Provider Profile Sheet ───────────────────────────────────────────────────
-
-function ProviderProfileSheet({
-  match,
-  open,
-  onClose,
-  onRequest,
-  requesting,
-}: {
-  match: EnrichedMatch;
-  open: boolean;
-  onClose: () => void;
-  onRequest: () => void;
-  requesting: boolean;
-}) {
-  const profile = match.profile;
-  const businessName = profile?.businessName ?? "Unknown Provider";
-  const initials = getInitials(profile?.businessName);
-  const tier = scoreToTier(match.matchScore);
-  const statusVisual = statusToVisual(profile?.status);
-
-  const locationParts: string[] = [
-    profile?.locationData?.locality,
-    profile?.locationData?.city,
-    profile?.locationData?.region,
-  ].filter((v): v is string => Boolean(v));
-
-  const namedServices = (profile?.serviceOfferings ?? []).filter(
-    (s): s is Service => typeof s === "object" && Boolean(s.title),
-  );
-
-  const phone = profile?.contactInfo?.mainContact;
-  const email = profile?.contactInfo?.businessEmail;
-
-  const addressVerified =
-    profile?.isAddressVerified ?? profile?.locationData?.isAddressVerified;
-
-  const workDays = DAY_ORDER.filter((d) => profile?.workingHours?.[d]);
-
-  return (
-    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent
-        side="right"
-        className="w-full max-w-sm p-0 flex flex-col bg-white dark:bg-stone-900 border-l border-stone-200 dark:border-stone-800">
-        {/* Header */}
-        <SheetHeader className="px-5 pt-5 pb-0 space-y-0 shrink-0">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-400 transition-colors">
-            <X size={14} />
-          </button>
-
-          <div className="flex items-start gap-4 pb-5 border-b border-stone-100 dark:border-stone-800">
-            {/* Avatar */}
-            <div
-              className={`relative w-16 h-16 rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xl font-black shadow-md select-none shrink-0 ${TIER_STYLES[tier].ring}`}>
-              {profile?.profilePictureUrl ? (
-                <div className="absolute inset-0 rounded-2xl overflow-hidden">
-                  <Image
-                    src={profile.profilePictureThumbnailUrl ?? profile.profilePictureUrl}
-                    alt={businessName}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              ) : (
-                initials
-              )}
-              <span
-                className={`absolute -top-2 -right-2 text-[10px] leading-none font-extrabold px-1.5 py-0.5 rounded-full shadow-sm ${TIER_STYLES[tier].badge}`}>
-                {match.matchScore}
-              </span>
-            </div>
-
-            <div className="flex-1 min-w-0 pt-1">
-              <SheetTitle className="text-base font-bold text-stone-900 dark:text-stone-50 leading-tight pr-6">
-                {businessName}
-              </SheetTitle>
-              <SheetDescription className="sr-only">
-                Provider profile for {businessName}
-              </SheetDescription>
-
-              {locationParts.length > 0 && (
-                <p className="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500 mt-1">
-                  <MapPin size={10} className="shrink-0" />
-                  {locationParts.slice(0, 2).join(", ")}
-                  {addressVerified && (
-                    <BadgeCheck size={10} className="text-emerald-500 ml-0.5" />
-                  )}
-                </p>
-              )}
-
-              {match.distance != null && (
-                <p className="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500 mt-0.5">
-                  <Navigation size={10} className="shrink-0" />
-                  {match.distance.toFixed(1)} km away
-                </p>
-              )}
-            </div>
-          </div>
-        </SheetHeader>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-          {/* Trust badges */}
-          {(tier === "top" || statusVisual || profile?.isAlwaysAvailable || (profile?.ratingStats?.count ?? 0) > 0) && (
-            <div className="flex flex-wrap gap-1.5">
-              {tier === "top" && (
-                <Chip
-                  icon={<Zap size={9} />}
-                  label="Top match"
-                  className="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50"
-                />
-              )}
-              {statusVisual && (
-                <Chip
-                  icon={<Circle size={7} className={statusVisual.dot} />}
-                  label={statusVisual.label}
-                  className={statusVisual.className}
-                />
-              )}
-              {profile?.isAlwaysAvailable && (
-                <Chip
-                  icon={<Clock size={9} />}
-                  label="Always available"
-                  className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50"
-                />
-              )}
-              {(profile?.ratingStats?.count ?? 0) > 0 && (
-                <Chip
-                  icon={<Star size={9} className="text-amber-400" fill="currentColor" />}
-                  label={`${profile!.ratingStats!.average.toFixed(1)} (${profile!.ratingStats!.count})`}
-                  className="text-stone-600 dark:text-stone-300 bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700"
-                />
-              )}
-            </div>
-          )}
-
-          {/* Contact */}
-          {(phone || email) && (
-            <Section title="Contact" icon={<Phone size={12} />}>
-              <div className="space-y-2">
-                {phone && (
-                  <InfoRow icon={<Phone size={13} />} label="Phone">
-                    <a
-                      href={`tel:${phone}`}
-                      className="text-sm font-medium text-stone-800 dark:text-stone-100 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
-                      {phone}
-                    </a>
-                  </InfoRow>
-                )}
-                {email && (
-                  <InfoRow icon={<Mail size={13} />} label="Email">
-                    <a
-                      href={`mailto:${email}`}
-                      className="text-sm font-medium text-stone-800 dark:text-stone-100 hover:text-amber-600 dark:hover:text-amber-400 transition-colors truncate max-w-52 block">
-                      {email}
-                    </a>
-                  </InfoRow>
-                )}
-              </div>
-            </Section>
-          )}
-
-          {/* Location */}
-          {locationParts.length > 0 && (
-            <Section title="Location" icon={<MapPin size={12} />}>
-              <InfoRow icon={<MapPin size={13} />} label="Area">
-                <span className="text-sm text-stone-700 dark:text-stone-200">
-                  {locationParts.join(", ")}
-                </span>
-              </InfoRow>
-              {addressVerified && (
-                <div className="flex items-center gap-1.5 mt-2 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                  <Shield size={10} />
-                  Address verified
-                </div>
-              )}
-            </Section>
-          )}
-
-          {/* Schedule */}
-          {profile && (
-            <Section title="Schedule" icon={<Clock size={12} />}>
-              {profile.isAlwaysAvailable ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/50 rounded-full px-2.5 py-1">
-                  Always Available
-                </span>
-              ) : workDays.length > 0 ? (
-                <div className="space-y-1">
-                  {workDays.map((day) => {
-                    const h = profile.workingHours![day];
-                    return (
-                      <div key={day} className="flex items-center gap-2 text-xs text-stone-600 dark:text-stone-300">
-                        <span className="w-8 font-semibold text-stone-500 dark:text-stone-400 shrink-0">
-                          {DAY_SHORT[day]}
-                        </span>
-                        <span>{h.start} – {h.end}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <span className="text-xs text-stone-400 dark:text-stone-500">
-                  Schedule not specified
-                </span>
-              )}
-            </Section>
-          )}
-
-          {/* Services */}
-          {namedServices.length > 0 && (
-            <Section title="Services" icon={<Layers size={12} />}>
-              <div className="flex flex-wrap gap-1.5">
-                {namedServices.map((s, i) => (
-                  <span
-                    key={i}
-                    className="text-[11px] font-medium bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-lg px-2.5 py-1">
-                    {s.title}
-                  </span>
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* Match reason */}
-          {match.matchReasons?.[0] && (
-            <Section title="Why matched" icon={<Star size={12} />}>
-              <p className="text-xs text-stone-500 dark:text-stone-400 italic leading-relaxed">
-                &quot;{match.matchReasons[0]}&quot;
-              </p>
-            </Section>
-          )}
-
-          {/* Full profile link */}
-          <Link
-            href={`/providers/${match.providerId}`}
-            className="flex items-center justify-between w-full px-4 py-3 rounded-xl border border-stone-200 dark:border-stone-700 text-sm font-medium text-stone-600 dark:text-stone-300 hover:border-amber-400 dark:hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400 transition-all group">
-            <span className="flex items-center gap-2">
-              <Building2 size={14} />
-              View full business profile
-            </span>
-            <ExternalLink
-              size={13}
-              className="text-stone-400 group-hover:text-amber-500 transition-colors"
-            />
-          </Link>
-        </div>
-
-        {/* Footer CTA */}
-        <div className="px-5 pb-6 pt-4 border-t border-stone-100 dark:border-stone-800 shrink-0 space-y-2.5">
-          <button
-            onClick={() => {
-              onClose();
-              onRequest();
-            }}
-            disabled={requesting}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 disabled:opacity-60 transition-all duration-200 shadow-sm shadow-amber-200 dark:shadow-none">
-            {requesting ? (
-              <>
-                <Loader2 size={14} className="animate-spin" /> Requesting…
-              </>
-            ) : (
-              <>
-                <ArrowUpRight size={14} /> Request This Provider
-              </>
-            )}
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 rounded-2xl border border-stone-200 dark:border-stone-700 text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
-            Back to results
-          </button>
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
 // ─── Provider Card ────────────────────────────────────────────────────────────
 
 function ProviderCard({
@@ -580,13 +250,11 @@ function ProviderCard({
   onRequest,
   requesting,
   rank,
-  onViewProfile,
 }: {
   match: EnrichedMatch;
   onRequest: (providerId: string) => void;
   requesting: boolean;
   rank: number;
-  onViewProfile: () => void;
 }) {
   const profile = match.profile;
   const isLoading = match.profileLoading;
@@ -771,13 +439,13 @@ function ProviderCard({
         )}
 
         {/* View profile */}
-        <button
-          onClick={onViewProfile}
+        <Link
+          href={`/providers/${match.providerId}`}
           className="flex items-center gap-1.5 text-[11px] font-semibold text-stone-400 dark:text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors pt-1 border-t border-stone-50 dark:border-stone-700/50 w-full">
           <Building2 size={10} />
           View full profile
           <ChevronRight size={10} className="ml-auto" />
-        </button>
+        </Link>
       </div>
     </div>
   );
@@ -843,8 +511,6 @@ export function MatchedProvidersDrawer({
   onEditTask,
   editSaving,
 }: MatchedProvidersDrawerProps) {
-  const [profileSheetMatch, setProfileSheetMatch] =
-    useState<EnrichedMatch | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -1091,7 +757,6 @@ export function MatchedProvidersDrawer({
                       onRequest={onRequest}
                       requesting={requestingId === p.providerId}
                       rank={i + 1}
-                      onViewProfile={() => setProfileSheetMatch(p)}
                     />
                   ),
                 )}
@@ -1111,7 +776,6 @@ export function MatchedProvidersDrawer({
                     onRequest={onRequest}
                     requesting={requestingId === p.providerId}
                     rank={i + 1}
-                    onViewProfile={() => setProfileSheetMatch(p)}
                   />
                 ))}
               </div>
@@ -1185,16 +849,6 @@ export function MatchedProvidersDrawer({
         </SheetContent>
       </Sheet>
 
-      {/* Provider profile preview sheet — layered on top */}
-      {profileSheetMatch && (
-        <ProviderProfileSheet
-          match={profileSheetMatch}
-          open={!!profileSheetMatch}
-          onClose={() => setProfileSheetMatch(null)}
-          onRequest={() => onRequest(profileSheetMatch.providerId)}
-          requesting={requestingId === profileSheetMatch.providerId}
-        />
-      )}
     </>
   );
 }
