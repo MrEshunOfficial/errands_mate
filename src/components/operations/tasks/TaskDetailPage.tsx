@@ -42,6 +42,7 @@ import {
 } from "@/hooks/tasks/useTasks";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useProfile } from "@/hooks/profiles/useCoreUserProfile";
+import { useMyProviderProfile } from "@/hooks/profiles/useProviderProfile";
 import { UserRole } from "@/types/base.types";
 import {
   Task,
@@ -412,6 +413,10 @@ function InterestDialog({
     onSuccess: onExpressed,
   });
 
+  const friendlyError = error?.toLowerCase().includes("profile")
+    ? "Your provider profile isn't set up yet. Please complete your profile before expressing interest."
+    : error;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-2xl p-6">
@@ -426,7 +431,8 @@ function InterestDialog({
           </div>
           <button
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-600 rounded-lg p-1">
+            disabled={loading}
+            className="text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
@@ -441,16 +447,26 @@ function InterestDialog({
           rows={3}
           className="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-50 placeholder:text-stone-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 mb-3 resize-none"
         />
-        {error && (
-          <p className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 mb-3">
-            <AlertCircle size={12} className="shrink-0" />
-            {error}
-          </p>
+        {friendlyError && (
+          <div className="mb-3 space-y-1">
+            <p className="flex items-start gap-1.5 text-xs text-red-600 dark:text-red-400">
+              <AlertCircle size={12} className="shrink-0 mt-0.5" />
+              {friendlyError}
+            </p>
+            {error?.toLowerCase().includes("profile") && (
+              <Link
+                href="/profile"
+                className="ml-[18px] text-xs font-semibold text-red-600 dark:text-red-400 underline underline-offset-2">
+                Set up your profile →
+              </Link>
+            )}
+          </div>
         )}
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 h-9 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+            disabled={loading}
+            className="flex-1 h-9 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors disabled:opacity-40">
             Cancel
           </button>
           <button
@@ -740,6 +756,7 @@ function TaskDetail({
   const router = useRouter();
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { data: myProviderProfile, loading: myProviderProfileLoading } = useMyProviderProfile();
 
   const [showCancel, setShowCancel] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -938,10 +955,18 @@ function TaskDetail({
                     )}
                     Withdraw interest
                   </button>
+                ) : !myProviderProfileLoading && !myProviderProfile ? (
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 h-10 px-5 rounded-xl border border-amber-200 dark:border-amber-700/50 text-amber-700 dark:text-amber-400 text-[12px] font-semibold hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
+                    <AlertTriangle size={14} />
+                    Set up profile to apply
+                  </Link>
                 ) : (
                   <button
                     onClick={() => setShowInterest(true)}
-                    className="flex items-center gap-2 h-10 px-5 rounded-xl bg-stone-900 dark:bg-stone-50 text-white dark:text-stone-900 text-[12px] font-semibold hover:bg-amber-500 dark:hover:bg-amber-500 transition-colors">
+                    disabled={myProviderProfileLoading}
+                    className="flex items-center gap-2 h-10 px-5 rounded-xl bg-stone-900 dark:bg-stone-50 text-white dark:text-stone-900 text-[12px] font-semibold hover:bg-amber-500 dark:hover:bg-amber-500 transition-colors disabled:opacity-50">
                     <Zap size={14} />
                     Express interest
                   </button>

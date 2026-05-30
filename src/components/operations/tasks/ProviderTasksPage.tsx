@@ -27,6 +27,7 @@ import {
   useExpressInterest,
   useWithdrawInterest,
 } from "@/hooks/tasks/useTasks";
+import { useMyProviderProfile } from "@/hooks/profiles/useProviderProfile";
 import { Task, TaskPriority, resolveTaskLocation } from "@/types/task.types";
 
 // ─── Priority config ──────────────────────────────────────────────────────────
@@ -129,6 +130,10 @@ function ExpressInterestDialog({
 
   const taskLoc = resolveTaskLocation(task.locationContext);
 
+  const friendlyError = error?.toLowerCase().includes("profile")
+    ? "Your provider profile isn't set up yet. Please complete your profile before expressing interest."
+    : error;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-2xl">
@@ -142,7 +147,10 @@ function ExpressInterestDialog({
               <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-0.5 line-clamp-1">{task.title}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 rounded-lg p-1">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
@@ -183,10 +191,19 @@ function ExpressInterestDialog({
             )}
           </div>
 
-          {error && (
-            <p className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
-              <AlertCircle size={12} className="shrink-0" />{error}
-            </p>
+          {friendlyError && (
+            <div className="space-y-1">
+              <p className="flex items-start gap-1.5 text-xs text-red-600 dark:text-red-400">
+                <AlertCircle size={12} className="shrink-0 mt-0.5" />{friendlyError}
+              </p>
+              {error?.toLowerCase().includes("profile") && (
+                <Link
+                  href="/profile"
+                  className="ml-[18px] text-xs font-semibold text-red-600 dark:text-red-400 underline underline-offset-2">
+                  Set up your profile →
+                </Link>
+              )}
+            </div>
           )}
         </div>
 
@@ -194,7 +211,7 @@ function ExpressInterestDialog({
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 h-10 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+            className="flex-1 h-10 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors disabled:opacity-40"
           >
             Cancel
           </button>
@@ -240,7 +257,10 @@ function WithdrawDialog({
               You&apos;ll be removed from &ldquo;{task.title}&rdquo;. You can re-apply if it&apos;s still open.
             </p>
           </div>
-          <button onClick={onClose} className="ml-auto text-stone-400 hover:text-stone-600 rounded-lg p-1 shrink-0">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="ml-auto text-stone-400 hover:text-stone-600 rounded-lg p-1 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
@@ -472,6 +492,9 @@ export default function ProviderTasksPage() {
   const [expressTarget, setExpressTarget] = useState<Task | null>(null);
   const [withdrawTarget, setWithdrawTarget] = useState<Task | null>(null);
 
+  const { data: myProfile, loading: myProfileLoading } = useMyProviderProfile();
+  const profileReady = !myProfileLoading && !!myProfile;
+
   const floatingParams = region ? { region } : undefined;
 
   const {
@@ -559,6 +582,24 @@ export default function ProviderTasksPage() {
           Browse open tasks and express interest to get hired
         </p>
       </div>
+
+      {/* Profile incomplete banner */}
+      {!myProfileLoading && !myProfile && (
+        <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-2xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/10">
+          <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+              Provider profile not set up
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+              You need a provider profile to express interest in tasks.{" "}
+              <Link href="/profile" className="font-semibold underline underline-offset-2">
+                Complete your profile →
+              </Link>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto hide-scrollbar mb-5 pb-1">
@@ -711,7 +752,7 @@ export default function ProviderTasksPage() {
               key={task._id}
               task={task}
               mode={activeTab === "applied" ? "applied" : activeTab === "matched" ? "matched" : "available"}
-              onExpress={setExpressTarget}
+              onExpress={profileReady ? setExpressTarget : () => { window.location.href = "/profile"; }}
               onWithdraw={setWithdrawTarget}
             />
           ))}
