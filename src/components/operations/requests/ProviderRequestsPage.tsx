@@ -21,6 +21,8 @@ import {
   AlertCircle,
   History,
   Sparkles,
+  SendHorizonal,
+  CalendarCheck,
 } from "lucide-react";
 import {
   useMyRequestsAsProvider,
@@ -202,6 +204,17 @@ function RequestCard({
             <div className="flex items-center gap-2 flex-wrap">
               <StatusBadge status={request.status} />
               <SourceBadge source={request.source} />
+              {request.source === RequestSource.TASK_INTEREST && (
+                request.convertedToBookingId ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/50">
+                    <CalendarCheck size={9} /> Task Booked
+                  </span>
+                ) : (request.status === RequestStatus.PENDING || request.status === RequestStatus.RESCHEDULED) ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-700/50">
+                    <SendHorizonal size={9} /> Task Requested
+                  </span>
+                ) : null
+              )}
             </div>
             {request.taskTitle && (
               <p className="text-sm font-semibold text-stone-800 dark:text-stone-100 truncate">
