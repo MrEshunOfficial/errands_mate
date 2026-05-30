@@ -339,17 +339,6 @@ export function useCancelRequest(
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Provider accepts or rejects a PENDING request directed at them.
- *
- * On ACCEPT: status → ACCEPTED, a Booking is created atomically.
- * On REJECT: status → REJECTED, no booking created.
- * @role provider
- *
- * @example
- *   const { mutate: respond, loading } = useRespondToRequest({ onSuccess: refetch });
- *   await respond({ requestId, body: { action: "accept", message: "See you Friday!" } });
- */
-/**
  * Provider proposes a new schedule for a PENDING request.
  * Status → RESCHEDULED.
  * @role provider
@@ -370,11 +359,6 @@ export function useProposeSchedule(
 }
 
 /**
- * Client confirms a provider's proposed reschedule.
- * Status → ACCEPTED with the new schedule applied.
- * @role customer
- */
-/**
  * Client declines a provider's proposed reschedule.
  * Status → PENDING so the provider can respond again.
  * @role customer
@@ -391,6 +375,11 @@ export function useDeclineReschedule(
   );
 }
 
+/**
+ * Client confirms a provider's proposed reschedule.
+ * Status → ACCEPTED with the new schedule applied.
+ * @role customer
+ */
 export function useConfirmReschedule(
   callbacks?: MutationCallbacks<ProviderRequest>,
 ): MutationResult<ProviderRequest, { requestId: string }> {
@@ -420,6 +409,17 @@ export function useNegotiateSchedule(
   );
 }
 
+/**
+ * Provider accepts or rejects a PENDING request directed at them.
+ *
+ * On ACCEPT: status → ACCEPTED, a Booking is created atomically.
+ * On REJECT: status → REJECTED, no booking created.
+ * @role provider
+ *
+ * @example
+ *   const { mutate: respond, loading } = useRespondToRequest({ onSuccess: refetch });
+ *   await respond({ requestId, body: { action: "accept", message: "See you Friday!" } });
+ */
 export function useRespondToRequest(
   callbacks?: MutationCallbacks<ProviderRequest>,
 ): MutationResult<

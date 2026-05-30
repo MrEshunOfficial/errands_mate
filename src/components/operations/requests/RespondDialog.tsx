@@ -9,12 +9,12 @@ import {
   Loader2,
   AlertCircle,
   CalendarDays,
+  CalendarClock,
   MapPin,
   ClipboardList,
   Radio,
   Search,
 } from "lucide-react";
-import { CalendarClock } from "lucide-react";
 import {
   useRespondToRequest,
   useProposeSchedule,
@@ -116,10 +116,13 @@ export function RespondDialog({
   const loading = respondLoading || proposeLoading;
   const mutationError = proposeError ?? respondError;
 
+  const timeOrderValid =
+    !proposedStart || !proposedEnd || proposedStart < proposedEnd;
+
   const canSubmit = (() => {
     if (!action) return false;
     if (action === "propose")
-      return !!proposedDate && !!proposedStart && !!proposedEnd;
+      return !!proposedDate && !!proposedStart && !!proposedEnd && timeOrderValid;
     return true;
   })();
 
@@ -140,7 +143,11 @@ export function RespondDialog({
         body: { action, message: message.trim() || undefined },
       });
       if (result && action === "accept" && myProfileId) {
-        void providerProfileAPI.updateProviderStatus(myProfileId, { status: "Booked" });
+        try {
+          await providerProfileAPI.updateProviderStatus(myProfileId, { status: "Booked" });
+        } catch (err) {
+          console.error("Failed to update provider status after accept:", err);
+        }
       }
     }
   };
@@ -165,7 +172,8 @@ export function RespondDialog({
           <button
             type="button"
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg p-1">
+            disabled={loading}
+            className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
@@ -308,10 +316,20 @@ export function RespondDialog({
                       type="time"
                       value={proposedEnd}
                       onChange={(e) => setProposedEnd(e.target.value)}
-                      className="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      className={`w-full text-xs rounded-lg border bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                        !timeOrderValid
+                          ? "border-red-400 dark:border-red-600"
+                          : "border-stone-200 dark:border-stone-700"
+                      }`}
                     />
                   </div>
                 </div>
+                {!timeOrderValid && (
+                  <p className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400">
+                    <AlertCircle size={11} className="shrink-0" />
+                    End time must be after start time
+                  </p>
+                )}
               </div>
             </div>
           )}

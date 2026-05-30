@@ -763,7 +763,8 @@ function CancelDialog({
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 h-9 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+            disabled={loading}
+            className="flex-1 h-9 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             Keep it
           </button>
           <button
@@ -877,7 +878,10 @@ function NegotiateDialog({
               Propose your schedule
             </h3>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 rounded-lg p-1">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
