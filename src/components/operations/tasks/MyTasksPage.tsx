@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ClipboardList,
   Plus,
@@ -19,17 +18,8 @@ import {
   Hourglass,
   RotateCcw,
   Trash2,
-  MapPin,
-  Star,
   X,
-  ArrowUpRight,
-  BadgeCheck,
-  Mail,
-  Phone,
-  Navigation,
-  Building2,
 } from "lucide-react";
-import { ProviderStatus } from "@/types/provider.profile.types";
 import { providerProfileAPI } from "@/lib/api/profile/business.profile.api";
 import { useMyTasks, useMatchedProviders, useTriggerMatching, useUpdateTask, useDeleteTask } from "@/hooks/tasks/useTasks";
 import { toast } from "sonner";
@@ -40,9 +30,9 @@ import {
   EnrichedMatch,
   MatchedProvidersDrawer,
   fetchProviderProfile,
-  getInitials,
   type ProviderSummary,
 } from "./forms/MatchedProvidersDrawer";
+import { ProviderDrawerCard } from "./ProviderDrawerCard";
 import {
   Sheet,
   SheetContent,
@@ -137,180 +127,14 @@ function InterestedProviderDrawerCard({
     return () => { cancelled = true; };
   }, [entry.providerId]);
 
-  const name = profile?.businessName ?? (loading ? null : "Unknown Provider");
-  const initials = getInitials(profile?.businessName);
-  const locationParts = [
-    profile?.locationData?.locality,
-    profile?.locationData?.city,
-    profile?.locationData?.region,
-  ].filter(Boolean).slice(0, 2).join(", ");
-  const rating = profile?.ratingStats;
-  const phone = profile?.contactInfo?.mainContact;
-  const email = profile?.contactInfo?.businessEmail;
-  const addressVerified = profile?.isAddressVerified ?? profile?.locationData?.isAddressVerified;
-  const isBooked = profile?.status === ProviderStatus.Booked;
-  const isClosed = profile?.status === ProviderStatus.Closed;
-
-  const namedServices = (profile?.serviceOfferings ?? [])
-    .filter((s): s is Service => typeof s === "object" && Boolean((s as Service).title))
-    .slice(0, 3);
-  const extraServiceCount = (profile?.serviceOfferings?.length ?? 0) - namedServices.length;
-
-  if (loading) {
-    return (
-      <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4 animate-pulse">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-stone-100 dark:bg-stone-800 shrink-0" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 w-32 bg-stone-100 dark:bg-stone-800 rounded-full" />
-            <div className="h-2.5 w-20 bg-stone-100 dark:bg-stone-800 rounded-full" />
-          </div>
-          <div className="w-16 h-8 bg-stone-100 dark:bg-stone-800 rounded-lg" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4 transition-colors hover:border-stone-300 dark:hover:border-stone-700">
-      {/* Header row */}
-      <div className="flex items-start gap-3">
-        {/* Avatar */}
-        <div className="relative w-11 h-11 rounded-lg bg-stone-100 dark:bg-stone-800 ring-1 ring-stone-200/60 dark:ring-stone-700 flex items-center justify-center text-sm font-semibold text-stone-500 dark:text-stone-300 overflow-hidden shrink-0">
-          {profile?.profilePictureUrl ? (
-            <Image
-              src={profile.profilePictureThumbnailUrl ?? profile.profilePictureUrl}
-              alt={name ?? "Provider"}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            initials
-          )}
-        </div>
-
-        {/* Name + meta */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-sm font-semibold text-stone-900 dark:text-stone-50 truncate leading-tight">
-              {name}
-            </p>
-            {addressVerified && (
-              <BadgeCheck size={13} className="text-emerald-500 shrink-0" />
-            )}
-          </div>
-          <div className="flex items-center gap-x-2.5 gap-y-1 mt-1 flex-wrap text-xs text-stone-500 dark:text-stone-400">
-            {locationParts && (
-              <span className="inline-flex items-center gap-1 min-w-0">
-                <MapPin size={11} className="shrink-0" />
-                <span className="truncate">{locationParts}</span>
-              </span>
-            )}
-            {(rating?.count ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <Star size={11} className="text-amber-400 shrink-0" fill="currentColor" />
-                <span className="font-medium text-stone-700 dark:text-stone-200">
-                  {rating!.average.toFixed(1)}
-                </span>
-                <span className="text-stone-400 dark:text-stone-500">
-                  ({rating!.count})
-                </span>
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Request CTA */}
-        <button
-          onClick={() => onRequest(entry.providerId)}
-          disabled={isClosed}
-          className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-stone-900 dark:bg-stone-100 dark:text-stone-900 hover:bg-amber-500 dark:hover:bg-amber-500 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed rounded-lg px-3 py-2 transition-colors">
-          <ArrowUpRight size={12} />
-          {isClosed ? "Unavailable" : "Request"}
-        </button>
-      </div>
-
-      {/* Availability / status signals */}
-      {(isBooked || isClosed || profile?.isAlwaysAvailable) && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-3 text-[11px] font-medium">
-          {isBooked && (
-            <span className="inline-flex items-center gap-1 text-stone-500 dark:text-stone-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              Currently booked
-            </span>
-          )}
-          {isClosed && (
-            <span className="inline-flex items-center gap-1 text-stone-500 dark:text-stone-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
-              Closed
-            </span>
-          )}
-          {profile?.isAlwaysAvailable && (
-            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-              <Clock size={11} />
-              Always available
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Services */}
-      {namedServices.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-3">
-          {namedServices.map((s, i) => (
-            <span
-              key={i}
-              className="text-[11px] font-medium bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-md px-2 py-0.5">
-              {(s as Service).title}
-            </span>
-          ))}
-          {extraServiceCount > 0 && (
-            <span className="text-[11px] text-stone-400 dark:text-stone-500 px-1 py-0.5">
-              +{extraServiceCount} more
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Pitch message */}
-      {entry.message && (
-        <div className="mt-3 pt-2.5 border-t border-stone-100 dark:border-stone-800">
-          <p className="text-[11px] text-stone-500 dark:text-stone-400 italic leading-relaxed">
-            &ldquo;{entry.message}&rdquo;
-          </p>
-        </div>
-      )}
-
-      {/* Contact + profile link */}
-      {(phone || email) && (
-        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-stone-100 dark:border-stone-800">
-          {phone && (
-            <a
-              href={`tel:${phone}`}
-              className="inline-flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
-              <Phone size={12} className="shrink-0" />
-              {phone}
-            </a>
-          )}
-          {email && (
-            <a
-              href={`mailto:${email}`}
-              className="inline-flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors min-w-0">
-              <Mail size={12} className="shrink-0" />
-              <span className="truncate">{email}</span>
-            </a>
-          )}
-        </div>
-      )}
-
-      <Link
-        href={`/providers/${entry.providerId}`}
-        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-stone-400 dark:text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors mt-3">
-        <Building2 size={11} />
-        View full profile
-        <ChevronRight size={11} />
-      </Link>
-    </div>
+    <ProviderDrawerCard
+      profile={profile}
+      loading={loading}
+      providerId={entry.providerId}
+      onAction={onRequest}
+      message={entry.message}
+    />
   );
 }
 
