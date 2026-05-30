@@ -176,26 +176,38 @@ function TaskRow({
       <td className="py-3.5 pl-3 pr-5 align-middle text-right whitespace-nowrap">
         {canViewProviders ? (
           <div className="flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => onRematch(task)}
-              disabled={rematching}
-              title="Re-match providers"
-              className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-amber-400 hover:text-amber-600 dark:hover:border-amber-500 dark:hover:text-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              {rematching ? (
-                <Loader2 size={13} className="animate-spin" />
-              ) : (
-                <RotateCcw size={13} />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => onViewProviders(task)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-stone-900 dark:bg-stone-700 hover:bg-amber-500 dark:hover:bg-amber-500 rounded-xl px-3 py-1.5 transition-all duration-150">
-              <Users size={12} />
-              Providers
-              <ChevronRight size={11} />
-            </button>
+            {task.status === TaskStatus.MATCHED && (
+              <button
+                type="button"
+                onClick={() => onRematch(task)}
+                disabled={rematching}
+                title="Re-match providers"
+                className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-amber-400 hover:text-amber-600 dark:hover:border-amber-500 dark:hover:text-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                {rematching ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <RotateCcw size={13} />
+                )}
+              </button>
+            )}
+            {task.status === TaskStatus.FLOATING ? (
+              <Link
+                href={`/tasks/${task._id}`}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-amber-500 hover:bg-amber-400 rounded-xl px-3 py-1.5 transition-all duration-150">
+                <Radio size={12} />
+                {interestCount > 0 ? `${interestCount} interested` : "View task"}
+                <ChevronRight size={11} />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onViewProviders(task)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-stone-900 dark:bg-stone-700 hover:bg-amber-500 dark:hover:bg-amber-500 rounded-xl px-3 py-1.5 transition-all duration-150">
+                <Users size={12} />
+                Providers
+                <ChevronRight size={11} />
+              </button>
+            )}
           </div>
         ) : isTerminal ? (
           <button

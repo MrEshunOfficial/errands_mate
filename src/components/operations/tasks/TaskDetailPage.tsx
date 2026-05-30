@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Clock,
@@ -58,6 +59,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  fetchProviderProfile,
+  getInitials,
+  type ProviderSummary,
+} from "./forms/MatchedProvidersDrawer";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -65,6 +71,102 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+
+// ─── Interested Provider Card ─────────────────────────────────────────────────
+
+function InterestedProviderCard({
+  entry,
+  taskId,
+}: {
+  entry: { providerId: string; expressedAt: string; message?: string };
+  taskId: string;
+}) {
+  const [profile, setProfile] = useState<ProviderSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchProviderProfile(entry.providerId).then((p) => {
+      if (!cancelled) { setProfile(p); setLoading(false); }
+    });
+    return () => { cancelled = true; };
+  }, [entry.providerId]);
+
+  const name = profile?.businessName ?? (loading ? null : "Unknown Provider");
+  const initials = getInitials(profile?.businessName);
+  const locationParts = [
+    profile?.locationData?.locality,
+    profile?.locationData?.city,
+    profile?.locationData?.region,
+  ].filter(Boolean).slice(0, 2).join(", ");
+  const rating = profile?.ratingStats;
+
+  return (
+    <div className="flex items-start gap-3 py-3 border-b border-stone-100 dark:border-stone-800 last:border-0">
+      {/* Avatar */}
+      <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
+        {loading ? (
+          <Loader2 size={13} className="animate-spin text-white/70" />
+        ) : profile?.profilePictureUrl ? (
+          <Image
+            src={profile.profilePictureThumbnailUrl ?? profile.profilePictureUrl}
+            alt={name ?? "Provider"}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          initials
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        {loading ? (
+          <div className="space-y-1.5">
+            <div className="h-3 w-32 bg-stone-200 dark:bg-stone-700 rounded animate-pulse" />
+            <div className="h-2.5 w-20 bg-stone-100 dark:bg-stone-800 rounded animate-pulse" />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-xs font-semibold text-stone-800 dark:text-stone-100 truncate">
+                {name}
+              </p>
+              {(rating?.count ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-500">
+                  <Star size={9} fill="currentColor" />
+                  {rating!.average.toFixed(1)}
+                </span>
+              )}
+            </div>
+            {locationParts && (
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 flex items-center gap-1 mt-0.5">
+                <MapPin size={9} className="shrink-0" />
+                {locationParts}
+              </p>
+            )}
+          </>
+        )}
+        {entry.message && (
+          <p className="text-[11px] text-stone-400 dark:text-stone-500 italic mt-1 line-clamp-2">
+            &ldquo;{entry.message}&rdquo;
+          </p>
+        )}
+        <p className="text-[10px] text-stone-400 dark:text-stone-600 mt-1">
+          Interested {fmtDateTime(entry.expressedAt)}
+        </p>
+      </div>
+
+      {/* CTA */}
+      <Link
+        href={`/requests/provider/${entry.providerId}?taskId=${taskId}&source=task_interest`}
+        className="shrink-0 flex items-center gap-1 h-8 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold transition-colors">
+        Request
+        <ChevronRight size={11} />
+      </Link>
+    </div>
+  );
+}
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -1057,36 +1159,15 @@ function TaskDetail({
 
             {/* Interested providers — client view, FLOATING status */}
             {isOwner && isFloating && (
-              <Section title="Interested providers">
+              <Section title={`Interested providers${(task.interestedProviders?.length ?? 0) > 0 ? ` (${task.interestedProviders!.length})` : ""}`}>
                 {(task.interestedProviders?.length ?? 0) > 0 ? (
-                  <div className="space-y-1">
+                  <div className="-mx-5 px-5">
                     {task.interestedProviders!.map((ip) => (
-                      <div
+                      <InterestedProviderCard
                         key={ip.providerId}
-                        className="flex items-start gap-3 py-2.5 border-b border-stone-50 dark:border-stone-800 last:border-0">
-                        <div className="w-8 h-8 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-400 shrink-0">
-                          <Users size={13} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-stone-700 dark:text-stone-300">
-                            Provider
-                          </p>
-                          {ip.message && (
-                            <p className="text-[11px] text-stone-400 dark:text-stone-500 italic mt-0.5 line-clamp-2">
-                              &quot;{ip.message}&quot;
-                            </p>
-                          )}
-                          <p className="text-[10px] text-stone-400 dark:text-stone-600 mt-0.5">
-                            {fmtDateTime(ip.expressedAt)}
-                          </p>
-                        </div>
-                        <Link
-                          href={`/requests/provider/${ip.providerId}?taskId=${task._id}&source=task_interest`}
-                          className="shrink-0 flex items-center gap-1 h-7 px-2.5 rounded-lg border border-stone-200 dark:border-stone-700 text-[11px] font-semibold text-stone-600 dark:text-stone-300 hover:border-amber-400 hover:text-amber-700 dark:hover:border-amber-500 dark:hover:text-amber-400 transition-colors">
-                          Request
-                          <ChevronRight size={10} />
-                        </Link>
-                      </div>
+                        entry={ip}
+                        taskId={task._id}
+                      />
                     ))}
                   </div>
                 ) : (
