@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, AlertTriangle, ExternalLink, Copy, Check } from "lucide-react";
+import { Loader2, AlertTriangle, ExternalLink, Copy, Check, X } from "lucide-react";
 
 import { useBookingById } from "@/hooks/booking/useBookings";
 import type {
@@ -184,6 +184,7 @@ export function BookingDetailPanel({
 }: BookingDetailPanelProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
 
   const {
     booking,
@@ -270,6 +271,7 @@ export function BookingDetailPanel({
         break;
     }
 
+    setDismissedError(null);
     setPendingAction(null);
     onRefetch();
   }, [
@@ -417,11 +419,19 @@ export function BookingDetailPanel({
             {/* ── Tab Body ────────────────────────────────────────────────── */}
             <ScrollArea className="flex-1 overflow-auto">
               <div className="p-4">
-                {(mutationError || error) && (
-                  <Alert variant="destructive" className="mb-4">
+                {((mutationError && mutationError !== dismissedError) || error) && (
+                  <Alert variant="destructive" className="mb-4 relative pr-8">
                     <AlertDescription className="text-xs">
                       {mutationError ?? error}
                     </AlertDescription>
+                    {mutationError && (
+                      <button
+                        onClick={() => setDismissedError(mutationError)}
+                        className="absolute top-2 right-2 text-red-400 hover:text-red-600 transition-colors"
+                        aria-label="Dismiss error">
+                        <X size={13} />
+                      </button>
+                    )}
                   </Alert>
                 )}
 

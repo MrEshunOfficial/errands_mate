@@ -978,7 +978,9 @@ export default function ProviderProfilePage() {
     profilePictureAPI
       .getPublicRecord(authUserId)
       .then((file) => { if (!cancelled && file?.url) setFetchedPicture(file); })
-      .catch(() => {});
+      .catch((err: unknown) => {
+        console.warn("Failed to fetch provider profile picture:", err);
+      });
     return () => { cancelled = true; };
   }, [rawProfile]);
 

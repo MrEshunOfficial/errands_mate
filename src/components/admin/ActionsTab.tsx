@@ -546,7 +546,12 @@ export function ActionsTab({
             <Button
               size="sm"
               variant="outline"
-              disabled={!rescheduleDate || mutating}
+              disabled={
+                !rescheduleDate ||
+                (!!rescheduleStart && !rescheduleEnd) ||
+                (!rescheduleStart && !!rescheduleEnd) ||
+                mutating
+              }
               onClick={handleReschedule}
             >
               {mutating && (

@@ -34,10 +34,7 @@ import {
 } from "@/hooks/requests/useProviderRequest";
 import { Booking, BookingStatus } from "@/types/booking.types";
 import { ProviderRequest, RequestStatus } from "@/types/provider.request.types";
-import {
-  useMyProviderProfile,
-  useServiceOfferings,
-} from "@/hooks/profiles/useProviderProfile";
+import { useMyProviderProfile } from "@/hooks/profiles/useProviderProfile";
 import { useProfile } from "@/hooks/profiles/useCoreUserProfile";
 import { isPopulatedPicture } from "@/types/core.user.profile.types";
 import ProviderSetupPrompt from "@/components/homepage/ProviderSetupPrompt";
@@ -485,7 +482,6 @@ export default function ProviderDashboardPage() {
   const { data: providerProfile, loading: profileLoading } =
     useMyProviderProfile();
   const profileId = providerProfile?._id ? String(providerProfile._id) : null;
-  const { data: services } = useServiceOfferings(profileId);
   const { profile: userProfile } = useProfile();
   const avatarUrl = isPopulatedPicture(userProfile?.profilePictureId)
     ? userProfile.profilePictureId.thumbnailUrl ||
@@ -553,8 +549,6 @@ export default function ProviderDashboardPage() {
     .map((w: string) => w[0] ?? "")
     .join("")
     .toUpperCase();
-
-  void services;
 
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">

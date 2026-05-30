@@ -115,10 +115,11 @@ function ResolvePanel({
                 return (
                   <button
                     key={outcome}
+                    disabled={loading}
                     onClick={() =>
                       setSelectedOutcome(isSelected ? null : outcome)
                     }
-                    className={`rounded-xl border px-3 py-2 text-left transition-all text-[11px] font-semibold ${cfg.className} ${
+                    className={`rounded-xl border px-3 py-2 text-left transition-all text-[11px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed ${cfg.className} ${
                       isSelected ? "ring-2 ring-offset-1 ring-current" : ""
                     }`}
                   >

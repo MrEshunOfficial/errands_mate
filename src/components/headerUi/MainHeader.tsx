@@ -203,7 +203,7 @@ export const MainHeader: React.FC = () => {
     return undefined;
   }, [uploadedAvatarUrl, profile]);
 
-  const isLoading = authLoading;
+  const isLoading = authLoading || profileLoading.profile;
 
   const navigationItems = useMemo<NavigationItem[]>(
     () => [...baseNavigationItems],
