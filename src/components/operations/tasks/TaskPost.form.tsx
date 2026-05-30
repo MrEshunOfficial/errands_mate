@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
   MapPin,
@@ -305,14 +305,10 @@ export default function PostTaskForm() {
   const [postedTaskId, setPostedTaskId] = useState<string | null>(null);
 
   // ── Location state ───────────────────────────────────────────────────────────
-  const locationForm = useLocationForm();
-
-  // Auto-trigger GPS on mount so coordinates are often ready by the time
-  // the user reaches step 1 (mirrors original background-capture behaviour).
-  useEffect(() => {
-    locationForm.requestGps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // autoRequestGps captures the browser fix on mount so coordinates are often
+  // ready by the time the user reaches step 1. Server enrichment needs them to
+  // resolve region/city/locality from the bare Ghana Post GPS code.
+  const locationForm = useLocationForm(undefined, { autoRequestGps: true });
 
   const set = useCallback(
     <K extends keyof TaskDraft>(key: K) =>

@@ -133,11 +133,14 @@ export function ClientAddressForm({
   const [customLabel, setCustomLabel] = useState(initial.customLabel);
   const [isDefault, setIsDefault] = useState(initial.isDefault);
 
-  const locationForm = useLocationForm({
-    ghanaPostGPS: initial.ghanaPostGPS,
-    nearbyLandmark: initial.nearbyLandmark,
-    coordinates: initial.liveCoords,
-  });
+  const locationForm = useLocationForm(
+    {
+      ghanaPostGPS: initial.ghanaPostGPS,
+      nearbyLandmark: initial.nearbyLandmark,
+      coordinates: initial.liveCoords,
+    },
+    { autoRequestGps: true },
+  );
 
   const valid =
     locationForm.isValid &&

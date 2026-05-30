@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useGeolocation } from "./useGeolocation";
 import type { GeolocationState } from "./useGeolocation";
 
@@ -56,7 +56,24 @@ function deriveGpsStatus(
  * ClientAddressForm. Internally delegates to useGeolocation so the existing
  * permission-probing and change-listener logic is reused.
  */
-export function useLocationForm(initial?: Partial<LocationFormState>) {
+export interface UseLocationFormOptions {
+  /**
+   * Request the browser GPS fix once when the form mounts, so coordinates are
+   * usually captured by the time the user submits. Server-side enrichment can
+   * only resolve region/city/locality from a coordinate fix (a bare Ghana Post
+   * GPS code is not geocodable) — without this the address saves un-enriched.
+   *
+   * Enable on forms that are mounted on demand (add/edit dialogs, task posting,
+   * request composition). Leave off where the hook lives on an always-rendered
+   * surface (e.g. a settings card) so we don't prompt for location on page load.
+   */
+  autoRequestGps?: boolean;
+}
+
+export function useLocationForm(
+  initial?: Partial<LocationFormState>,
+  options?: UseLocationFormOptions,
+) {
   const [ghanaPostGPS, setGhanaPostGPS] = useState(
     initial?.ghanaPostGPS ?? "",
   );
@@ -81,6 +98,16 @@ export function useLocationForm(initial?: Partial<LocationFormState>) {
       });
     }
   }, [geoState]);
+
+  // Optionally kick off a GPS request once on mount. Fired a single time so a
+  // user who declines or clears the fix isn't re-prompted on every re-render.
+  const autoRequested = useRef(false);
+  useEffect(() => {
+    if (options?.autoRequestGps && !autoRequested.current) {
+      autoRequested.current = true;
+      requestLocation();
+    }
+  }, [options?.autoRequestGps, requestLocation]);
 
   const gpsStatus = deriveGpsStatus(permission, geoState);
 
