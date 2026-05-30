@@ -29,6 +29,8 @@ import {
   Pencil,
   ChevronDown,
   Trash2,
+  SendHorizonal,
+  CalendarCheck,
 } from "lucide-react";
 import {
   useTaskById,
@@ -206,6 +208,24 @@ const STATUS_CFG: Record<
     dot: "bg-sky-500 animate-pulse",
     accent: "from-sky-400 to-blue-400",
     subtext: "Open to all nearby providers.",
+  },
+  [TaskStatus.REQUESTED]: {
+    label: "Requested",
+    icon: <SendHorizonal size={12} />,
+    classes:
+      "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-700/50",
+    dot: "bg-violet-500 animate-pulse",
+    accent: "from-violet-400 to-purple-400",
+    subtext: "A request has been sent. Awaiting the provider's response.",
+  },
+  [TaskStatus.BOOKED]: {
+    label: "Booked",
+    icon: <CalendarCheck size={12} />,
+    classes:
+      "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
+    dot: "bg-emerald-500",
+    accent: "from-emerald-400 to-teal-400",
+    subtext: "A booking has been created for this task.",
   },
   [TaskStatus.CANCELLED]: {
     label: "Cancelled",

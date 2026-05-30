@@ -19,6 +19,8 @@ import {
   RotateCcw,
   Trash2,
   X,
+  SendHorizonal,
+  CalendarCheck,
 } from "lucide-react";
 import { providerProfileAPI } from "@/lib/api/profile/business.profile.api";
 import { useMyTasks, useMatchedProviders, useTriggerMatching, useUpdateTask, useDeleteTask } from "@/hooks/tasks/useTasks";
@@ -252,6 +254,20 @@ const STATUS_CONFIG: Record<
       "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50",
     dot: "bg-sky-500 animate-pulse",
   },
+  [TaskStatus.REQUESTED]: {
+    label: "Requested",
+    icon: <SendHorizonal size={11} />,
+    classes:
+      "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-700/50",
+    dot: "bg-violet-500 animate-pulse",
+  },
+  [TaskStatus.BOOKED]: {
+    label: "Booked",
+    icon: <CalendarCheck size={11} />,
+    classes:
+      "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50",
+    dot: "bg-emerald-500",
+  },
   [TaskStatus.CANCELLED]: {
     label: "Cancelled",
     icon: <XCircle size={11} />,
@@ -408,6 +424,16 @@ function TaskRow({
               </button>
             )}
           </div>
+        ) : task.status === TaskStatus.REQUESTED ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400">
+            <SendHorizonal size={12} />
+            Awaiting response
+          </span>
+        ) : task.status === TaskStatus.BOOKED ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <CalendarCheck size={12} />
+            Booked
+          </span>
         ) : isTerminal ? (
           <button
             type="button"
@@ -820,10 +846,16 @@ export default function MyTasksPage() {
 
   const taskList = tasks ?? [];
   const activeTasks = taskList.filter(
-    (t) => t.status !== TaskStatus.CANCELLED && t.status !== TaskStatus.EXPIRED,
+    (t) =>
+      t.status !== TaskStatus.CANCELLED &&
+      t.status !== TaskStatus.EXPIRED &&
+      t.status !== TaskStatus.BOOKED,
   );
   const pastTasks = taskList.filter(
-    (t) => t.status === TaskStatus.CANCELLED || t.status === TaskStatus.EXPIRED,
+    (t) =>
+      t.status === TaskStatus.CANCELLED ||
+      t.status === TaskStatus.EXPIRED ||
+      t.status === TaskStatus.BOOKED,
   );
 
   return (

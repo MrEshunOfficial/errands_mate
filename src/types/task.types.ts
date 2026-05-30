@@ -20,6 +20,8 @@ export enum TaskPriority {
  * MATCHED   — at least one provider matched; awaiting client action
  * FLOATING  — open to all nearby providers (client cast a wider net,
  *             or intelligent matching yielded no results)
+ * REQUESTED — client sent a request to an interested provider; no longer floating
+ * BOOKED    — a booking was created from this task; task is fulfilled
  * CANCELLED — cancelled by the client or an admin before a booking was made
  * EXPIRED   — passed expiresAt without being converted
  */
@@ -27,6 +29,8 @@ export enum TaskStatus {
   PENDING = "PENDING",
   MATCHED = "MATCHED",
   FLOATING = "FLOATING",
+  REQUESTED = "REQUESTED",
+  BOOKED = "BOOKED",
   CANCELLED = "CANCELLED",
   EXPIRED = "EXPIRED",
 }
