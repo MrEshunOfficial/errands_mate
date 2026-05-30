@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -32,11 +32,6 @@ import {
   ChevronRight,
   Navigation,
 } from "lucide-react";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
 import { useTaskById } from "@/hooks/tasks/useTasks";
 import { useAuth } from "@/hooks/auth/useAuth";
 import {
@@ -321,146 +316,6 @@ function LocationSection({
   );
 }
 
-// ─── Task details popover (provider view) ─────────────────────────────────────
-
-function TaskDetailsPopover({
-  taskId,
-  taskAttachments,
-}: {
-  taskId: string;
-  taskAttachments?: {
-    _id: string;
-    url: string;
-    thumbnailUrl?: string;
-    fileName?: string;
-  }[];
-}) {
-  const [open, setOpen] = useState(false);
-  const [fetchEnabled, setFetchEnabled] = useState(false);
-
-  const handleOpen = useCallback((next: boolean) => {
-    if (next) setFetchEnabled(true);
-    setOpen(next);
-  }, []);
-
-  const { data: task, loading } = useTaskById(fetchEnabled ? taskId : null);
-
-  return (
-    <Popover open={open} onOpenChange={handleOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 mt-2 h-7 px-2.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-[11px] font-semibold text-stone-600 dark:text-stone-300 hover:border-amber-400 dark:hover:border-amber-500 hover:text-amber-700 dark:hover:text-amber-400 transition-colors">
-          <FileText size={11} />
-          View task details
-          <ChevronRight size={10} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        sideOffset={6}
-        className="w-80 p-0 rounded-2xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl overflow-hidden">
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-stone-100 dark:border-stone-800 flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-            <FileText
-              size={12}
-              className="text-amber-600 dark:text-amber-400"
-            />
-          </div>
-          <p className="text-xs font-bold text-stone-800 dark:text-stone-100">
-            Task details
-          </p>
-        </div>
-
-        <div className="p-4">
-          {loading && (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 size={16} className="animate-spin text-stone-400" />
-            </div>
-          )}
-
-          {!loading && task && (
-            <div className="space-y-3">
-              {/* Title */}
-              <p className="text-sm font-bold text-stone-900 dark:text-stone-50 leading-snug">
-                {task.title}
-              </p>
-
-              {/* Description */}
-              {task.description && (
-                <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-4">
-                  {task.description}
-                </p>
-              )}
-
-              {/* Tags */}
-              {task.tags && task.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {task.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400">
-                      <Tag size={8} />
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Location */}
-              {(() => {
-                const loc = resolveTaskLocation(task.locationContext);
-                if (!loc.ghanaPostGPS) return null;
-                const detail = loc.resolvedAddress ?? loc.nearbyLandmark;
-                return (
-                  <div className="flex items-center gap-1.5 text-[11px] text-stone-500 dark:text-stone-400">
-                    <MapPin size={11} className="shrink-0 text-stone-400" />
-                    <span className="font-mono">{loc.ghanaPostGPS}</span>
-                    {detail && <span className="text-stone-400"> · {detail}</span>}
-                  </div>
-                );
-              })()}
-
-              {/* Attachments */}
-              {taskAttachments && taskAttachments.length > 0 && (
-                <div>
-                  <p className="text-[10px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-1.5">
-                    Attachments
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {taskAttachments.map((att) => (
-                      <Link
-                        key={att._id}
-                        href={att.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative w-12 h-12 rounded-lg overflow-hidden border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 hover:opacity-80 transition-opacity">
-                        <Image
-                          src={att.thumbnailUrl ?? att.url}
-                          alt={att.fileName ?? "attachment"}
-                          fill
-                          className="object-cover"
-                        />
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {!loading && !task && (
-            <p className="text-xs text-stone-400 dark:text-stone-500 text-center py-4">
-              Could not load task details.
-            </p>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 // ─── Other party card ─────────────────────────────────────────────────────────
 
 function OtherPartyCard({
@@ -615,6 +470,11 @@ function TaskSidePanelCard({
                   />
                 </Link>
               ))}
+              {taskAttachments.length > 6 && (
+                <span className="w-12 h-12 rounded-lg border border-amber-200 dark:border-amber-700/40 bg-amber-100/60 dark:bg-amber-900/20 flex items-center justify-center text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                  +{taskAttachments.length - 6}
+                </span>
+              )}
             </div>
           </div>
         )}
