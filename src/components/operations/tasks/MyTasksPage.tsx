@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ClipboardList,
   Plus,
@@ -18,6 +19,10 @@ import {
   Hourglass,
   RotateCcw,
   Trash2,
+  MapPin,
+  Star,
+  X,
+  ArrowUpRight,
 } from "lucide-react";
 import { useMyTasks, useMatchedProviders, useTriggerMatching, useUpdateTask, useDeleteTask } from "@/hooks/tasks/useTasks";
 import { toast } from "sonner";
@@ -27,7 +32,217 @@ import { profilePictureAPI } from "@/lib/api/files/profile/profile-picture.api";
 import {
   EnrichedMatch,
   MatchedProvidersDrawer,
+  fetchProviderProfile,
+  getInitials,
+  type ProviderSummary,
 } from "./forms/MatchedProvidersDrawer";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+
+// ─── Interested Provider Card (drawer) ───────────────────────────────────────
+
+function InterestedProviderDrawerCard({
+  entry,
+  taskId,
+  onRequest,
+}: {
+  entry: { providerId: string; expressedAt: string; message?: string };
+  taskId: string;
+  onRequest: (providerId: string) => void;
+}) {
+  const [profile, setProfile] = useState<ProviderSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchProviderProfile(entry.providerId).then((p) => {
+      if (!cancelled) { setProfile(p); setLoading(false); }
+    });
+    return () => { cancelled = true; };
+  }, [entry.providerId]);
+
+  const name = profile?.businessName ?? (loading ? null : "Unknown Provider");
+  const initials = getInitials(profile?.businessName);
+  const locationParts = [
+    profile?.locationData?.locality,
+    profile?.locationData?.city,
+    profile?.locationData?.region,
+  ].filter(Boolean).slice(0, 2).join(", ");
+  const rating = profile?.ratingStats;
+  const phone = profile?.contactInfo?.mainContact;
+
+  return (
+    <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4 transition-colors hover:border-stone-300 dark:hover:border-stone-700">
+      <div className="flex items-start gap-3">
+        {/* Avatar */}
+        <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
+          {loading ? (
+            <Loader2 size={14} className="animate-spin text-white/70" />
+          ) : profile?.profilePictureUrl ? (
+            <Image
+              src={profile.profilePictureThumbnailUrl ?? profile.profilePictureUrl}
+              alt={name ?? "Provider"}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            initials
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          {loading ? (
+            <div className="space-y-1.5">
+              <div className="h-3 w-32 bg-stone-200 dark:bg-stone-700 rounded animate-pulse" />
+              <div className="h-2.5 w-20 bg-stone-100 dark:bg-stone-800 rounded animate-pulse" />
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-sm font-semibold text-stone-900 dark:text-stone-50 truncate leading-tight">
+                  {name}
+                </p>
+                {(rating?.count ?? 0) > 0 && (
+                  <span className="inline-flex items-center gap-0.5 text-[11px] text-amber-500">
+                    <Star size={10} fill="currentColor" />
+                    {rating!.average.toFixed(1)}
+                  </span>
+                )}
+              </div>
+              {locationParts && (
+                <p className="text-[11px] text-stone-500 dark:text-stone-400 flex items-center gap-1 mt-0.5">
+                  <MapPin size={9} className="shrink-0" />
+                  {locationParts}
+                </p>
+              )}
+              {phone && (
+                <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">{phone}</p>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Request CTA */}
+        <button
+          onClick={() => onRequest(entry.providerId)}
+          disabled={loading}
+          className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-stone-900 dark:bg-stone-100 dark:text-stone-900 hover:bg-amber-500 dark:hover:bg-amber-500 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed rounded-lg px-3 py-2 transition-colors">
+          <ArrowUpRight size={12} />
+          Request
+        </button>
+      </div>
+
+      {/* Pitch message */}
+      {entry.message && (
+        <p className="mt-3 text-[11px] text-stone-500 dark:text-stone-400 italic leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-2.5">
+          &ldquo;{entry.message}&rdquo;
+        </p>
+      )}
+
+      {/* View full profile link */}
+      <Link
+        href={`/providers/${entry.providerId}`}
+        className="inline-flex items-center gap-1 mt-2.5 text-[11px] font-semibold text-stone-400 dark:text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+        View full profile
+        <ChevronRight size={11} />
+      </Link>
+    </div>
+  );
+}
+
+// ─── Interested Providers Sheet ───────────────────────────────────────────────
+
+function InterestedProvidersSheet({
+  task,
+  visible,
+  onClose,
+  onRequest,
+}: {
+  task: Task | null;
+  visible: boolean;
+  onClose: () => void;
+  onRequest: (providerId: string) => void;
+}) {
+  const providers = task?.interestedProviders ?? [];
+
+  return (
+    <Sheet open={visible} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side="right"
+        className="w-full max-w-md p-0 flex flex-col bg-stone-50 dark:bg-stone-950 border-l border-stone-200 dark:border-stone-800">
+        <SheetHeader className="px-5 pt-5 pb-4 border-b border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 space-y-0 shrink-0">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-400 dark:text-stone-500 transition-colors">
+            <X size={15} />
+          </button>
+
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+              Floating task
+            </p>
+          </div>
+
+          <SheetTitle className="text-lg font-bold text-stone-900 dark:text-stone-50 leading-tight pr-8">
+            Interested Providers
+          </SheetTitle>
+          <SheetDescription className="text-xs text-stone-400 dark:text-stone-500 mt-0.5 truncate max-w-[calc(100%-2rem)]">
+            &quot;{task?.title}&quot;
+          </SheetDescription>
+
+          {providers.length > 0 && (
+            <p className="text-[11px] font-medium text-stone-500 dark:text-stone-400 mt-2">
+              {providers.length} provider{providers.length !== 1 ? "s" : ""} expressed interest
+            </p>
+          )}
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          {providers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center px-6 gap-4">
+              <div className="w-12 h-12 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                <Radio size={20} className="text-stone-400 dark:text-stone-500" />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold text-stone-700 dark:text-stone-200">
+                  No interest yet
+                </p>
+                <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed max-w-60">
+                  Your task is live and visible to nearby providers. You&apos;ll see
+                  them here when they express interest.
+                </p>
+              </div>
+            </div>
+          ) : (
+            providers.map((entry) => (
+              <InterestedProviderDrawerCard
+                key={entry.providerId}
+                entry={entry}
+                taskId={task!._id}
+                onRequest={onRequest}
+              />
+            ))
+          )}
+        </div>
+
+        <div className="px-4 pb-6 pt-4 border-t border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 shrink-0">
+          <button
+            onClick={onClose}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-sm font-semibold hover:bg-amber-500 dark:hover:bg-amber-500 dark:hover:text-white transition-colors">
+            Close
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -101,12 +316,14 @@ function StatusBadge({ status }: { status: TaskStatus }) {
 function TaskRow({
   task,
   onViewProviders,
+  onViewInterested,
   onRematch,
   onDelete,
   rematching,
 }: {
   task: Task;
   onViewProviders: (task: Task) => void;
+  onViewInterested: (task: Task) => void;
   onRematch: (task: Task) => void;
   onDelete: (task: Task) => void;
   rematching: boolean;
@@ -191,13 +408,14 @@ function TaskRow({
               </button>
             )}
             {task.status === TaskStatus.FLOATING ? (
-              <Link
-                href={`/tasks/${task._id}`}
+              <button
+                type="button"
+                onClick={() => onViewInterested(task)}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-amber-500 hover:bg-amber-400 rounded-xl px-3 py-1.5 transition-all duration-150">
                 <Radio size={12} />
-                {interestCount > 0 ? `${interestCount} interested` : "View task"}
+                {interestCount > 0 ? `${interestCount} interested` : "Floating"}
                 <ChevronRight size={11} />
-              </Link>
+              </button>
             ) : (
               <button
                 type="button"
@@ -294,6 +512,7 @@ function TaskTable({
   loading,
   isPast,
   onViewProviders,
+  onViewInterested,
   onRematch,
   onDelete,
   rematchingTaskId,
@@ -302,6 +521,7 @@ function TaskTable({
   loading: boolean;
   isPast?: boolean;
   onViewProviders: (task: Task) => void;
+  onViewInterested: (task: Task) => void;
   onRematch: (task: Task) => void;
   onDelete: (task: Task) => void;
   rematchingTaskId: string | null;
@@ -342,6 +562,7 @@ function TaskTable({
               key={task._id}
               task={task}
               onViewProviders={onViewProviders}
+              onViewInterested={onViewInterested}
               onRematch={onRematch}
               onDelete={onDelete}
               rematching={rematchingTaskId === task._id}
@@ -412,6 +633,10 @@ export default function MyTasksPage() {
 
   const { data: tasks, loading, error, refetch } = useMyTasks();
   const [activeTab, setActiveTab] = useState<TabId>("active");
+
+  // ── Interested providers sheet state ──────────────────────────────────────
+  const [interestTask, setInterestTask] = useState<Task | null>(null);
+  const [interestSheetOpen, setInterestSheetOpen] = useState(false);
 
   // ── Providers drawer state ─────────────────────────────────────────────────
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -526,6 +751,24 @@ export default function MyTasksPage() {
     setDrawerOpen(false);
     setActiveTask(null);
     setRequestingId(null);
+  }
+
+  function openInterestSheet(task: Task) {
+    setInterestTask(task);
+    setInterestSheetOpen(true);
+  }
+
+  function closeInterestSheet() {
+    setInterestSheetOpen(false);
+    setInterestTask(null);
+  }
+
+  function handleInterestRequest(providerId: string) {
+    if (!interestTask) return;
+    closeInterestSheet();
+    router.push(
+      `/requests/provider/${providerId}?taskId=${interestTask._id}&source=task_interest`,
+    );
   }
 
   function handleRequest(providerId: string) {
@@ -656,6 +899,7 @@ export default function MyTasksPage() {
               loading={loading}
               isPast={activeTab === "past"}
               onViewProviders={openDrawer}
+              onViewInterested={openInterestSheet}
               onRematch={handleRematch}
               onDelete={(task) => setConfirmDeleteTask(task)}
               rematchingTaskId={rematchingTaskId}
@@ -679,6 +923,14 @@ export default function MyTasksPage() {
         onRefresh={handleDrawerRefresh}
         onEditTask={handleDrawerEdit}
         editSaving={editSaving}
+      />
+
+      {/* Interested Providers Sheet */}
+      <InterestedProvidersSheet
+        task={interestTask}
+        visible={interestSheetOpen}
+        onClose={closeInterestSheet}
+        onRequest={handleInterestRequest}
       />
 
       {/* Delete confirmation dialog */}
