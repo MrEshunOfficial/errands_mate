@@ -1,18 +1,9 @@
 "use client";
 
-/**
- * ProviderSidebar.tsx
- *
- * Merged sidebar for the Provider Settings page.
- * Layout follows ProviderSidebar; enriched with ProfileSidebar's
- * refresh button, profile-completion block, and member-since date.
- */
-
 import type { ReactNode } from "react";
 import {
   Clock,
   Briefcase,
-  Calendar,
   Wifi,
   WifiOff,
   CheckCircle2,
@@ -23,6 +14,7 @@ import {
   Phone,
   Mail,
   PhoneCall,
+  MapPin,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +26,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { ProviderProfile } from "@/types/provider.profile.types";
 import { useProfile } from "@/hooks/profiles/useCoreUserProfile";
 import { ProviderStatus } from "@/types/provider.profile.types";
+import { isPopulatedPicture } from "@/types/core.user.profile.types";
+import { AvatarChanger } from "@/components/files/user-profile/AvatarChanger";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -111,15 +105,6 @@ function deriveStatus(profile: ProviderProfile): {
   };
 }
 
-function businessInitials(name?: string | null): string {
-  if (!name) return "?";
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
 function profileCompletion(profile: ProviderProfile) {
   const items = [
     { label: "Business name", done: !!profile.businessName },
@@ -130,6 +115,7 @@ function profileCompletion(profile: ProviderProfile) {
         profile.isAlwaysAvailable ||
         Object.keys(profile.workingHours ?? {}).length > 0,
     },
+    { label: "Services", done: (profile.serviceOfferings?.length ?? 0) > 0 },
   ] as const;
   const done = items.filter((i) => i.done).length;
   return { items, done, pct: Math.round((done / items.length) * 100) };
@@ -259,7 +245,7 @@ export function ProviderSidebarSkeleton() {
     <Card className="overflow-hidden dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
       <CardContent className="pt-5 space-y-4">
         <div className="flex flex-col items-center text-center gap-3">
-          <Skeleton className="w-16 h-16 rounded-2xl" />
+          <Skeleton className="w-16 h-16 rounded-full" />
           <div className="space-y-1.5">
             <Skeleton className="h-3 w-20 mx-auto" />
             <Skeleton className="h-5 w-36 mx-auto" />
@@ -269,7 +255,7 @@ export function ProviderSidebarSkeleton() {
         </div>
         <Separator />
         <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex justify-between items-center py-1">
               <Skeleton className="h-3.5 w-24" />
               <Skeleton className="h-3.5 w-12" />
@@ -296,19 +282,28 @@ export function ProviderSidebar({ profile }: ProviderSidebarProps) {
   const st = deriveStatus(profile);
   const { profile: userProfile } = useProfile(true);
   const contactInfo = userProfile?.contactInfo ?? null;
+
+  const profilePicUrl = isPopulatedPicture(userProfile?.profilePictureId)
+    ? userProfile.profilePictureId.url
+    : null;
+
   const serviceCount = profile.serviceOfferings?.length ?? 0;
-  const workingDays = profile.isAlwaysAvailable
-    ? "24/7"
-    : `${Object.keys(profile.workingHours ?? {}).length}d/wk`;
+  const locationData = profile.locationData;
+  const locationLine = [locationData?.city, locationData?.region]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <Card className="overflow-hidden bg-white/10 dark:bg-zinc-900/10 backdrop-blur-2xl shadow-lg border border-white/20 dark:border-white/10 sticky top-6">
       <CardContent className="pt-5 pb-5 backdrop-blur-2xl">
         {/* ── Avatar + identity ────────────────────────────────────────── */}
         <div className="mb-4 flex flex-col items-center text-center gap-3">
-          <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xl font-black ring-4 ring-background shrink-0">
-            {businessInitials(profile.businessName)}
-          </div>
+          <AvatarChanger
+            src={profilePicUrl}
+            name={profile.businessName ?? userProfile?.userId?.toString()}
+            size="lg"
+            editable
+          />
           <div>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
               Business Profile
@@ -343,19 +338,13 @@ export function ProviderSidebar({ profile }: ProviderSidebarProps) {
           <div className="mb-3 space-y-1.5">
             {contactInfo.mainContact && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone
-                  size={13}
-                  className="shrink-0 text-muted-foreground/60"
-                />
+                <Phone size={13} className="shrink-0 text-muted-foreground/60" />
                 <span>{contactInfo.mainContact}</span>
               </div>
             )}
             {contactInfo.additionalContact && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <PhoneCall
-                  size={13}
-                  className="shrink-0 text-muted-foreground/60"
-                />
+                <PhoneCall size={13} className="shrink-0 text-muted-foreground/60" />
                 <span>{contactInfo.additionalContact}</span>
               </div>
             )}
@@ -374,6 +363,23 @@ export function ProviderSidebar({ profile }: ProviderSidebarProps) {
 
         <Separator className="mb-4" />
 
+        {/* ── Location ─────────────────────────────────────────────────── */}
+        <div className="mb-4">
+          {locationLine ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin size={13} className="shrink-0 text-muted-foreground/60" />
+              <span>{locationLine}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
+              <MapPin size={13} className="shrink-0 text-muted-foreground/60" />
+              <span>No location set</span>
+            </div>
+          )}
+        </div>
+
+        <Separator className="mb-4" />
+
         {/* ── Stats ───────────────────────────────────────────────────── */}
         <div className="space-y-0.5 mb-4">
           <StatRow
@@ -381,8 +387,18 @@ export function ProviderSidebar({ profile }: ProviderSidebarProps) {
             label="Services"
             value={`${serviceCount} offering${serviceCount !== 1 ? "s" : ""}`}
           />
-          <StatRow icon={Calendar} label="Schedule" value={workingDays} />
         </div>
+
+        {/* ── Schedule ────────────────────────────────────────────────── */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Schedule
+          </p>
+          <ScheduleChips profile={profile} />
+        </div>
+
+        {/* ── Profile Completion ───────────────────────────────────────── */}
+        <ProfileCompletion profile={profile} />
       </CardContent>
     </Card>
   );
