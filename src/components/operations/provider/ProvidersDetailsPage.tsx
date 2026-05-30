@@ -892,6 +892,7 @@ function ProviderReviewsSection({ providerProfileId, ratingStats }: {
 // ─── Request CTA Button ───────────────────────────────────────────────────────
 function RequestProviderCTA({
   providerId,
+  isOpen,
   isBooked,
   isCustomer,
 }: {
@@ -902,16 +903,24 @@ function RequestProviderCTA({
 }) {
   if (!isCustomer) return null;
 
+  const unavailable = isBooked || !isOpen;
+  const label = isBooked
+    ? "Currently Booked"
+    : !isOpen
+      ? "Currently Closed"
+      : "Request This Provider";
+
   return (
     <Link
       href={`/requests/provider/${providerId}`}
       className={`flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-bold text-sm transition-all duration-150 active:scale-[0.98] ${
-        isBooked
-          ? "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 cursor-default"
+        unavailable
+          ? "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 cursor-default pointer-events-none"
           : "bg-amber-500 hover:bg-amber-400 text-white shadow-lg shadow-amber-900/20"
-      }`}>
+      }`}
+      aria-disabled={unavailable}>
       <Send size={14} />
-      {isBooked ? "Currently Unavailable" : "Request This Provider"}
+      {label}
     </Link>
   );
 }

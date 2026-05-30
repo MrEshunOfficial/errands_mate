@@ -1273,9 +1273,14 @@ export default function ClientPreferencePage() {
     async (locationId: string) => {
       setDeletingId(locationId);
       setDeletingConfirmId(null);
-      await removeAddress(locationId);
-      toast.success("Address removed.");
-      setDeletingId(null);
+      try {
+        await removeAddress(locationId);
+        toast.success("Address removed.");
+      } catch {
+        toast.error("Failed to remove address. Please try again.");
+      } finally {
+        setDeletingId(null);
+      }
     },
     [removeAddress],
   );
@@ -1283,9 +1288,14 @@ export default function ClientPreferencePage() {
   const handleSetDefault = useCallback(
     async (locationId: string) => {
       setSettingDefaultId(locationId);
-      await setDefaultAddress(locationId);
-      toast.success("Default address updated.");
-      setSettingDefaultId(null);
+      try {
+        await setDefaultAddress(locationId);
+        toast.success("Default address updated.");
+      } catch {
+        toast.error("Failed to update default. Please try again.");
+      } finally {
+        setSettingDefaultId(null);
+      }
     },
     [setDefaultAddress],
   );
@@ -1293,9 +1303,14 @@ export default function ClientPreferencePage() {
   const handleUnsetDefault = useCallback(
     async (locationId: string) => {
       setUnsettingDefaultId(locationId);
-      await unsetDefaultAddress(locationId);
-      toast.success("Default address cleared.");
-      setUnsettingDefaultId(null);
+      try {
+        await unsetDefaultAddress(locationId);
+        toast.success("Default address cleared.");
+      } catch {
+        toast.error("Failed to clear default. Please try again.");
+      } finally {
+        setUnsettingDefaultId(null);
+      }
     },
     [unsetDefaultAddress],
   );
@@ -1338,10 +1353,15 @@ export default function ClientPreferencePage() {
   const handleRemoveService = useCallback(
     async (id: string) => {
       setRemovingServiceId(id);
-      const ok = await removeFavoriteService(id);
-      if (ok) toast.success("Removed from saved services.");
-      else toast.error("Failed to remove service.");
-      setRemovingServiceId(null);
+      try {
+        const ok = await removeFavoriteService(id);
+        if (ok) toast.success("Removed from saved services.");
+        else toast.error("Failed to remove service.");
+      } catch {
+        toast.error("Failed to remove service.");
+      } finally {
+        setRemovingServiceId(null);
+      }
     },
     [removeFavoriteService],
   );
@@ -1349,10 +1369,15 @@ export default function ClientPreferencePage() {
   const handleRemoveProvider = useCallback(
     async (id: string) => {
       setRemovingProviderId(id);
-      const ok = await removeFavoriteProvider(id);
-      if (ok) toast.success("Removed from saved providers.");
-      else toast.error("Failed to remove provider.");
-      setRemovingProviderId(null);
+      try {
+        const ok = await removeFavoriteProvider(id);
+        if (ok) toast.success("Removed from saved providers.");
+        else toast.error("Failed to remove provider.");
+      } catch {
+        toast.error("Failed to remove provider.");
+      } finally {
+        setRemovingProviderId(null);
+      }
     },
     [removeFavoriteProvider],
   );
@@ -1360,10 +1385,15 @@ export default function ClientPreferencePage() {
   const handleRemoveCategory = useCallback(
     async (id: string) => {
       setRemovingCategoryId(id);
-      const ok = await removeFavoriteCategory(id);
-      if (ok) toast.success("Removed from saved categories.");
-      else toast.error("Failed to remove category.");
-      setRemovingCategoryId(null);
+      try {
+        const ok = await removeFavoriteCategory(id);
+        if (ok) toast.success("Removed from saved categories.");
+        else toast.error("Failed to remove category.");
+      } catch {
+        toast.error("Failed to remove category.");
+      } finally {
+        setRemovingCategoryId(null);
+      }
     },
     [removeFavoriteCategory],
   );

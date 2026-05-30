@@ -179,7 +179,7 @@ interface ProviderCardProps {
   provider: BrowseProviderProfile; // ← was ProviderProfile
   isNearby?: boolean;
   isFavorite?: boolean;
-  onToggleFavorite?: (id: string) => void;
+  onToggleFavorite?: (id: string) => Promise<void>;
 }
 
 function ProviderCard({
@@ -188,6 +188,7 @@ function ProviderCard({
   isFavorite = false,
   onToggleFavorite,
 }: ProviderCardProps) {
+  const [toggling, setToggling] = useState(false);
   const name = provider.businessName ?? "Unknown Provider";
   const locationLine = buildLocationLine(provider.locationData);
   const dist = provider.distanceKm;
@@ -213,13 +214,20 @@ function ProviderCard({
       {/* Favourite button */}
       {onToggleFavorite && (
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            onToggleFavorite(String(provider._id));
+            if (toggling) return;
+            setToggling(true);
+            try {
+              await onToggleFavorite(String(provider._id));
+            } finally {
+              setToggling(false);
+            }
           }}
           type="button"
-          className={`absolute top-3 right-3 z-10 w-7 h-7 rounded-full border flex items-center justify-center transition-all shadow-sm ${
+          disabled={toggling}
+          className={`absolute top-3 right-3 z-10 w-7 h-7 rounded-full border flex items-center justify-center transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
             isFavorite
               ? "bg-amber-500 border-amber-500 text-white"
               : "bg-white/90 dark:bg-stone-800/90 border-stone-200 dark:border-stone-700 text-stone-400 hover:border-amber-300 hover:text-amber-500"
@@ -656,13 +664,11 @@ export default function ProvidersPage() {
   );
 
   const handleToggleFavorite = useCallback(
-    (id: string) => {
-      const action = favoriteProviderIds.includes(id)
+    async (id: string): Promise<void> => {
+      const ok = await (favoriteProviderIds.includes(id)
         ? removeFavoriteProvider(id)
-        : addFavoriteProvider(id);
-      action.then((ok) => {
-        if (!ok) toast.error("Could not update saved providers. Please try again.");
-      });
+        : addFavoriteProvider(id));
+      if (!ok) toast.error("Could not update saved providers. Please try again.");
     },
     [favoriteProviderIds, addFavoriteProvider, removeFavoriteProvider],
   );
