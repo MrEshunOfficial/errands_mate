@@ -183,13 +183,13 @@ function ServiceRow({
         {st.label}
       </Badge>
 
-      {/* Actions menu */}
-      <DropdownMenu>
+      {/* Actions menu — only rendered when the service has a valid ID */}
+      {serviceId && <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
-            disabled={busy || !serviceId}
+            disabled={busy}
             className="h-7 w-7 p-0 shrink-0 text-muted-foreground hover:text-foreground">
             <MoreHorizontal size={14} />
           </Button>
@@ -218,7 +218,7 @@ function ServiceRow({
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu>}
     </div>
   );
 }

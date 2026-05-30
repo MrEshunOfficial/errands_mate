@@ -11,13 +11,12 @@
  *   4. Shows enriched location preview; user confirms with "Save"
  */
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import {
   MapPin,
   Pencil,
   Loader2,
   CheckCircle2,
-  XCircle,
   ShieldCheck,
   Navigation,
   Landmark,
@@ -45,6 +44,10 @@ import type {
 } from "@/types/provider.profile.types";
 import { useLocationForm } from "@/hooks/profiles/useLocationForm";
 import { LocationFormFields } from "@/components/shared/location";
+import {
+  SectionIcon,
+  InlineFeedback,
+} from "@/components/operations/profile/shared";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,57 +59,6 @@ interface LocationCardProps {
     error: string | null;
     success: boolean;
   };
-}
-
-// ─── Small helpers ────────────────────────────────────────────────────────────
-
-function SectionIcon({
-  icon: Icon,
-  className,
-}: {
-  icon: React.ElementType;
-  className?: string;
-}) {
-  return (
-    <span
-      className={`inline-flex items-center justify-center w-9 h-9 rounded-xl shrink-0 ${className}`}>
-      <Icon size={16} />
-    </span>
-  );
-}
-
-interface InlineFeedbackProps {
-  loading: boolean;
-  error: string | null;
-  success: boolean;
-  successMsg?: string;
-}
-
-function InlineFeedback({
-  loading,
-  error,
-  success,
-  successMsg = "Saved",
-}: InlineFeedbackProps) {
-  if (loading)
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Loader2 size={12} className="animate-spin" /> Saving…
-      </span>
-    );
-  if (error)
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-destructive">
-        <XCircle size={12} /> {error}
-      </span>
-    );
-  if (success)
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-        <CheckCircle2 size={12} /> {successMsg}
-      </span>
-    );
-  return null;
 }
 
 // ─── Enriched Preview ─────────────────────────────────────────────────────────
@@ -328,8 +280,9 @@ export function LocationCard({
     try {
       await updateLocation(locationForm.toPayload());
       setStep("preview");
-    } catch {
-      setEnrichError("Enrichment failed. Check your GPS code and try again.");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : null;
+      setEnrichError(detail ?? "Enrichment failed. Check your GPS code and try again.");
     } finally {
       setEnriching(false);
     }

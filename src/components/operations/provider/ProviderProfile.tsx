@@ -86,7 +86,12 @@ function profileCompletion(profile: ProviderProfile) {
         profile.isAlwaysAvailable ||
         Object.keys(profile.workingHours ?? {}).length > 0,
     },
-    { label: "Services", done: (profile.serviceOfferings?.length ?? 0) > 0 },
+    {
+      label: "Services",
+      done: ((profile.serviceOfferings ?? []) as unknown as { isActive?: boolean }[]).some(
+        (s) => s?.isActive,
+      ),
+    },
   ] as const;
   const done = items.filter((i) => i.done).length;
   return { items, done, pct: Math.round((done / items.length) * 100) };
@@ -460,9 +465,6 @@ export default function ProviderProfile() {
 
     setAvailability,
     setAvailabilityState,
-
-    updateWorkingHours,
-    updateWorkingHoursState,
   } = useProviderProfileManager();
 
   const router = useRouter();
@@ -531,8 +533,6 @@ export default function ProviderProfile() {
                   profile={profile}
                   setAvailability={setAvailability}
                   setAvailabilityState={setAvailabilityState}
-                  updateWorkingHours={updateWorkingHours}
-                  updateWorkingHoursState={updateWorkingHoursState}
                 />
 
                 <LocationCard
