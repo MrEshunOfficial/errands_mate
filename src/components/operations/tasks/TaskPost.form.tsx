@@ -527,7 +527,8 @@ export default function PostTaskForm() {
   // ── Request a provider ───────────────────────────────────────────────────────
   async function handleRequest(providerId: string) {
     if (!postedTaskId) return;
-    router.push(`requests/provider/${providerId}`);
+    setRequestId(providerId);
+    router.push(`/requests/provider/${providerId}?taskId=${postedTaskId}&source=task_match`);
   }
 
   // ── Refresh matched providers ─────────────────────────────────────────────────

@@ -891,6 +891,7 @@ function ProviderRequestInner() {
         ghanaPostGPS: ghanaPostGPS ?? "",
         nearbyLandmark: nearbyLandmark ?? "",
       });
+      set("locationMode", "new");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, isTaskMode]);
@@ -937,13 +938,11 @@ function ProviderRequestInner() {
     if (!isTaskMode && !form.serviceId)
       next.serviceId = "Please select a service.";
 
-    if (!isTaskMode) {
-      if (form.locationMode === "existing" && !form.existingLocationId)
-        next.existingLocationId = "Please select a saved address.";
-      if (form.locationMode === "new" && !locationForm.isValid) {
-        toast.error("Please enter a valid Ghana Post GPS address.");
-        return false;
-      }
+    if (form.locationMode === "existing" && !form.existingLocationId)
+      next.existingLocationId = "Please select a saved address.";
+    if (form.locationMode === "new" && !locationForm.isValid) {
+      toast.error("Please enter a valid Ghana Post GPS address.");
+      return false;
     }
 
     if (!form.priority) next.priority = "Please choose a priority level.";
@@ -968,7 +967,7 @@ function ProviderRequestInner() {
       gpsCoordinates?: { latitude: number; longitude: number; accuracy?: number };
     };
 
-    if (isTaskMode || form.locationMode === "new") {
+    if (form.locationMode === "new") {
       locationPayload = locationForm.toPayload();
     } else {
       const loc = locations.find(
@@ -1041,7 +1040,7 @@ function ProviderRequestInner() {
     if (!result) return;
 
     // Save enriched location from the response — avoids a second GPS lookup
-    if (!isTaskMode && form.locationMode === "new" && form.saveNewLocation) {
+    if (form.locationMode === "new" && form.saveNewLocation) {
       void saveAddress({
         label: form.newLocationLabel,
         customLabel:
@@ -1269,31 +1268,14 @@ function ProviderRequestInner() {
               title="Service Location"
               iconBg="bg-emerald-100 dark:bg-emerald-900/30"
               iconColor="text-emerald-600 dark:text-emerald-400">
-              {isTaskMode ? (
-                /* Task mode — pre-filled from task, editable, GPS auto-captured */
-                <LocationFormFields
-                  ghanaPostGPS={locationForm.ghanaPostGPS}
-                  nearbyLandmark={locationForm.nearbyLandmark}
-                  coordinates={locationForm.coordinates}
-                  gpsStatus={locationForm.gpsStatus}
-                  gpsCodeInvalid={locationForm.gpsCodeInvalid}
-                  onGhanaPostGPSChange={locationForm.setGhanaPostGPS}
-                  onNearbyLandmarkChange={locationForm.setNearbyLandmark}
-                  onCoordinatesChange={locationForm.setCoordinates}
-                  onRequestGps={locationForm.requestGps}
-                  coordinatesIdleDescription="Confirms where the service will take place."
-                />
-              ) : (
-                /* Service browse mode — existing saved address or new address */
-                <LocationSection
-                  form={form}
-                  set={set}
-                  errors={errors}
-                  locations={locations}
-                  isLoadingLocations={isLoadingLocations}
-                  locationForm={locationForm}
-                />
-              )}
+              <LocationSection
+                form={form}
+                set={set}
+                errors={errors}
+                locations={locations}
+                isLoadingLocations={isLoadingLocations}
+                locationForm={locationForm}
+              />
             </SectionCard>
 
             {/* ── Schedule ─────────────────────────────────────────── */}
