@@ -207,18 +207,24 @@ function LocationSection({
   serviceLocation,
   taskLocation,
 }: {
-  serviceLocation?: { ghanaPostGPS?: string; nearbyLandmark?: string };
+  serviceLocation?: import("@/types/location.types").UserLocation;
   taskLocation?: import("@/types/provider.request.types").RequestContextTaskLocation;
 }) {
+  // Prefer the task's registered location; for direct/service-browse requests
+  // (no task) fall back to the request's own enriched serviceLocation.
   const reg = taskLocation?.registeredLocation;
-  const coords = reg?.gpsCoordinates ?? taskLocation?.gpsLocationAtPosting;
-  const gps = reg?.ghanaPostGPS ?? serviceLocation?.ghanaPostGPS;
-  const landmark = reg?.nearbyLandmark ?? serviceLocation?.nearbyLandmark;
+  const svc = serviceLocation;
+  const coords =
+    reg?.gpsCoordinates ??
+    svc?.gpsCoordinates ??
+    taskLocation?.gpsLocationAtPosting;
+  const gps = reg?.ghanaPostGPS ?? svc?.ghanaPostGPS;
+  const landmark = reg?.nearbyLandmark ?? svc?.nearbyLandmark;
   const addressParts = [
-    reg?.locality,
-    reg?.city,
-    reg?.district,
-    reg?.region,
+    reg?.locality ?? svc?.locality,
+    reg?.city ?? svc?.city,
+    reg?.district ?? svc?.district,
+    reg?.region ?? svc?.region,
   ].filter(Boolean);
 
   const mapsUrl = coords

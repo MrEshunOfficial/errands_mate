@@ -787,13 +787,9 @@ function ProviderRequestInner() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ── Shared location form ──────────────────────────────────────────────────
-  const locationForm = useLocationForm();
-
-  // Auto-capture browser GPS on mount so coordinates are ready when submitting
-  useEffect(() => {
-    locationForm.requestGps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // autoRequestGps captures the browser fix on mount so coordinates are ready
+  // when submitting — server enrichment needs them to resolve the address.
+  const locationForm = useLocationForm(undefined, { autoRequestGps: true });
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const { data: profile, loading: profileLoading } = useProviderProfile(
