@@ -188,6 +188,7 @@ export interface ChangePasswordData {
 
 export interface RestoreAccountData {
   email: string;
+  password?: string;
 }
 
 export interface UpdateUserRoleData {

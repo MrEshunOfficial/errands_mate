@@ -7,6 +7,7 @@ interface RequestConfig extends RequestInit {
 export interface APIError extends Error {
   status?: number;
   code?: string;
+  deletedAt?: string;
 }
 
 // Add API Response wrapper type
@@ -159,19 +160,24 @@ export abstract class APIClient {
   protected async handleErrorResponse(response: Response): Promise<never> {
     let errorMessage = `HTTP Error: ${response.status}`;
     let errorCode = `HTTP_${response.status}`;
+    let errorData: Record<string, unknown> | null = null;
 
     try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorData.error || errorMessage;
-      errorCode = errorData.code || errorCode;
+      errorData = await response.json();
+      if (errorData) {
+        errorMessage = (errorData.message as string) || (errorData.error as string) || errorMessage;
+        errorCode = (errorData.code as string) || errorCode;
+      }
     } catch {
-      // If response is not JSON, use status text
       errorMessage = response.statusText || errorMessage;
     }
 
     const error = new Error(errorMessage) as APIError;
     error.status = response.status;
     error.code = errorCode;
+    if (errorData?.deletedAt) {
+      error.deletedAt = errorData.deletedAt as string;
+    }
 
     throw error;
   }

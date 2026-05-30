@@ -11,17 +11,21 @@ const AccountDeletePage = () => {
   const [confirmation, setConfirmation] = useState("");
 
   const router = useRouter();
-  const { deleteAccount, isLoading } = useAuth();
+  const { deleteAccount } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isValid = confirmation.trim().toLowerCase() === "delete my account";
 
   const handleDelete = async () => {
+    setIsDeleting(true);
     try {
       await deleteAccount();
-      toast.success("Account deleted successfully.");
-      router.push("/");
+      toast.success("Account deleted. Sign back in within the grace period to restore it.");
+      window.location.href = "/login";
     } catch {
       toast.error("Unable to delete account. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -60,7 +64,7 @@ const AccountDeletePage = () => {
             </button>
 
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/profile")}
               className="w-full rounded-xl bg-gray-100 py-3 font-medium text-gray-700 transition hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               Keep my account
@@ -97,10 +101,10 @@ const AccountDeletePage = () => {
           <div className="space-y-3">
             <button
               onClick={handleDelete}
-              disabled={!isValid || isLoading}
+              disabled={!isValid || isDeleting}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 py-3 font-medium text-white transition hover:bg-red-700 disabled:bg-gray-400"
             >
-              {isLoading ? (
+              {isDeleting ? (
                 "Deleting…"
               ) : (
                 <>
