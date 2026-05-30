@@ -31,6 +31,7 @@ import {
   FileText,
   Tag,
   CalendarCheck,
+  Printer,
 } from "lucide-react";
 import {
   useBookingById,
@@ -607,13 +608,38 @@ function BookingDetail({
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6">
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-1.5 text-[12px] text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 mb-5 transition-colors"
-      >
-        <ArrowLeft size={14} />
-        Back
-      </button>
+      {/* Nav row — hidden when printing */}
+      <div className="flex items-center justify-between mb-5 print:hidden">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1.5 text-[12px] text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+        >
+          <ArrowLeft size={14} />
+          Back
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-1.5 h-8 px-3 rounded-xl border border-stone-200 dark:border-stone-700 text-[12px] font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+        >
+          <Printer size={13} />
+          Print / Save PDF
+        </button>
+      </div>
+
+      {/* Print-only header */}
+      <div className="hidden print:block mb-6 pb-4 border-b border-stone-200">
+        <p className="text-xl font-bold text-stone-900">Booking Receipt</p>
+        <p className="text-sm text-stone-500 mt-1">
+          Ref: {booking.bookingNumber || booking._id.slice(-8).toUpperCase()}
+          {" · "}
+          {new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </p>
+      </div>
 
       {/* Status banner */}
       <div className={`rounded-2xl border p-4 mb-5 flex items-center gap-3 ${cfg.classes}`}>
@@ -630,8 +656,8 @@ function BookingDetail({
         </span>
       </div>
 
-      {/* Action bar */}
-      <div className="flex flex-wrap gap-2 mb-5">
+      {/* Action bar — hidden when printing */}
+      <div className="flex flex-wrap gap-2 mb-5 print:hidden">
         {isProvider && booking.status === BookingStatus.CONFIRMED && (
           <>
             <button
