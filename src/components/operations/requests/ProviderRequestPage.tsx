@@ -1056,6 +1056,20 @@ function ProviderRequestInner() {
 
   // ── Loading ───────────────────────────────────────────────────────────────
 
+  if (!providerId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
+        <AlertCircle size={24} className="text-red-400" />
+        <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">
+          Invalid provider link.
+        </p>
+        <p className="text-xs text-stone-400 dark:text-stone-500">
+          No provider ID was found in the URL.
+        </p>
+      </div>
+    );
+  }
+
   if (profileLoading || (isTaskMode && taskLoading)) {
     return <LoadingOverlay message="Loading…" show />;
   }

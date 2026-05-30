@@ -119,23 +119,44 @@ function useBaseMutation<TData, TArgs>(
     mutationFnRef.current = mutationFn;
   });
 
+  // Tracks whether the component is still mounted so we never call setState
+  // after unmount (avoids React memory-leak warnings).
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Incremented on every mutate() and reset() call. A settled promise only
+  // applies its state update when its snapshot matches, so reset() and
+  // rapid-fire calls can never clobber each other.
+  const activeCallRef = useRef(0);
+
   const mutate = useCallback(async (args: TArgs): Promise<TData | null> => {
+    const callId = ++activeCallRef.current;
     setState({ data: null, loading: true, error: null });
     try {
       const data = await mutationFnRef.current(args);
-      setState({ data, loading: false, error: null });
-      callbacksRef.current?.onSuccess?.(data);
+      if (mountedRef.current && activeCallRef.current === callId) {
+        setState({ data, loading: false, error: null });
+        callbacksRef.current?.onSuccess?.(data);
+      }
       return data;
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "An unexpected error occurred";
-      setState((prev) => ({ ...prev, loading: false, error: message }));
-      callbacksRef.current?.onError?.(message);
+      if (mountedRef.current && activeCallRef.current === callId) {
+        const message =
+          err instanceof Error ? err.message : "An unexpected error occurred";
+        setState((prev) => ({ ...prev, loading: false, error: message }));
+        callbacksRef.current?.onError?.(message);
+      }
       return null;
     }
   }, []);
 
   const reset = useCallback(() => {
+    activeCallRef.current++; // invalidate any in-flight promise
     setState({ data: null, loading: false, error: null });
   }, []);
 

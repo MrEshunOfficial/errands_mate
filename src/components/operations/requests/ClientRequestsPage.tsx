@@ -442,13 +442,15 @@ export default function ClientRequestsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto hide-scrollbar mb-6 pb-1">
+      <div role="tablist" aria-label="Filter requests by status" className="flex gap-1 overflow-x-auto hide-scrollbar mb-6 pb-1">
         {FILTER_TABS.map((tab) => {
           const count = counts[tab.id];
           const isActive = activeFilter === tab.id;
           return (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={isActive}
               onClick={() => setActiveFilter(tab.id)}
               className={`shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-xl text-[12px] font-semibold transition-colors ${
                 isActive
