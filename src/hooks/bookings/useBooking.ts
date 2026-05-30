@@ -7,7 +7,8 @@ import {
   BookingStatus,
   BookingWithContext,
   SubmitProofRequestBody,
-  RescheduleBookingRequestBody,
+  ProposeRescheduleBody,
+  RespondToRescheduleBody,
   CancelBookingRequestBody,
 } from "@/types/booking.types";
 import {
@@ -298,13 +299,25 @@ export function useSubmitRebuttal(
 // SECTION 6 — SHARED MUTATION HOOKS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function useRescheduleBooking(
+export function useProposeReschedule(
   callbacks?: MutationCallbacks<Booking>,
-): MutationResult<Booking, { bookingId: string; body: RescheduleBookingRequestBody }> {
+): MutationResult<Booking, { bookingId: string; body: ProposeRescheduleBody }> {
   return useBaseMutation(
     ({ bookingId, body }) =>
       bookingAPI
-        .rescheduleBooking(bookingId, body)
+        .proposeReschedule(bookingId, body)
+        .then((res) => res.booking as Booking),
+    callbacks,
+  );
+}
+
+export function useRespondToReschedule(
+  callbacks?: MutationCallbacks<Booking>,
+): MutationResult<Booking, { bookingId: string; body: RespondToRescheduleBody }> {
+  return useBaseMutation(
+    ({ bookingId, body }) =>
+      bookingAPI
+        .respondToReschedule(bookingId, body)
         .then((res) => res.booking as Booking),
     callbacks,
   );

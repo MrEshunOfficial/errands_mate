@@ -23,7 +23,7 @@ import { useBookingById } from "@/hooks/booking/useBookings";
 import type {
   ValidateBookingInput,
   ResolveDisputeInput,
-  RescheduleBookingInput,
+  ProposeRescheduleInput,
   PaymentStatus,
 } from "@/types/booking/booking.types";
 import { ActionsTab } from "./ActionsTab";
@@ -133,7 +133,7 @@ type PendingAction =
   | { type: "resolveDispute"; input: ResolveDisputeInput }
   | { type: "rebuttal"; message: string }
   | { type: "paymentStatus"; status: PaymentStatus }
-  | { type: "reschedule"; input: RescheduleBookingInput };
+  | { type: "reschedule"; input: ProposeRescheduleInput };
 
 function pendingActionLabel(action: PendingAction): string {
   switch (action.type) {
@@ -195,7 +195,7 @@ export function BookingDetailPanel({
     completeService,
     validateCompletion,
     cancelBooking,
-    rescheduleBooking,
+    proposeReschedule,
     deleteBooking,
     restoreBooking,
     resolveDispute,
@@ -266,7 +266,7 @@ export function BookingDetailPanel({
         await updatePaymentStatus({ paymentStatus: pendingAction.status });
         break;
       case "reschedule":
-        await rescheduleBooking(pendingAction.input);
+        await proposeReschedule(pendingAction.input);
         break;
     }
 
@@ -283,7 +283,7 @@ export function BookingDetailPanel({
     resolveDispute,
     submitRebuttal,
     updatePaymentStatus,
-    rescheduleBooking,
+    proposeReschedule,
     onRefetch,
   ]);
 

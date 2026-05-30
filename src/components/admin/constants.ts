@@ -34,6 +34,16 @@ export const BOOKING_STATUS_CONFIG: Record<BookingStatus, BookingStatusMeta> = {
     isTerminal: false,
     allowedTransitions: [BookingStatus.IN_PROGRESS, BookingStatus.CANCELLED],
   },
+  [BookingStatus.RESCHEDULE_REQUESTED]: {
+    variant: "outline",
+    label: "Reschedule Proposed",
+    color: "text-sky-600",
+    bgColor: "bg-sky-100 dark:bg-sky-950",
+    icon: "📅",
+    description: "A reschedule proposal is pending response",
+    isTerminal: false,
+    allowedTransitions: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED],
+  },
   [BookingStatus.IN_PROGRESS]: {
     variant: "secondary",
     label: "In Progress",

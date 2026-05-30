@@ -41,7 +41,8 @@ import {
   useSubmitRebuttal,
   useRespondToProof,
   useCancelBooking,
-  useRescheduleBooking,
+  useProposeReschedule,
+  useRespondToReschedule,
 } from "@/hooks/bookings/useBooking";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { Booking, BookingStatus, BookingDetailContext } from "@/types/booking.types";
@@ -68,6 +69,14 @@ const STATUS_CFG: Record<
     dot: "bg-emerald-500",
     accent: "from-emerald-400 to-teal-400",
     description: "Provider accepted — service is scheduled",
+  },
+  [BookingStatus.RESCHEDULE_REQUESTED]: {
+    label: "Reschedule Proposed",
+    icon: <CalendarClock size={14} />,
+    classes: "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50",
+    dot: "bg-sky-500 animate-pulse",
+    accent: "from-sky-400 to-blue-400",
+    description: "A new date has been proposed — awaiting the other party's response",
   },
   [BookingStatus.IN_PROGRESS]: {
     label: "In Progress",
@@ -221,7 +230,7 @@ function CancelDialog({
   );
 }
 
-function RescheduleDialog({
+function ProposeRescheduleDialog({
   bookingId,
   onClose,
   onDone,
@@ -233,7 +242,8 @@ function RescheduleDialog({
   const [newDate, setNewDate] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const { mutate: reschedule, loading, error } = useRescheduleBooking({ onSuccess: () => { onDone(); onClose(); } });
+  const [message, setMessage] = useState("");
+  const { mutate: propose, loading, error } = useProposeReschedule({ onSuccess: () => { onDone(); onClose(); } });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -243,9 +253,9 @@ function RescheduleDialog({
             <span className="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
               <CalendarClock size={16} className="text-sky-600 dark:text-sky-400" />
             </span>
-            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">Reschedule</h3>
+            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">Propose new date</h3>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 rounded-lg p-1"><X size={16} /></button>
+          <button onClick={onClose} disabled={loading} className="text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed"><X size={16} /></button>
         </div>
         <div className="space-y-3 mb-4">
           <div>
@@ -278,6 +288,16 @@ function RescheduleDialog({
               />
             </div>
           </div>
+          <div>
+            <label className="text-[10px] text-stone-400 dark:text-stone-500 mb-1 block">Note (optional)</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Reason for the change…"
+              rows={2}
+              className="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-50 placeholder:text-stone-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none"
+            />
+          </div>
         </div>
         {error && (
           <p className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 mb-3">
@@ -287,21 +307,172 @@ function RescheduleDialog({
         <div className="flex gap-2">
           <button onClick={onClose} disabled={loading} className="flex-1 h-9 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">Cancel</button>
           <button
-            onClick={() =>
-              reschedule({
-                bookingId,
-                body: {
-                  newDate,
-                  newTimeSlot: start ? { start, end: end || start } : undefined,
-                },
-              })
-            }
+            onClick={() => propose({
+              bookingId,
+              body: {
+                newDate,
+                newTimeSlot: start ? { start, end: end || start } : undefined,
+                message: message.trim() || undefined,
+              },
+            })}
             disabled={loading || !newDate}
             className="flex-1 h-9 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
           >
             {loading ? <Loader2 size={13} className="animate-spin" /> : <CalendarClock size={13} />}
-            Confirm
+            Send proposal
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RespondRescheduleDialog({
+  bookingId,
+  pendingReschedule,
+  onClose,
+  onDone,
+}: {
+  bookingId: string;
+  pendingReschedule: NonNullable<import("@/types/booking.types").PendingReschedule>;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [counterDate, setCounterDate] = useState("");
+  const [counterStart, setCounterStart] = useState("");
+  const [counterEnd, setCounterEnd] = useState("");
+  const [message, setMessage] = useState("");
+  const [mode, setMode] = useState<"decide" | "counter">("decide");
+
+  const { mutate: respond, loading, error } = useRespondToReschedule({
+    onSuccess: () => { onDone(); onClose(); },
+  });
+
+  const expiresAt = new Date(pendingReschedule.expiresAt);
+  const hoursLeft = Math.max(0, Math.round((expiresAt.getTime() - Date.now()) / 3_600_000));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-2xl">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-stone-100 dark:border-stone-800">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+              <CalendarClock size={14} className="text-sky-600 dark:text-sky-400" />
+            </span>
+            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">Reschedule proposed</h3>
+          </div>
+          <button onClick={onClose} disabled={loading} className="text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed"><X size={16} /></button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4">
+          {/* Proposed schedule */}
+          <div className="rounded-xl border border-sky-200 dark:border-sky-700/50 bg-sky-50 dark:bg-sky-900/10 px-4 py-3 space-y-1.5">
+            <p className="text-xs font-bold text-sky-800 dark:text-sky-200">
+              {new Date(pendingReschedule.newDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+            </p>
+            {pendingReschedule.newTimeSlot?.start && (
+              <p className="text-xs text-sky-700 dark:text-sky-300">
+                {pendingReschedule.newTimeSlot.start}
+                {pendingReschedule.newTimeSlot.end && ` – ${pendingReschedule.newTimeSlot.end}`}
+              </p>
+            )}
+            {pendingReschedule.message && (
+              <p className="text-xs text-sky-600 dark:text-sky-400 italic">&ldquo;{pendingReschedule.message}&rdquo;</p>
+            )}
+            <p className="text-[10px] text-sky-500 dark:text-sky-500">
+              Expires in {hoursLeft}h
+            </p>
+          </div>
+
+          {mode === "decide" ? (
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => respond({ bookingId, body: { action: "accept" } })}
+                  disabled={loading}
+                  className="h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[12px] font-semibold transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <CheckCircle2 size={13} /> Accept
+                </button>
+                <button
+                  onClick={() => respond({ bookingId, body: { action: "reject" } })}
+                  disabled={loading}
+                  className="h-10 rounded-xl border border-red-200 dark:border-red-700/50 text-red-600 dark:text-red-400 text-[12px] font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <X size={13} /> Reject
+                </button>
+                <button
+                  onClick={() => setMode("counter")}
+                  disabled={loading}
+                  className="h-10 rounded-xl border border-sky-200 dark:border-sky-700/50 text-sky-700 dark:text-sky-400 text-[12px] font-semibold hover:bg-sky-50 dark:hover:bg-sky-900/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <CalendarClock size={13} /> Counter
+                </button>
+              </div>
+              {loading && (
+                <div className="flex items-center justify-center gap-1.5 text-xs text-stone-400">
+                  <Loader2 size={13} className="animate-spin" /> Processing…
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="space-y-2.5">
+                <div>
+                  <label className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 mb-1 block">Your preferred date</label>
+                  <input
+                    type="date"
+                    value={counterDate}
+                    onChange={(e) => setCounterDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-stone-400 dark:text-stone-500 mb-1 block">Start time</label>
+                    <input type="time" value={counterStart} onChange={(e) => setCounterStart(e.target.value)} className="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-stone-400 dark:text-stone-500 mb-1 block">End time</label>
+                    <input type="time" value={counterEnd} onChange={(e) => setCounterEnd(e.target.value)} className="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                  </div>
+                </div>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Explain why (optional)…"
+                  rows={2}
+                  className="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-50 placeholder:text-stone-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setMode("decide")} disabled={loading} className="h-9 px-3 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">Back</button>
+                <button
+                  onClick={() => respond({
+                    bookingId,
+                    body: {
+                      action: "counter",
+                      newDate: counterDate,
+                      newTimeSlot: counterStart ? { start: counterStart, end: counterEnd || counterStart } : undefined,
+                      message: message.trim() || undefined,
+                    },
+                  })}
+                  disabled={loading || !counterDate}
+                  className="flex-1 h-9 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                >
+                  {loading ? <Loader2 size={13} className="animate-spin" /> : <CalendarClock size={13} />}
+                  Send counter
+                </button>
+              </div>
+            </>
+          )}
+
+          {error && (
+            <p className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+              <AlertCircle size={12} className="shrink-0" />{error}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -572,7 +743,7 @@ function CompletionAttemptsSection({ bookingId }: { bookingId: string }) {
 
 // ─── Detail body ──────────────────────────────────────────────────────────────
 
-type DialogType = "cancel" | "reschedule" | "start" | "proof" | "rebuttal" | "respond";
+type DialogType = "cancel" | "propose-reschedule" | "respond-reschedule" | "start" | "proof" | "rebuttal" | "respond";
 
 function BookingDetail({
   booking,
@@ -660,18 +831,19 @@ function BookingDetail({
       <div className="flex flex-wrap gap-2 mb-5 print:hidden">
         {isProvider && booking.status === BookingStatus.CONFIRMED && (
           <>
-            <button
-              onClick={() => setOpenDialog("start")}
-              className="h-10 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-[12px] font-semibold transition-colors flex items-center gap-2"
-            >
-              <Play size={14} />
-              Start job
+            <button onClick={() => setOpenDialog("start")} className="h-10 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-[12px] font-semibold transition-colors flex items-center gap-2">
+              <Play size={14} /> Start job
             </button>
-            <button onClick={() => setOpenDialog("reschedule")} className="h-10 px-4 rounded-xl border border-sky-200 dark:border-sky-700/50 text-sky-700 dark:text-sky-400 text-[12px] font-semibold hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors flex items-center gap-2">
-              <CalendarClock size={14} />
-              Reschedule
+            <button onClick={() => setOpenDialog("propose-reschedule")} className="h-10 px-4 rounded-xl border border-sky-200 dark:border-sky-700/50 text-sky-700 dark:text-sky-400 text-[12px] font-semibold hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors flex items-center gap-2">
+              <CalendarClock size={14} /> Propose reschedule
             </button>
           </>
+        )}
+        {isProvider && booking.status === BookingStatus.RESCHEDULE_REQUESTED &&
+          booking.pendingReschedule?.proposedBy === "client" && (
+          <button onClick={() => setOpenDialog("respond-reschedule")} className="h-10 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-[12px] font-semibold transition-colors flex items-center gap-2">
+            <CalendarClock size={14} /> Respond to reschedule
+          </button>
         )}
         {isProvider && booking.status === BookingStatus.IN_PROGRESS && (
           <button onClick={() => setOpenDialog("proof")} className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-semibold transition-colors flex items-center gap-2">
@@ -691,13 +863,24 @@ function BookingDetail({
         )}
         {isClient && booking.status === BookingStatus.CONFIRMED && (
           <>
-            <button onClick={() => setOpenDialog("reschedule")} className="h-10 px-4 rounded-xl border border-sky-200 dark:border-sky-700/50 text-sky-700 dark:text-sky-400 text-[12px] font-semibold hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors flex items-center gap-2">
-              <CalendarClock size={14} /> Reschedule
+            <button onClick={() => setOpenDialog("propose-reschedule")} className="h-10 px-4 rounded-xl border border-sky-200 dark:border-sky-700/50 text-sky-700 dark:text-sky-400 text-[12px] font-semibold hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors flex items-center gap-2">
+              <CalendarClock size={14} /> Propose reschedule
             </button>
             <button onClick={() => setOpenDialog("cancel")} className="h-10 px-4 rounded-xl border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-[12px] font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2">
               <Ban size={14} /> Cancel
             </button>
           </>
+        )}
+        {isClient && booking.status === BookingStatus.RESCHEDULE_REQUESTED &&
+          booking.pendingReschedule?.proposedBy === "provider" && (
+          <button onClick={() => setOpenDialog("respond-reschedule")} className="h-10 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-[12px] font-semibold transition-colors flex items-center gap-2">
+            <CalendarClock size={14} /> Respond to reschedule
+          </button>
+        )}
+        {booking.status === BookingStatus.RESCHEDULE_REQUESTED && (
+          <button onClick={() => setOpenDialog("cancel")} className="h-10 px-4 rounded-xl border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-[12px] font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2">
+            <Ban size={14} /> Cancel booking
+          </button>
         )}
 
 
@@ -956,6 +1139,46 @@ function BookingDetail({
           </div>
         </div>
 
+        {/* Pending reschedule panel */}
+        {booking.pendingReschedule && booking.status === BookingStatus.RESCHEDULE_REQUESTED && (
+          <div className="rounded-2xl border-2 border-sky-300 dark:border-sky-600/50 bg-sky-50 dark:bg-sky-900/10 overflow-hidden">
+            <div className="px-5 py-3 bg-sky-100/80 dark:bg-sky-900/30 border-b border-sky-200 dark:border-sky-700/40 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CalendarClock size={13} className="text-sky-600 dark:text-sky-400" />
+                <p className="text-[11px] font-bold text-sky-800 dark:text-sky-200 uppercase tracking-wider">
+                  Reschedule proposal pending
+                </p>
+              </div>
+              <span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400">
+                Proposed by {booking.pendingReschedule.proposedBy}
+              </span>
+            </div>
+            <div className="px-5 py-4 space-y-1.5">
+              <p className="text-sm font-semibold text-sky-800 dark:text-sky-200">
+                {new Date(booking.pendingReschedule.newDate).toLocaleDateString("en-US", {
+                  weekday: "long", month: "long", day: "numeric", year: "numeric",
+                })}
+              </p>
+              {booking.pendingReschedule.newTimeSlot?.start && (
+                <p className="text-xs text-sky-700 dark:text-sky-300">
+                  {booking.pendingReschedule.newTimeSlot.start}
+                  {booking.pendingReschedule.newTimeSlot.end &&
+                    ` – ${booking.pendingReschedule.newTimeSlot.end}`}
+                </p>
+              )}
+              {booking.pendingReschedule.message && (
+                <p className="text-xs text-sky-600 dark:text-sky-400 italic">
+                  &ldquo;{booking.pendingReschedule.message}&rdquo;
+                </p>
+              )}
+              <p className="text-[10px] text-sky-500 dark:text-sky-500 mt-1">
+                Expires {fmtDateTime(booking.pendingReschedule.expiresAt)}
+                {booking.rescheduleCount !== undefined && ` · ${booking.rescheduleCount}/3 proposals used`}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Completion attempts */}
         <CompletionAttemptsSection bookingId={booking._id} />
 
@@ -994,7 +1217,15 @@ function BookingDetail({
       {/* Dialogs */}
       {openDialog === "start" && <ConfirmStartDialog bookingId={booking._id} onClose={close} onDone={refresh} />}
       {openDialog === "cancel" && <CancelDialog bookingId={booking._id} onClose={close} onDone={refresh} />}
-      {openDialog === "reschedule" && <RescheduleDialog bookingId={booking._id} onClose={close} onDone={refresh} />}
+      {openDialog === "propose-reschedule" && <ProposeRescheduleDialog bookingId={booking._id} onClose={close} onDone={refresh} />}
+      {openDialog === "respond-reschedule" && booking.pendingReschedule && (
+        <RespondRescheduleDialog
+          bookingId={booking._id}
+          pendingReschedule={booking.pendingReschedule}
+          onClose={close}
+          onDone={refresh}
+        />
+      )}
       {openDialog === "respond" && <RespondProofDialog bookingId={booking._id} onClose={close} onDone={refresh} />}
       {openDialog === "proof" && (
         <SubmitProofInline bookingId={booking._id} onClose={close} onDone={refresh} />

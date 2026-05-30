@@ -7,6 +7,7 @@ import { RequestSource } from "./provider.request.types";
 
 export enum BookingStatus {
   CONFIRMED = "CONFIRMED",
+  RESCHEDULE_REQUESTED = "RESCHEDULE_REQUESTED",
   IN_PROGRESS = "IN_PROGRESS",
   AWAITING_VALIDATION = "AWAITING_VALIDATION",
   DISPUTED = "DISPUTED",
@@ -14,6 +15,17 @@ export enum BookingStatus {
   COMPLETED = "COMPLETED",
   RESOLVED = "RESOLVED",
   CANCELLED = "CANCELLED",
+}
+
+// ─── Pending Reschedule ───────────────────────────────────────────────────────
+
+export interface PendingReschedule {
+  proposedBy: "client" | "provider";
+  proposedAt: string;
+  expiresAt: string;
+  newDate: string;
+  newTimeSlot?: { start: string; end: string };
+  message?: string;
 }
 
 // ─── Status History ───────────────────────────────────────────────────────────
@@ -66,6 +78,9 @@ export interface Booking {
   attemptCount: number;
   currentAttemptId?: string;
 
+  pendingReschedule?: PendingReschedule;
+  rescheduleCount?: number;
+
   finalOutcome?: {
     closedAt: string;
     resolution: "completed" | "admin_resolved" | "cancelled";
@@ -99,9 +114,17 @@ export interface SubmitProofRequestBody {
   images: string[];
 }
 
-export interface RescheduleBookingRequestBody {
+export interface ProposeRescheduleBody {
   newDate: string;
   newTimeSlot?: { start: string; end: string };
+  message?: string;
+}
+
+export interface RespondToRescheduleBody {
+  action: "accept" | "reject" | "counter";
+  newDate?: string;
+  newTimeSlot?: { start: string; end: string };
+  message?: string;
 }
 
 export interface CancelBookingRequestBody {

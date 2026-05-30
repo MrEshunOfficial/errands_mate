@@ -76,6 +76,13 @@ const BOOKING_STATUS_CFG: Record<
     dot: "bg-emerald-500",
     accent: "from-emerald-400 to-teal-400",
   },
+  [BookingStatus.RESCHEDULE_REQUESTED]: {
+    label: "Reschedule Proposed",
+    classes:
+      "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50",
+    dot: "bg-sky-500 animate-pulse",
+    accent: "from-sky-400 to-blue-400",
+  },
   [BookingStatus.IN_PROGRESS]: {
     label: "In Progress",
     classes:

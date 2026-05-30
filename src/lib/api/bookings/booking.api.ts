@@ -3,7 +3,8 @@ import {
   BookingResponse,
   BookingListResponse,
   SubmitProofRequestBody,
-  RescheduleBookingRequestBody,
+  ProposeRescheduleBody,
+  RespondToRescheduleBody,
   CancelBookingRequestBody,
 } from "@/types/booking.types";
 import type { BookingStats, BookingStatsResponse } from "@/types/booking/booking.types";
@@ -97,12 +98,22 @@ export class BookingAPI extends APIClient {
   // SECTION 5 — SHARED: RESCHEDULE & DETAIL
   // ═══════════════════════════════════════════════════════════════════════════
 
-  async rescheduleBooking(
+  async proposeReschedule(
     bookingId: string,
-    body: RescheduleBookingRequestBody,
+    body: ProposeRescheduleBody,
   ): Promise<BookingResponse> {
     return this.patch<BookingResponse>(
       `${this.base}/${bookingId}/reschedule`,
+      body,
+    );
+  }
+
+  async respondToReschedule(
+    bookingId: string,
+    body: RespondToRescheduleBody,
+  ): Promise<BookingResponse> {
+    return this.patch<BookingResponse>(
+      `${this.base}/${bookingId}/reschedule/respond`,
       body,
     );
   }

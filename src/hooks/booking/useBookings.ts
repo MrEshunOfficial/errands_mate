@@ -12,7 +12,7 @@ import type {
   BookingStatus,
   ValidateBookingInput,
   ResolveDisputeInput,
-  RescheduleBookingInput,
+  ProposeRescheduleInput,
   PaymentStatus,
 } from "@/types/booking/booking.types";
 
@@ -114,7 +114,7 @@ interface BookingDetailHookResult {
   resolveDispute: (input: ResolveDisputeInput) => Promise<void>;
   updatePaymentStatus: (opts: { paymentStatus: PaymentStatus }) => Promise<void>;
   submitRebuttal: (opts: { message: string }) => Promise<void>;
-  rescheduleBooking: (input: RescheduleBookingInput) => Promise<void>;
+  proposeReschedule: (input: ProposeRescheduleInput) => Promise<void>;
 }
 
 export function useBookingById(
@@ -246,12 +246,13 @@ export function useBookingById(
     [id, mutate],
   );
 
-  const rescheduleBooking = useCallback(
-    (input: RescheduleBookingInput) =>
+  const proposeReschedule = useCallback(
+    (input: ProposeRescheduleInput) =>
       mutate(() =>
-        bookingAPI.rescheduleBooking(id!, {
+        bookingAPI.proposeReschedule(id!, {
           newDate: input.newDate,
           newTimeSlot: input.newTimeSlot,
+          message: input.message,
         }),
       ),
     [id, mutate],
@@ -278,7 +279,7 @@ export function useBookingById(
     resolveDispute,
     updatePaymentStatus,
     submitRebuttal,
-    rescheduleBooking,
+    proposeReschedule,
   };
 }
 

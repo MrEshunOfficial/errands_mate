@@ -28,7 +28,7 @@ import {
   PaymentStatus,
   type ValidateBookingInput,
   type ResolveDisputeInput,
-  type RescheduleBookingInput,
+  type ProposeRescheduleInput,
 } from "@/types/booking/booking.types";
 import { ALL_PAYMENT_STATUSES, PAYMENT_STATUS_CONFIG, BOOKING_STATUS_CONFIG } from "./constants";
 import { BookingRowData, formatPrice, isOverdue, daysSince } from "./helpers";
@@ -128,7 +128,7 @@ interface ActionsTabProps {
   onResolveDispute: (input: ResolveDisputeInput) => void;
   onSubmitRebuttal: (message: string) => void;
   onUpdatePaymentStatus: (status: PaymentStatus) => void;
-  onReschedule: (input: RescheduleBookingInput) => void;
+  onReschedule: (input: ProposeRescheduleInput) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -221,7 +221,6 @@ export function ActionsTab({
             end: rescheduleEnd || rescheduleStart,
           }
         : undefined,
-      actorRole: "admin",
     });
   };
 

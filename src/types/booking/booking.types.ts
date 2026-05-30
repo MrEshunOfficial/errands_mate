@@ -8,6 +8,7 @@ import { UserLocation } from "@/types/location.types";
 
 export enum BookingStatus {
   CONFIRMED = "CONFIRMED",
+  RESCHEDULE_REQUESTED = "RESCHEDULE_REQUESTED",
   IN_PROGRESS = "IN_PROGRESS",
   AWAITING_VALIDATION = "AWAITING_VALIDATION",
   VALIDATED = "VALIDATED",
@@ -195,6 +196,7 @@ export interface BookingDetailResponse {
 export interface BookingStats {
   total: number;
   CONFIRMED?: number;
+  RESCHEDULE_REQUESTED?: number;
   IN_PROGRESS?: number;
   AWAITING_VALIDATION?: number;
   VALIDATED?: number;
@@ -226,8 +228,8 @@ export interface ResolveDisputeInput {
   notes?: string;
 }
 
-export interface RescheduleBookingInput {
+export interface ProposeRescheduleInput {
   newDate: string;
   newTimeSlot?: { start: string; end: string };
-  actorRole?: "admin" | "client" | "provider";
+  message?: string;
 }

@@ -22,6 +22,7 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
+  CalendarClock,
 } from "lucide-react";
 import {
   useClientBookings,
@@ -56,6 +57,13 @@ const STATUS_CFG: Record<
     classes: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50",
     dot: "bg-amber-500 animate-pulse",
     accent: "from-amber-400 to-orange-400",
+  },
+  [BookingStatus.RESCHEDULE_REQUESTED]: {
+    label: "Reschedule Proposed",
+    icon: <CalendarClock size={11} />,
+    classes: "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50",
+    dot: "bg-sky-500 animate-pulse",
+    accent: "from-sky-400 to-blue-400",
   },
   [BookingStatus.DISPUTED]: {
     label: "Disputed",
@@ -98,6 +106,7 @@ type FilterTab = "all" | BookingStatus;
 const FILTER_TABS: { id: FilterTab; label: string }[] = [
   { id: "all", label: "All" },
   { id: BookingStatus.CONFIRMED, label: "Confirmed" },
+  { id: BookingStatus.RESCHEDULE_REQUESTED, label: "Reschedule" },
   { id: BookingStatus.IN_PROGRESS, label: "In Progress" },
   { id: BookingStatus.AWAITING_VALIDATION, label: "Needs Review" },
   { id: BookingStatus.DISPUTED, label: "Disputed" },
