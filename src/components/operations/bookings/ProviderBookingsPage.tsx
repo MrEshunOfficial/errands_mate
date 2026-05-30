@@ -163,7 +163,10 @@ function StartServiceDialog({
               This marks the booking as In Progress and notifies the client.
             </p>
           </div>
-          <button onClick={onClose} className="ml-auto text-stone-400 hover:text-stone-600 rounded-lg p-1">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="ml-auto text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
@@ -278,7 +281,10 @@ function SubmitProofDialog({
             </span>
             <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">Mark job complete</h3>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 rounded-lg p-1">
+          <button
+            onClick={onClose}
+            disabled={submitLoading || isUploading}
+            className="text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
@@ -378,7 +384,10 @@ function RebuttalDialog({
             </span>
             <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">Submit rebuttal</h3>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 rounded-lg p-1">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
@@ -542,7 +551,9 @@ export default function ProviderBookingsPage() {
   function handleJobDone() {
     refetch();
     if (myProfileId) {
-      void providerProfileAPI.updateProviderStatus(myProfileId, { status: "Available" });
+      providerProfileAPI
+        .updateProviderStatus(myProfileId, { status: "Available" })
+        .catch((err) => console.error("Failed to reset provider status after job completion:", err));
     }
   }
 

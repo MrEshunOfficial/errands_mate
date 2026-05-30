@@ -162,7 +162,10 @@ function CancelDialog({
               The provider will be notified. This cannot be undone.
             </p>
           </div>
-          <button onClick={onClose} className="ml-auto text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg p-1">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="ml-auto text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>
@@ -247,7 +250,10 @@ function RespondProofDialog({
       <div className="w-full max-w-md rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-2xl">
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-stone-100 dark:border-stone-800">
           <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">Review submitted proof</h3>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 rounded-lg p-1">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="text-stone-400 hover:text-stone-600 rounded-lg p-1 disabled:opacity-40 disabled:cursor-not-allowed">
             <X size={16} />
           </button>
         </div>

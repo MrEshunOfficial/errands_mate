@@ -118,23 +118,39 @@ function useBaseMutation<TData, TArgs>(
     mutationFnRef.current = mutationFn;
   });
 
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const activeCallRef = useRef(0);
+
   const mutate = useCallback(async (args: TArgs): Promise<TData | null> => {
+    const callId = ++activeCallRef.current;
     setState({ data: null, loading: true, error: null });
     try {
       const data = await mutationFnRef.current(args);
-      setState({ data, loading: false, error: null });
-      callbacksRef.current?.onSuccess?.(data);
+      if (mountedRef.current && activeCallRef.current === callId) {
+        setState({ data, loading: false, error: null });
+        callbacksRef.current?.onSuccess?.(data);
+      }
       return data;
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "An unexpected error occurred";
-      setState((prev) => ({ ...prev, loading: false, error: message }));
-      callbacksRef.current?.onError?.(message);
+      if (mountedRef.current && activeCallRef.current === callId) {
+        const message =
+          err instanceof Error ? err.message : "An unexpected error occurred";
+        setState((prev) => ({ ...prev, loading: false, error: message }));
+        callbacksRef.current?.onError?.(message);
+      }
       return null;
     }
   }, []);
 
   const reset = useCallback(() => {
+    activeCallRef.current++;
     setState({ data: null, loading: false, error: null });
   }, []);
 
