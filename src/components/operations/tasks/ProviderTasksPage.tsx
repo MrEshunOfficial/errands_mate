@@ -19,6 +19,8 @@ import {
   ArrowUpRight,
   Eye,
   RotateCcw,
+  SendHorizonal,
+  CalendarCheck,
 } from "lucide-react";
 import {
   useFloatingTasks,
@@ -28,7 +30,7 @@ import {
   useWithdrawInterest,
 } from "@/hooks/tasks/useTasks";
 import { useMyProviderProfile } from "@/hooks/profiles/useProviderProfile";
-import { Task, TaskPriority, resolveTaskLocation } from "@/types/task.types";
+import { Task, TaskPriority, TaskStatus, resolveTaskLocation } from "@/types/task.types";
 
 // ─── Priority config ──────────────────────────────────────────────────────────
 
@@ -324,7 +326,17 @@ function TaskCard({
                   <Zap size={9} /> Matched
                 </span>
               )}
-              {mode === "applied" && (
+              {mode === "applied" && task.status === TaskStatus.REQUESTED && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-700/50">
+                  <SendHorizonal size={9} /> Requested by client
+                </span>
+              )}
+              {mode === "applied" && task.status === TaskStatus.BOOKED && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/50">
+                  <CalendarCheck size={9} /> Booked
+                </span>
+              )}
+              {mode === "applied" && task.status !== TaskStatus.REQUESTED && task.status !== TaskStatus.BOOKED && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/50">
                   <CheckCircle2 size={9} /> Applied
                 </span>
@@ -404,7 +416,20 @@ function TaskCard({
         {/* Actions */}
         <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            {mode === "applied" ? (
+            {mode === "applied" && task.status === TaskStatus.REQUESTED ? (
+              <Link
+                href="/requests"
+                className="h-8 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-semibold transition-colors flex items-center gap-1.5"
+              >
+                <SendHorizonal size={12} />
+                Respond to request
+              </Link>
+            ) : mode === "applied" && task.status === TaskStatus.BOOKED ? (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <CalendarCheck size={12} />
+                Booking confirmed
+              </span>
+            ) : mode === "applied" ? (
               <button
                 onClick={() => onWithdraw(task)}
                 className="h-8 px-3 rounded-xl border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-[11px] font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-1.5"
