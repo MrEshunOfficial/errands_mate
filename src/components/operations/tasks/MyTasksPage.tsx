@@ -497,13 +497,13 @@ function TaskRow({
                 )}
               </button>
             )}
-            {task.status === TaskStatus.FLOATING ? (
+            {task.status === TaskStatus.FLOATING && interestCount > 0 ? (
               <button
                 type="button"
                 onClick={() => onViewInterested(task)}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-amber-500 hover:bg-amber-400 rounded-xl px-3 py-1.5 transition-all duration-150">
                 <Radio size={12} />
-                {interestCount > 0 ? `${interestCount} interested` : "Floating"}
+                {interestCount} interested
                 <ChevronRight size={11} />
               </button>
             ) : (
