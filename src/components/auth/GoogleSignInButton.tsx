@@ -165,10 +165,8 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
           {isButtonLoading
             ? "Connecting..."
             : !isGoogleReady
-              ? "Loading Google..."
-              : mode === "register"
-                ? "Sign up with Google"
-                : "Continue with Google"}
+              ? "Loading..."
+              : "Google"}
         </span>
       </Button>
 

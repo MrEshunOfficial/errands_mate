@@ -116,7 +116,7 @@ export function BaseAuthForm({ mode }: BaseAuthFormProps): JSX.Element {
       {/* Social logins */}
       <div className="space-y-2">
         <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">
-          Continue with
+          {mode === "login" ? "Sign in with" : "Sign up with"}
         </p>
         <div className="space-y-3">
           <GoogleSignIn mode={mode} />
@@ -128,7 +128,7 @@ export function BaseAuthForm({ mode }: BaseAuthFormProps): JSX.Element {
       <div className="relative flex items-center">
         <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
         <span className="mx-3 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-          or continue with email
+          {mode === "login" ? "or sign in with email" : "or sign up with email"}
         </span>
         <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
       </div>

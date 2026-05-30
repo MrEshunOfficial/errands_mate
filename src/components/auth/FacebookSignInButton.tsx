@@ -130,10 +130,8 @@ export function FacebookSignIn({
           {isButtonLoading
             ? "Connecting..."
             : !isFBReady
-              ? "Loading Facebook..."
-              : mode === "register"
-                ? "Sign up with Facebook"
-                : "Continue with Facebook"}
+              ? "Loading..."
+              : "Facebook"}
         </span>
       </Button>
 
