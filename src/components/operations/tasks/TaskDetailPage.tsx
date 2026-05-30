@@ -27,6 +27,7 @@ import {
   Star,
   Pencil,
   ChevronDown,
+  Trash2,
 } from "lucide-react";
 import {
   useTaskById,
@@ -37,8 +38,11 @@ import {
   useExpressInterest,
   useWithdrawInterest,
   useUpdateTask,
+  useDeleteTask,
 } from "@/hooks/tasks/useTasks";
 import { useAuth } from "@/hooks/auth/useAuth";
+import { useProfile } from "@/hooks/profiles/useCoreUserProfile";
+import { UserRole } from "@/types/base.types";
 import {
   Task,
   TaskStatus,
@@ -333,6 +337,58 @@ function CancelDialog({
               <Ban size={13} />
             )}
             Cancel task
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Delete task dialog ───────────────────────────────────────────────────────
+
+function DeleteTaskDialog({
+  taskId,
+  onClose,
+  onDeleted,
+}: {
+  taskId: string;
+  onClose: () => void;
+  onDeleted: () => void;
+}) {
+  const { mutate: deleteTask, loading } = useDeleteTask({ onSuccess: onDeleted });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-2xl p-6">
+        <div className="flex items-start gap-2.5 mb-4">
+          <span className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+            <Trash2 size={16} className="text-red-600 dark:text-red-400" />
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+              Delete task?
+            </h3>
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+              This will permanently remove the task from your history.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 h-9 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+            Keep it
+          </button>
+          <button
+            onClick={() => deleteTask(taskId)}
+            disabled={loading}
+            className="flex-1 h-9 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50">
+            {loading ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Trash2 size={13} />
+            )}
+            Delete task
           </button>
         </div>
       </div>
@@ -683,8 +739,10 @@ function TaskDetail({
 }) {
   const router = useRouter();
   const { user } = useAuth();
+  const { profile } = useProfile();
 
   const [showCancel, setShowCancel] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   const [showInterest, setShowInterest] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [hasExpressedInterest, setHasExpressedInterest] = useState(false);
@@ -692,6 +750,7 @@ function TaskDetail({
   const [rematchLoading, setRematchLoading] = useState(false);
 
   const isOwner = !!user?.id && user.id === task.clientId;
+  const isProvider = profile?.role === UserRole.PROVIDER;
   const isTerminal =
     task.status === TaskStatus.CANCELLED || task.status === TaskStatus.EXPIRED;
   const isFloating = task.status === TaskStatus.FLOATING;
@@ -864,7 +923,8 @@ function TaskDetail({
                   </button>
                 </>
               ) : (
-                // Provider CTAs — only meaningful on floating tasks
+                // Provider CTAs — only visible to service providers on floating tasks
+                isProvider &&
                 isFloating &&
                 (hasExpressedInterest ? (
                   <button
@@ -887,6 +947,18 @@ function TaskDetail({
                   </button>
                 ))
               )}
+            </div>
+          )}
+
+          {/* Delete button — owner cleanup for terminal tasks */}
+          {isOwner && isTerminal && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              <button
+                onClick={() => setShowDelete(true)}
+                className="flex items-center gap-1.5 h-10 px-4 rounded-xl border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-[12px] font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                <Trash2 size={13} />
+                Delete task
+              </button>
             </div>
           )}
 
@@ -1001,7 +1073,7 @@ function TaskDetail({
             )}
 
             {/* Interest confirmed notice — provider view */}
-            {!isOwner && isFloating && hasExpressedInterest && (
+            {isProvider && isFloating && hasExpressedInterest && (
               <div className="rounded-2xl border border-emerald-200 dark:border-emerald-700/40 bg-emerald-50 dark:bg-emerald-900/10 px-5 py-4 flex items-center gap-3">
                 <CheckCircle2
                   size={16}
@@ -1040,6 +1112,13 @@ function TaskDetail({
             setShowCancel(false);
             refetch();
           }}
+        />
+      )}
+      {showDelete && (
+        <DeleteTaskDialog
+          taskId={task._id}
+          onClose={() => setShowDelete(false)}
+          onDeleted={() => router.push("/tasks")}
         />
       )}
       {showInterest && (
