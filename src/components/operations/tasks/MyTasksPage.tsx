@@ -17,8 +17,9 @@ import {
   CalendarDays,
   Hourglass,
   RotateCcw,
+  Trash2,
 } from "lucide-react";
-import { useMyTasks, useMatchedProviders, useTriggerMatching, useUpdateTask } from "@/hooks/tasks/useTasks";
+import { useMyTasks, useMatchedProviders, useTriggerMatching, useUpdateTask, useDeleteTask } from "@/hooks/tasks/useTasks";
 import { toast } from "sonner";
 import { Task, TaskStatus, MatchingSummary } from "@/types/task.types";
 import type { Service } from "@/types/services/service.types";
@@ -101,15 +102,19 @@ function TaskRow({
   task,
   onViewProviders,
   onRematch,
+  onDelete,
   rematching,
 }: {
   task: Task;
   onViewProviders: (task: Task) => void;
   onRematch: (task: Task) => void;
+  onDelete: (task: Task) => void;
   rematching: boolean;
 }) {
   const canViewProviders =
     task.status === TaskStatus.MATCHED || task.status === TaskStatus.FLOATING;
+  const isTerminal =
+    task.status === TaskStatus.CANCELLED || task.status === TaskStatus.EXPIRED;
   const matchCount = task.matchedProviders?.length ?? 0;
   const interestCount = task.interestedProviders?.length ?? 0;
 
@@ -192,6 +197,14 @@ function TaskRow({
               <ChevronRight size={11} />
             </button>
           </div>
+        ) : isTerminal ? (
+          <button
+            type="button"
+            onClick={() => onDelete(task)}
+            title="Delete task"
+            className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-400 dark:text-stone-500 hover:border-red-300 dark:hover:border-red-700/50 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+            <Trash2 size={13} />
+          </button>
         ) : (
           <span className="text-xs text-stone-300 dark:text-stone-600">—</span>
         )}
@@ -270,6 +283,7 @@ function TaskTable({
   isPast,
   onViewProviders,
   onRematch,
+  onDelete,
   rematchingTaskId,
 }: {
   tasks: Task[];
@@ -277,6 +291,7 @@ function TaskTable({
   isPast?: boolean;
   onViewProviders: (task: Task) => void;
   onRematch: (task: Task) => void;
+  onDelete: (task: Task) => void;
   rematchingTaskId: string | null;
 }) {
   return (
@@ -316,6 +331,7 @@ function TaskTable({
               task={task}
               onViewProviders={onViewProviders}
               onRematch={onRematch}
+              onDelete={onDelete}
               rematching={rematchingTaskId === task._id}
             />
           ))}
@@ -394,6 +410,15 @@ export default function MyTasksPage() {
   const [drawerRematching, setDrawerRematching] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [rematchingTaskId, setRematchingTaskId] = useState<string | null>(null);
+
+  // ── Delete state ───────────────────────────────────────────────────────────
+  const [confirmDeleteTask, setConfirmDeleteTask] = useState<Task | null>(null);
+  const { mutate: deleteTask, loading: deleting } = useDeleteTask({
+    onSuccess: () => {
+      setConfirmDeleteTask(null);
+      refetch();
+    },
+  });
 
   const { mutate: triggerMatch } = useTriggerMatching();
   const { mutate: updateTask } = useUpdateTask();
@@ -620,6 +645,7 @@ export default function MyTasksPage() {
               isPast={activeTab === "past"}
               onViewProviders={openDrawer}
               onRematch={handleRematch}
+              onDelete={(task) => setConfirmDeleteTask(task)}
               rematchingTaskId={rematchingTaskId}
             />
           </div>
@@ -642,6 +668,46 @@ export default function MyTasksPage() {
         onEditTask={handleDrawerEdit}
         editSaving={editSaving}
       />
+
+      {/* Delete confirmation dialog */}
+      {confirmDeleteTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-2xl p-6">
+            <div className="flex items-start gap-2.5 mb-4">
+              <span className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+                <Trash2 size={16} className="text-red-600 dark:text-red-400" />
+              </span>
+              <div>
+                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+                  Delete task?
+                </h3>
+                <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-2">
+                  &ldquo;{confirmDeleteTask.title}&rdquo; will be permanently removed from your history.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDeleteTask(null)}
+                disabled={deleting}
+                className="flex-1 h-9 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors disabled:opacity-50">
+                Keep it
+              </button>
+              <button
+                onClick={() => deleteTask(confirmDeleteTask._id)}
+                disabled={deleting}
+                className="flex-1 h-9 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50">
+                {deleting ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Trash2 size={13} />
+                )}
+                Delete task
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

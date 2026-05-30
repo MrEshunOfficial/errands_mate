@@ -8,7 +8,6 @@ import {
   RematchRequestBody,
   CancelTaskRequestBody,
   ExpressInterestRequestBody,
-  // Query param shapes
   GetFloatingTasksParams,
   SearchTasksParams,
   GetMyTasksParams,
@@ -16,8 +15,6 @@ import {
   GetTaskByIdParams,
   AdminGetAllTasksParams,
   AdminGetTaskStatsParams,
-  // Response shapes
-  // TaskResponse,
   TaskListResponse,
   TaskWithMatchesResponse,
   TaskSummaryResponse,
