@@ -30,6 +30,7 @@ import {
   Building2,
 } from "lucide-react";
 import { ProviderStatus } from "@/types/provider.profile.types";
+import { providerProfileAPI } from "@/lib/api/profile/business.profile.api";
 import { useMyTasks, useMatchedProviders, useTriggerMatching, useUpdateTask, useDeleteTask } from "@/hooks/tasks/useTasks";
 import { toast } from "sonner";
 import { Task, TaskStatus, MatchingSummary } from "@/types/task.types";
@@ -64,9 +65,75 @@ function InterestedProviderDrawerCard({
 
   useEffect(() => {
     let cancelled = false;
-    fetchProviderProfile(entry.providerId).then((p) => {
-      if (!cancelled) { setProfile(p); setLoading(false); }
-    });
+
+    async function load() {
+      try {
+        // Fetch the populated provider profile
+        const raw = await providerProfileAPI.getProviderProfileById(
+          entry.providerId,
+          { populate: true },
+        );
+        if (cancelled || !raw?._id) return;
+
+        // Build the summary (mirrors fetchProviderProfile)
+        const summary: ProviderSummary = {
+          _id: String(raw._id),
+          businessName: raw.businessName,
+          contactInfo: raw.contactInfo
+            ? {
+                mainContact: raw.contactInfo.mainContact ?? null,
+                businessEmail: raw.contactInfo.businessEmail ?? null,
+              }
+            : null,
+          locationData: raw.locationData
+            ? {
+                region: raw.locationData.region,
+                city: raw.locationData.city,
+                locality: raw.locationData.locality,
+                isAddressVerified: raw.locationData.isAddressVerified,
+              }
+            : undefined,
+          status: raw.status,
+          isAlwaysAvailable: raw.isAlwaysAvailable,
+          isAddressVerified: raw.isAddressVerified,
+          workingHours: raw.workingHours,
+          ratingStats: raw.ratingStats,
+          serviceOfferings: Array.isArray(raw.serviceOfferings)
+            ? (raw.serviceOfferings.filter(
+                (s) => typeof s === "object" && s !== null,
+              ) as Service[])
+            : undefined,
+        };
+
+        if (!cancelled) setProfile(summary);
+
+        // Fetch profile picture separately via auth userId
+        const rawAny = raw as unknown as Record<string, unknown>;
+        const userProfileObj = rawAny.profile as Record<string, unknown> | undefined;
+        const userId = (userProfileObj?.userId as Record<string, unknown> | undefined)?._id as string | undefined;
+        if (userId && !cancelled) {
+          profilePictureAPI
+            .getPublicRecord(userId)
+            .then((file) => {
+              if (cancelled || !file?.url) return;
+              setProfile((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      profilePictureUrl: file.url,
+                      profilePictureThumbnailUrl: file.thumbnailUrl ?? null,
+                    }
+                  : prev,
+              );
+            })
+            .catch(() => {});
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
     return () => { cancelled = true; };
   }, [entry.providerId]);
 
