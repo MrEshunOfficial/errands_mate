@@ -16,6 +16,10 @@ export interface LinkProviderData {
   idToken: string;
 }
 
+export type OAuthRestoreAccountData =
+  | { provider: "google"; idToken: string }
+  | { provider: "facebook"; accessToken: string };
+
 // ─── OAuth API ────────────────────────────────────────────────────────────────
 
 export class OAuthAPI extends APIClient {
@@ -31,6 +35,10 @@ export class OAuthAPI extends APIClient {
 
   async linkProvider(data: LinkProviderData): Promise<AuthResponse> {
     return this.post<AuthResponse>(`${this.endpoint}/link-provider`, data);
+  }
+
+  async restoreOAuthAccount(data: OAuthRestoreAccountData): Promise<AuthResponse> {
+    return this.post<AuthResponse>(`${this.endpoint}/restore-account`, data);
   }
 }
 

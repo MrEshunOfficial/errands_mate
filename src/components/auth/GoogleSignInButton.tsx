@@ -2,7 +2,11 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
-import { useOAuth } from "@/hooks/auth/useOauth";
+import { toast } from "sonner";
+import { oAuthAPI } from "@/lib/api/auth/oauth.api";
+import { APIError } from "@/lib/api/base/api-client";
+import { saveAuthToken } from "@/lib/auth/token";
+import { RestoreAccountModal } from "@/components/auth/RestoreAccountModal";
 
 interface GoogleSignInProps {
   mode: "login" | "register";
@@ -10,57 +14,61 @@ interface GoogleSignInProps {
   onError?: (error: string) => void;
 }
 
-export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
-  const { googleAuth, isLoading, error, clearError } = useOAuth();
+export function GoogleSignIn({ onSuccess, onError }: GoogleSignInProps) {
   const searchParams = useSearchParams();
   const [isGoogleReady, setIsGoogleReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [restoreModal, setRestoreModal] = useState<{
+    visible: boolean;
+    deletedAt: string | null;
+    idToken: string;
+  }>({ visible: false, deletedAt: null, idToken: "" });
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
   const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-  // Keep a stable ref to the latest handler so we never re-initialize the SDK
-  // just because a closure dependency changed.
   const handleGoogleResponse = useCallback(
     async (response: { credential: string }) => {
+      setIsProcessing(true);
+      setAuthError(null);
+
       try {
-        setIsProcessing(true);
-        clearError();
-
-        const result = await googleAuth({ idToken: response.credential });
-
-        if (result) {
-          if (onSuccess) {
-            onSuccess();
-          }
-
-          const destination = searchParams.get("redirect") || "/profile";
-          window.location.href = destination;
-        } else {
-          const errorMsg = "Google authentication failed. Please try again.";
-          if (onError) {
-            onError(errorMsg);
-          }
+        const result = await oAuthAPI.googleAuth({ idToken: response.credential });
+        if (result.token) {
+          saveAuthToken(result.token);
+          sessionStorage.removeItem("logged_out_at");
         }
+        onSuccess?.();
+        const destination = searchParams.get("redirect") || "/profile";
+        window.location.href = destination;
       } catch (err) {
-        console.error("Google auth error:", err);
-        const errorMsg =
-          err instanceof Error ? err.message : "Google authentication failed";
-        if (onError) {
-          onError(errorMsg);
+        const apiError = err as APIError;
+
+        if (apiError.status === 423 && apiError.code === "ACCOUNT_PENDING_DELETION") {
+          setRestoreModal({
+            visible: true,
+            deletedAt: apiError.deletedAt ?? null,
+            idToken: response.credential,
+          });
+          return;
         }
+
+        const errorMsg = apiError.message || "Google authentication failed. Please try again.";
+        setAuthError(errorMsg);
+        onError?.(errorMsg);
       } finally {
         setIsProcessing(false);
       }
     },
-    [googleAuth, mode, onSuccess, onError, clearError, searchParams],
+    [onSuccess, onError, searchParams],
   );
 
   const handleGoogleResponseRef = useRef(handleGoogleResponse);
   handleGoogleResponseRef.current = handleGoogleResponse;
 
-  // Initialize the Google SDK exactly once. The callback delegates to the ref
-  // so it always uses the latest handler without triggering a re-init.
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) {
       console.error("GOOGLE_CLIENT_ID not found in environment variables");
@@ -118,26 +126,53 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
   }, [GOOGLE_CLIENT_ID]);
 
   const handleGoogleSignIn = () => {
-    if (!isGoogleReady) {
-      console.error("Google Sign-In not ready");
-      return;
-    }
-
-    clearError();
-
+    if (!isGoogleReady) return;
+    setAuthError(null);
     const googleButton = googleButtonRef.current?.querySelector(
       "div[role='button']",
     ) as HTMLElement;
     if (googleButton) {
       googleButton.click();
-    } else {
-      if (window.google) {
-        window.google.accounts.id.prompt();
-      }
+    } else if (window.google) {
+      window.google.accounts.id.prompt();
     }
   };
 
-  const isButtonLoading = isLoading || isProcessing;
+  const handleGoogleRestore = async () => {
+    setIsRestoring(true);
+    setRestoreError(null);
+    try {
+      const result = await oAuthAPI.restoreOAuthAccount({
+        provider: "google",
+        idToken: restoreModal.idToken,
+      });
+      if (result.token) saveAuthToken(result.token);
+      sessionStorage.removeItem("logged_out_at");
+      toast.success("Account restored! Welcome back.");
+      const destination = searchParams.get("redirect") || "/profile";
+      window.location.href = destination;
+    } catch (err) {
+      const apiError = err as APIError;
+      if (apiError.status === 400) {
+        // Token likely expired — close modal and re-trigger Google sign-in
+        setRestoreModal({ visible: false, deletedAt: null, idToken: "" });
+        setAuthError("Session expired. Please sign in with Google again to restore your account.");
+        if (window.google) window.google.accounts.id.prompt();
+      } else if (apiError.status === 404) {
+        setRestoreError("This account no longer exists.");
+      } else {
+        setRestoreError(apiError.message || "Failed to restore account. Please try again.");
+      }
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const closeRestoreModal = () => {
+    if (isRestoring) return;
+    setRestoreModal({ visible: false, deletedAt: null, idToken: "" });
+    setRestoreError(null);
+  };
 
   if (!GOOGLE_CLIENT_ID) {
     return (
@@ -149,32 +184,43 @@ export function GoogleSignIn({ mode, onSuccess, onError }: GoogleSignInProps) {
   }
 
   return (
-    <div className="space-y-2">
-      {/* Hidden Google button */}
-      <div ref={googleButtonRef} className="hidden" />
+    <>
+      <RestoreAccountModal
+        open={restoreModal.visible}
+        deletedAt={restoreModal.deletedAt}
+        onRestore={handleGoogleRestore}
+        onCancel={closeRestoreModal}
+        isLoading={isRestoring}
+        error={restoreError}
+      />
 
-      {/* Custom styled button */}
-      <Button
-        onClick={handleGoogleSignIn}
-        disabled={isButtonLoading || !isGoogleReady}
-        variant="secondary"
-        className="w-full flex items-center justify-center gap-3 py-5 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <FcGoogle className="h-5 w-5 lg:h-6 lg:w-6" />
-        <span className="font-medium">
-          {isButtonLoading
-            ? "Connecting..."
-            : !isGoogleReady
-              ? "Loading..."
-              : "Google"}
-        </span>
-      </Button>
+      <div className="space-y-2">
+        {/* Hidden Google button */}
+        <div ref={googleButtonRef} className="hidden" />
 
-      {error && (
-        <div className="text-red-600 dark:text-red-400 text-sm text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
-          {error}
-        </div>
-      )}
-    </div>
+        {/* Custom styled button */}
+        <Button
+          onClick={handleGoogleSignIn}
+          disabled={isProcessing || !isGoogleReady}
+          variant="secondary"
+          className="w-full flex items-center justify-center gap-3 py-5 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FcGoogle className="h-5 w-5 lg:h-6 lg:w-6" />
+          <span className="font-medium">
+            {isProcessing
+              ? "Connecting..."
+              : !isGoogleReady
+                ? "Loading..."
+                : "Google"}
+          </span>
+        </Button>
+
+        {authError && (
+          <div className="text-red-600 dark:text-red-400 text-sm text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
+            {authError}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

@@ -5,6 +5,10 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/auth/useAuth";
+import { authAPI } from "@/lib/api/auth/auth.api";
+import { APIError } from "@/lib/api/base/api-client";
+import { saveAuthToken } from "@/lib/auth/token";
+import { RestoreAccountModal } from "@/components/auth/RestoreAccountModal";
 
 // Shared Input Field Component
 const InputField = ({
@@ -136,6 +140,14 @@ const CredentialsLogin = () => {
   });
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [restoreModal, setRestoreModal] = useState<{
+    visible: boolean;
+    deletedAt: string | null;
+    email: string;
+    password: string;
+  }>({ visible: false, deletedAt: null, email: "", password: "" });
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
   const { login, isLoading, error, clearError } = useAuth();
@@ -162,22 +174,69 @@ const CredentialsLogin = () => {
       toast.success("Welcome back! You've successfully logged in.");
       const destination = searchParams.get("redirect") || "/profile";
       window.location.href = destination;
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (err) {
+      const apiError = err as APIError;
 
-      // The useAuth hook handles error state, but we also show a toast
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Invalid credentials. Please try again.";
+      if (apiError.status === 423 && apiError.code === "ACCOUNT_PENDING_DELETION") {
+        setRestoreModal({
+          visible: true,
+          deletedAt: apiError.deletedAt ?? null,
+          email,
+          password,
+        });
+        return;
+      }
 
+      const errorMessage = apiError.message || "Invalid credentials. Please try again.";
       toast.error(errorMessage);
     }
   };
 
+  const handleCredentialsRestore = async () => {
+    setIsRestoring(true);
+    setRestoreError(null);
+    try {
+      const result = await authAPI.restoreAccount({
+        email: restoreModal.email,
+        password: restoreModal.password,
+      });
+      if (result.token) saveAuthToken(result.token);
+      sessionStorage.removeItem("logged_out_at");
+      toast.success("Account restored! Welcome back.");
+      const destination = searchParams.get("redirect") || "/profile";
+      window.location.href = destination;
+    } catch (err) {
+      const apiError = err as APIError;
+      if (apiError.status === 400) {
+        setRestoreError("Incorrect password. Please try again.");
+      } else if (apiError.status === 404) {
+        setRestoreError("This account no longer exists.");
+      } else {
+        setRestoreError(apiError.message || "Failed to restore account. Please try again.");
+      }
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const closeRestoreModal = () => {
+    if (isRestoring) return;
+    setRestoreModal({ visible: false, deletedAt: null, email: "", password: "" });
+    setRestoreError(null);
+  };
+
   return (
-    <div
-      className="flex items-center justify-center 
+    <>
+      <RestoreAccountModal
+        open={restoreModal.visible}
+        deletedAt={restoreModal.deletedAt}
+        onRestore={handleCredentialsRestore}
+        onCancel={closeRestoreModal}
+        isLoading={isRestoring}
+        error={restoreError}
+      />
+      <div
+        className="flex items-center justify-center
     transition-colors duration-200">
       <div
         className="border rounded-lg shadow-lg dark:shadow-xl p-3
@@ -254,6 +313,7 @@ const CredentialsLogin = () => {
         </form>
       </div>
     </div>
+    </>
   );
 };
 
