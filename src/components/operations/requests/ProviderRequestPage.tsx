@@ -30,6 +30,8 @@ import {
   Tag,
   FileText,
   Bookmark,
+  Plus,
+  X,
 } from "lucide-react";
 import {
   Breadcrumb,
@@ -785,6 +787,8 @@ function ProviderRequestInner() {
     null,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showMessage, setShowMessage] = useState(false);
+  const [showBudget, setShowBudget] = useState(false);
 
   // ── Shared location form ──────────────────────────────────────────────────
   // autoRequestGps captures the browser fix on mount so coordinates are ready
@@ -1399,87 +1403,123 @@ function ProviderRequestInner() {
             </SectionCard>
 
             {/* ── Message ─────────────────────────────────────────── */}
-            <SectionCard
-              icon={<MessageSquare size={14} />}
-              title="Message to Provider"
-              iconBg="bg-sky-100 dark:bg-sky-900/30"
-              iconColor="text-sky-600 dark:text-sky-400">
-              <div>
-                <FieldLabel>Your message</FieldLabel>
-                <textarea
-                  rows={4}
-                  placeholder="Describe what you need, any special requirements, or ask questions…"
-                  value={form.clientMessage}
-                  onChange={(e) => set("clientMessage", e.target.value)}
-                  maxLength={1000}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-950 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-600 outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-900/40 focus:border-amber-400 transition-all resize-none"
-                />
-                <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1 text-right">
-                  {form.clientMessage.length} / 1000
-                </p>
-              </div>
-            </SectionCard>
-
-            {/* ── Budget ──────────────────────────────────────────── */}
-            <SectionCard
-              icon={<Wallet size={14} />}
-              title="Estimated Budget"
-              iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-              iconColor="text-emerald-600 dark:text-emerald-400">
-              <div className="space-y-3.5">
-                <p className="text-xs text-stone-400 dark:text-stone-500">
-                  Optional. Helps the provider understand your expectations.
-                </p>
-                <div className="flex items-center gap-2.5">
-                  <div className="flex-1">
-                    <FieldLabel>Min</FieldLabel>
-                    <div className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 focus-within:ring-2 focus-within:ring-amber-200 dark:focus-within:ring-amber-900/40 focus-within:border-amber-400 transition-all">
-                      <span className="text-xs font-bold text-stone-400 shrink-0">
-                        {form.currency}
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        value={form.budgetMin}
-                        onChange={(e) => set("budgetMin", e.target.value)}
-                        className="flex-1 text-sm bg-transparent text-stone-800 dark:text-stone-100 outline-none"
-                      />
-                    </div>
-                  </div>
-                  <span className="text-xs text-stone-400 dark:text-stone-500 shrink-0 mt-5">
-                    —
-                  </span>
-                  <div className="flex-1">
-                    <FieldLabel>Max</FieldLabel>
-                    <div className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 focus-within:ring-2 focus-within:ring-amber-200 dark:focus-within:ring-amber-900/40 focus-within:border-amber-400 transition-all">
-                      <span className="text-xs font-bold text-stone-400 shrink-0">
-                        {form.currency}
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        value={form.budgetMax}
-                        onChange={(e) => set("budgetMax", e.target.value)}
-                        className="flex-1 text-sm bg-transparent text-stone-800 dark:text-stone-100 outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="shrink-0 mt-5">
-                    <select
-                      value={form.currency}
-                      onChange={(e) => set("currency", e.target.value)}
-                      className="h-10 px-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 text-xs font-bold text-stone-700 dark:text-stone-300 outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-900/40 focus:border-amber-400 transition-all">
-                      <option value="GHS">GHS</option>
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="GBP">GBP</option>
-                    </select>
+            {!showMessage ? (
+              <button
+                type="button"
+                onClick={() => setShowMessage(true)}
+                className="w-full flex items-center gap-2 px-4 sm:px-5 py-3.5 rounded-2xl border border-dashed border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-600 dark:hover:text-sky-400 transition-colors text-sm font-medium">
+                <Plus size={14} />
+                Add a message to the provider
+                <span className="ml-auto text-xs text-stone-400 dark:text-stone-500">
+                  optional
+                </span>
+              </button>
+            ) : (
+              <SectionCard
+                icon={<MessageSquare size={14} />}
+                title="Message to Provider"
+                iconBg="bg-sky-100 dark:bg-sky-900/30"
+                iconColor="text-sky-600 dark:text-sky-400">
+                <div className="space-y-2">
+                  <textarea
+                    rows={4}
+                    placeholder="Describe what you need, any special requirements, or ask questions…"
+                    value={form.clientMessage}
+                    onChange={(e) => set("clientMessage", e.target.value)}
+                    maxLength={1000}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-950 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-600 outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-900/40 focus:border-amber-400 transition-all resize-none"
+                  />
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => { setShowMessage(false); set("clientMessage", ""); }}
+                      className="flex items-center gap-1 text-xs text-stone-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                      <X size={11} /> Remove
+                    </button>
+                    <p className="text-[11px] text-stone-400 dark:text-stone-500">
+                      {form.clientMessage.length} / 1000
+                    </p>
                   </div>
                 </div>
-              </div>
-            </SectionCard>
+              </SectionCard>
+            )}
+
+            {/* ── Budget ──────────────────────────────────────────── */}
+            {!showBudget ? (
+              <button
+                type="button"
+                onClick={() => setShowBudget(true)}
+                className="w-full flex items-center gap-2 px-4 sm:px-5 py-3.5 rounded-2xl border border-dashed border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-emerald-300 dark:hover:border-emerald-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-sm font-medium">
+                <Plus size={14} />
+                Add budget estimate
+                <span className="ml-auto text-xs text-stone-400 dark:text-stone-500">
+                  optional
+                </span>
+              </button>
+            ) : (
+              <SectionCard
+                icon={<Wallet size={14} />}
+                title="Estimated Budget"
+                iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+                iconColor="text-emerald-600 dark:text-emerald-400">
+                <div className="space-y-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex-1">
+                      <FieldLabel>Min</FieldLabel>
+                      <div className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 focus-within:ring-2 focus-within:ring-amber-200 dark:focus-within:ring-amber-900/40 focus-within:border-amber-400 transition-all">
+                        <span className="text-xs font-bold text-stone-400 shrink-0">
+                          {form.currency}
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={form.budgetMin}
+                          onChange={(e) => set("budgetMin", e.target.value)}
+                          className="flex-1 text-sm bg-transparent text-stone-800 dark:text-stone-100 outline-none"
+                        />
+                      </div>
+                    </div>
+                    <span className="text-xs text-stone-400 dark:text-stone-500 shrink-0 mt-5">
+                      —
+                    </span>
+                    <div className="flex-1">
+                      <FieldLabel>Max</FieldLabel>
+                      <div className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 focus-within:ring-2 focus-within:ring-amber-200 dark:focus-within:ring-amber-900/40 focus-within:border-amber-400 transition-all">
+                        <span className="text-xs font-bold text-stone-400 shrink-0">
+                          {form.currency}
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={form.budgetMax}
+                          onChange={(e) => set("budgetMax", e.target.value)}
+                          className="flex-1 text-sm bg-transparent text-stone-800 dark:text-stone-100 outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="shrink-0 mt-5">
+                      <select
+                        value={form.currency}
+                        onChange={(e) => set("currency", e.target.value)}
+                        className="h-10 px-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 text-xs font-bold text-stone-700 dark:text-stone-300 outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-900/40 focus:border-amber-400 transition-all">
+                        <option value="GHS">GHS</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setShowBudget(false); set("budgetMin", ""); set("budgetMax", ""); }}
+                    className="flex items-center gap-1 text-xs text-stone-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                    <X size={11} /> Remove budget
+                  </button>
+                </div>
+              </SectionCard>
+            )}
 
             {/* ── Submit error ────────────────────────────────────── */}
             {submitError && (

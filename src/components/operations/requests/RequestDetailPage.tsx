@@ -935,39 +935,35 @@ function RequestDetail({
       )}
 
       {/* Schedule */}
-      <Section title="Schedule">
-        <Row label="Priority">
-          {request.schedule?.priority ? (
-            <span
-              className={`font-semibold ${PRIORITY_CFG[request.schedule.priority].color}`}>
-              {PRIORITY_CFG[request.schedule.priority].label}
-            </span>
-          ) : (
-            <span className="text-stone-400">—</span>
+      {request.schedule && (
+        <Section title="Schedule">
+          {request.schedule.priority && (
+            <Row label="Priority">
+              <span
+                className={`font-semibold ${PRIORITY_CFG[request.schedule.priority].color}`}>
+                {PRIORITY_CFG[request.schedule.priority].label}
+              </span>
+            </Row>
           )}
-        </Row>
-        <Row label="Preferred date">
-          {request.schedule?.preferredDate ? (
-            fmtDate(request.schedule.preferredDate)
-          ) : (
-            <span className="text-stone-400">Flexible / not set</span>
-          )}
-        </Row>
-        <Row label="Time slot">
-          {request.schedule?.timeSlot?.start ? (
-            <>
+          <Row label="Preferred date">
+            {request.schedule.preferredDate ? (
+              fmtDate(request.schedule.preferredDate)
+            ) : (
+              <span className="text-stone-400 italic">Flexible</span>
+            )}
+          </Row>
+          {request.schedule.timeSlot?.start && (
+            <Row label="Time slot">
               {request.schedule.timeSlot.start}
               {request.schedule.timeSlot.end &&
                 ` – ${request.schedule.timeSlot.end}`}
-            </>
-          ) : (
-            <span className="text-stone-400">Not specified</span>
+            </Row>
           )}
-        </Row>
-        <Row label="Flexible">
-          {request.schedule?.flexibleDates ? "Yes" : "No"}
-        </Row>
-      </Section>
+          {request.schedule.flexibleDates && (
+            <Row label="Flexible dates">Yes</Row>
+          )}
+        </Section>
+      )}
 
       {/* Location */}
       <LocationSection
@@ -1046,9 +1042,11 @@ function RequestDetail({
               </span>
             </Row>
           )}
-          <Row label="Responded at">
-            {fmtDateTime(request.providerResponse.respondedAt)}
-          </Row>
+          {request.providerResponse.respondedAt && (
+            <Row label="Responded at">
+              {fmtDateTime(request.providerResponse.respondedAt)}
+            </Row>
+          )}
         </Section>
       )}
 
