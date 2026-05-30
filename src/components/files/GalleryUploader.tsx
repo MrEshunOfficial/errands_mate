@@ -13,6 +13,7 @@ import {
   Eye,
   AlertCircle,
   CheckCircle2,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +102,7 @@ export function GalleryUploader({
   className,
 }: GalleryUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [queue, setQueue] = useState<QueuedImage[]>([]);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -229,15 +231,26 @@ export function GalleryUploader({
               </Button>
             )}
             {remainingSlots > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 gap-1.5 text-xs"
-                onClick={() => inputRef.current?.click()}
-                disabled={isUploading}>
-                <Plus className="h-3 w-3" />
-                Add
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1.5 text-xs"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={isUploading}>
+                  <Plus className="h-3 w-3" />
+                  Add
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1.5 text-xs"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={isUploading}>
+                  <Camera className="h-3 w-3" />
+                  Camera
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -494,6 +507,17 @@ export function GalleryUploader({
           type="file"
           multiple
           accept={IMAGE_TYPES.join(",")}
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files) enqueueFiles(Array.from(e.target.files));
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
           className="hidden"
           onChange={(e) => {
             if (e.target.files) enqueueFiles(Array.from(e.target.files));

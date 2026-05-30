@@ -13,6 +13,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +100,7 @@ export function AttachmentUploader({
   className,
 }: AttachmentUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [queue, setQueue] = useState<QueuedFile[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -228,16 +230,15 @@ export function AttachmentUploader({
         {remainingSlots > 0 && (
           <div
             className={cn(
-              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 transition-all duration-200",
+              "flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 transition-all duration-200",
               "bg-muted/30 dark:bg-muted/10",
               isDragging
                 ? "border-primary bg-primary/5 dark:bg-primary/10"
-                : "border-muted-foreground/25 hover:border-muted-foreground/40",
+                : "border-muted-foreground/25",
             )}
             onDrop={handleDrop}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
-            onClick={() => inputRef.current?.click()}
           >
             <div
               className={cn(
@@ -262,6 +263,24 @@ export function AttachmentUploader({
                 Any file type · Max {formatBytes(maxSizeBytes)} each ·{" "}
                 {remainingSlots} slot{remainingSlots !== 1 ? "s" : ""} remaining
               </p>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <Upload className="h-3 w-3" />
+                Browse files
+              </button>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <Camera className="h-3 w-3" />
+                Take photo
+              </button>
             </div>
           </div>
         )}
@@ -391,6 +410,14 @@ export function AttachmentUploader({
           ref={inputRef}
           type="file"
           multiple
+          className="hidden"
+          onChange={handleInputChange}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
           className="hidden"
           onChange={handleInputChange}
         />

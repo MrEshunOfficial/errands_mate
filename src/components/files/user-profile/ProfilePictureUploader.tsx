@@ -28,6 +28,7 @@ export function ProfilePictureUploader({
   // Once upload succeeds, we store the preview URL here and switch to success UI
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = useCallback(
     (file: File) => {
@@ -124,6 +125,15 @@ export function ProfilePictureUploader({
         ref={inputRef}
         type="file"
         accept="image/*"
+        onChange={handleInputChange}
+        className="hidden"
+        aria-hidden="true"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
         onChange={handleInputChange}
         className="hidden"
         aria-hidden="true"
@@ -314,24 +324,43 @@ export function ProfilePictureUploader({
                 </button>
               </>
             ) : (
-              <button
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-white text-[13px] font-semibold transition-all active:scale-[0.98]"
-                onClick={() => inputRef.current?.click()}>
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <polyline points="16 16 12 12 8 16" />
-                  <line x1="12" y1="12" x2="12" y2="21" />
-                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
-                </svg>
-                Choose a photo
-              </button>
+              <div className="flex gap-2">
+                <button
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-white text-[13px] font-semibold transition-all active:scale-[0.98]"
+                  onClick={() => inputRef.current?.click()}>
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <polyline points="16 16 12 12 8 16" />
+                    <line x1="12" y1="12" x2="12" y2="21" />
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                  </svg>
+                  Choose photo
+                </button>
+                <button
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 text-[13px] font-semibold transition-all active:scale-[0.98]"
+                  onClick={() => cameraInputRef.current?.click()}>
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  Take photo
+                </button>
+              </div>
             )}
           </div>
         </div>

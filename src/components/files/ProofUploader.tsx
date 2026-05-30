@@ -82,6 +82,7 @@ export function ProofUploader({
   className,
 }: ProofUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [queue, setQueue] = useState<QueuedProof[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -224,18 +225,17 @@ export function ProofUploader({
         {remainingSlots > 0 && (
           <div
             className={cn(
-              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 transition-all duration-200",
+              "flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 transition-all duration-200",
               isDragging
                 ? "border-emerald-500 bg-emerald-50 dark:border-emerald-600 dark:bg-emerald-950/30"
-                : "border-muted-foreground/25 bg-muted/20 hover:border-muted-foreground/40 dark:bg-muted/10",
+                : "border-muted-foreground/25 bg-muted/20 dark:bg-muted/10",
             )}
             onDrop={handleDrop}
             onDragOver={(e) => {
               e.preventDefault();
               setIsDragging(true);
             }}
-            onDragLeave={() => setIsDragging(false)}
-            onClick={() => inputRef.current?.click()}>
+            onDragLeave={() => setIsDragging(false)}>
             <div
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-full",
@@ -259,6 +259,22 @@ export function ProofUploader({
               <p className="text-xs text-muted-foreground">
                 Photos, videos, documents · Max {formatBytes(maxSizeBytes)}
               </p>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
+                <Upload className="h-3 w-3" />
+                Browse files
+              </button>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 dark:hover:bg-emerald-950 transition-colors">
+                <Camera className="h-3 w-3" />
+                Take photo
+              </button>
             </div>
           </div>
         )}
@@ -420,6 +436,17 @@ export function ProofUploader({
           ref={inputRef}
           type="file"
           multiple
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files) enqueueFiles(Array.from(e.target.files));
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
           className="hidden"
           onChange={(e) => {
             if (e.target.files) enqueueFiles(Array.from(e.target.files));
