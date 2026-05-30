@@ -195,14 +195,15 @@ function ConfirmDeletionDialog({
 
 export default function AccountDeletionPage() {
   const router = useRouter();
-  const { logout } = useAuth();
-  const { requestDeletion, cancelDeletion, isLoading } = useAccountDeletion();
+  const { logout, deleteAccount } = useAuth();
+  const { cancelDeletion } = useAccountDeletion();
 
   const [deletionStatus, setDeletionStatus] =
     useState<DeletionEventStatus | null>(null);
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
   const loadStatus = useCallback(async () => {
@@ -228,13 +229,16 @@ export default function AccountDeletionPage() {
   }, [loadStatus]);
 
   const handleRequestDeletion = async () => {
-    const res = await requestDeletion();
-    if (res?.success) {
-      toast.success("Account deletion scheduled. You can cancel within the grace period.");
+    setIsDeleting(true);
+    try {
+      await deleteAccount();
+      toast.success("Account deleted. Sign back in within the grace period to restore it.");
       setConfirmOpen(false);
-      await loadStatus();
-    } else {
-      toast.error("Failed to schedule account deletion. Please try again.");
+      window.location.href = "/login";
+    } catch {
+      toast.error("Failed to delete account. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -417,7 +421,7 @@ export default function AccountDeletionPage() {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         onConfirm={handleRequestDeletion}
-        isLoading={isLoading}
+        isLoading={isDeleting}
       />
     </div>
   );
