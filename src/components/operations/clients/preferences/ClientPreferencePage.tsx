@@ -54,10 +54,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useResolvedServiceCoverUrl } from "@/hooks/files/useResolvedFileUrl";
 
 import {
@@ -319,11 +328,11 @@ function EmptyState({
   );
 }
 
-// ─── Address Card ─────────────────────────────────────────────────────────────
+// ─── Address Row (Desktop Table) ──────────────────────────────────────────────
 
-function AddressCard({
+function AddressRow({
   loc,
-  onUpdate,
+  onEdit,
   onDelete,
   onSetDefault,
   onUnsetDefault,
@@ -331,11 +340,13 @@ function AddressCard({
   isSettingDefault,
   isUnsettingDefault,
   isDeleting,
-  isSaving,
   isReEnriching,
+  isConfirmingDelete,
+  onRequestDelete,
+  onCancelDelete,
 }: {
   loc: Location;
-  onUpdate: (values: AddressFormValues) => Promise<boolean>;
+  onEdit: () => void;
   onDelete: () => void;
   onSetDefault: () => void;
   onUnsetDefault: () => void;
@@ -343,16 +354,12 @@ function AddressCard({
   isSettingDefault: boolean;
   isUnsettingDefault: boolean;
   isDeleting: boolean;
-  isSaving: boolean;
   isReEnriching: boolean;
+  isConfirmingDelete: boolean;
+  onRequestDelete: () => void;
+  onCancelDelete: () => void;
 }) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
   const { address } = loc;
-
-  // A location is missing enrichment when none of the OSM-resolved fields are
-  // present — this happens for older records saved before enrichment ran.
   const needsEnrichment = !(
     address.streetName ||
     address.locality ||
@@ -361,131 +368,244 @@ function AddressCard({
     address.region
   );
 
-  const handleEdit = async (values: AddressFormValues) => {
-    setEditError(null);
-    const ok = await onUpdate(values);
-    if (ok) {
-      setEditOpen(false);
-    } else {
-      setEditError("Failed to update address. Please try again.");
-    }
-  };
+  const addressSummary = [
+    address.houseNumber && address.streetName
+      ? `${address.houseNumber} ${address.streetName}`
+      : address.streetName,
+    address.locality,
+    address.city,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
-    <div className="relative rounded-2xl border border-border bg-card p-4 transition-all hover:shadow-sm hover:border-zinc-300 dark:hover:border-zinc-600">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-              loc.isDefault
-                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
-            }`}>
-            <LabelIcon label={loc.label} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-foreground">
-                {labelText(loc)}
-              </span>
-              {loc.isDefault && (
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                  Default
-                </Badge>
-              )}
-              {address.isAddressVerified && (
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] px-1.5 py-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                  <ShieldCheck size={9} className="mr-0.5" /> Verified
-                </Badge>
-              )}
+    <>
+      <TableRow
+        className={
+          isConfirmingDelete
+            ? "bg-red-50/50 dark:bg-red-950/10 hover:bg-red-50/50 dark:hover:bg-red-950/10"
+            : undefined
+        }>
+        <TableCell className="pl-4">
+          <div className="flex items-center gap-2.5">
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                loc.isDefault
+                  ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+              }`}>
+              <LabelIcon label={loc.label} />
             </div>
-            <p className="text-xs font-mono text-muted-foreground mt-0.5">
-              {address.ghanaPostGPS}
-            </p>
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-sm font-semibold">{labelText(loc)}</span>
+                {loc.isDefault && (
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    Default
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={loc.isDefault ? onUnsetDefault : onSetDefault}
-            disabled={isSettingDefault || isUnsettingDefault}
-            title={loc.isDefault ? "Remove as default" : "Set as default"}
-            className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
-              loc.isDefault
-                ? "text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
-                : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
-            }`}>
-            {isSettingDefault || isUnsettingDefault ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Star
-                size={14}
-                className={loc.isDefault ? "fill-amber-500" : ""}
-              />
-            )}
-          </button>
-
-          <Popover
-            open={editOpen}
-            onOpenChange={(o) => {
-              setEditOpen(o);
-              if (!o) setEditError(null);
-            }}>
-            <PopoverTrigger asChild>
+        </TableCell>
+        <TableCell>
+          <p className="text-xs font-mono text-foreground">
+            {address.ghanaPostGPS}
+          </p>
+          {addressSummary && (
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-[200px] truncate">
+              {addressSummary}
+            </p>
+          )}
+          {needsEnrichment && (
+            <button
+              type="button"
+              onClick={onReEnrich}
+              disabled={isReEnriching}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors disabled:opacity-50 mt-0.5">
+              {isReEnriching ? (
+                <Loader2 size={10} className="animate-spin" />
+              ) : (
+                <Sparkles size={10} />
+              )}
+              {isReEnriching ? "Enriching…" : "Enrich"}
+            </button>
+          )}
+        </TableCell>
+        <TableCell>
+          {address.isAddressVerified ? (
+            <Badge
+              variant="secondary"
+              className="text-[10px] px-1.5 py-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+              <ShieldCheck size={9} className="mr-0.5" /> Verified
+            </Badge>
+          ) : (
+            <span className="text-xs text-muted-foreground/40">—</span>
+          )}
+        </TableCell>
+        <TableCell className="pr-4">
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={loc.isDefault ? onUnsetDefault : onSetDefault}
+              disabled={isSettingDefault || isUnsettingDefault}
+              title={loc.isDefault ? "Remove as default" : "Set as default"}
+              className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                loc.isDefault
+                  ? "text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                  : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+              }`}>
+              {isSettingDefault || isUnsettingDefault ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Star
+                  size={14}
+                  className={loc.isDefault ? "fill-amber-500" : ""}
+                />
+              )}
+            </button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onEdit}
+              className="h-7 px-2.5 text-xs gap-1 shrink-0">
+              <Pencil size={11} /> Edit
+            </Button>
+            <button
+              type="button"
+              onClick={isConfirmingDelete ? onCancelDelete : onRequestDelete}
+              title={isConfirmingDelete ? "Cancel" : "Remove address"}
+              disabled={isDeleting}
+              className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                isConfirmingDelete
+                  ? "text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  : "text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+              }`}>
+              {isDeleting ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : isConfirmingDelete ? (
+                <X size={14} />
+              ) : (
+                <Trash2 size={14} />
+              )}
+            </button>
+          </div>
+        </TableCell>
+      </TableRow>
+      {isConfirmingDelete && (
+        <TableRow className="bg-red-50/40 dark:bg-red-950/10 hover:bg-red-50/40 dark:hover:bg-red-950/10">
+          <TableCell colSpan={4} className="py-2 pl-4">
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                Remove this address?
+              </p>
               <button
                 type="button"
-                title="Edit address"
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                <Pencil size={14} />
+                onClick={onDelete}
+                disabled={isDeleting}
+                className="text-xs font-semibold text-red-600 dark:text-red-400 underline underline-offset-2 disabled:opacity-50">
+                {isDeleting ? "Removing…" : "Yes, remove"}
               </button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-[min(24rem,calc(100vw-2rem))] p-0"
-              align="end"
-              side="bottom">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <p className="text-sm font-semibold text-foreground">
-                  Edit address
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setEditOpen(false)}
-                  className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                  <X size={14} />
-                </button>
-              </div>
-              <div className="px-4 py-4 max-h-[70vh] overflow-y-auto">
-                <ClientAddressForm
-                  initial={editInitialValues(loc)}
-                  readonlyAddress={loc.address}
-                  saving={isSaving}
-                  serverError={editError}
-                  onSubmit={handleEdit}
-                  onCancel={() => setEditOpen(false)}
-                  submitLabel="Save changes"
-                />
-              </div>
-            </PopoverContent>
-          </Popover>
+              <button
+                type="button"
+                onClick={onCancelDelete}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                Cancel
+              </button>
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
+  );
+}
 
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            title="Remove address"
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
-            <Trash2 size={14} />
-          </button>
+// ─── Address Card (Mobile) ────────────────────────────────────────────────────
+
+function AddressMobileCard({
+  loc,
+  onEdit,
+  onDelete,
+  onSetDefault,
+  onUnsetDefault,
+  onReEnrich,
+  isSettingDefault,
+  isUnsettingDefault,
+  isDeleting,
+  isReEnriching,
+  isConfirmingDelete,
+  onRequestDelete,
+  onCancelDelete,
+}: {
+  loc: Location;
+  onEdit: () => void;
+  onDelete: () => void;
+  onSetDefault: () => void;
+  onUnsetDefault: () => void;
+  onReEnrich: () => void;
+  isSettingDefault: boolean;
+  isUnsettingDefault: boolean;
+  isDeleting: boolean;
+  isReEnriching: boolean;
+  isConfirmingDelete: boolean;
+  onRequestDelete: () => void;
+  onCancelDelete: () => void;
+}) {
+  const { address } = loc;
+  const needsEnrichment = !(
+    address.streetName ||
+    address.locality ||
+    address.city ||
+    address.district ||
+    address.region
+  );
+
+  return (
+    <div
+      className={`rounded-2xl border bg-card p-4 transition-all ${
+        isConfirmingDelete
+          ? "border-red-200 dark:border-red-800/50"
+          : "border-border hover:shadow-sm hover:border-zinc-300 dark:hover:border-zinc-600"
+      }`}>
+      {/* Top: icon + label + badges */}
+      <div className="flex items-start gap-3">
+        <div
+          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+            loc.isDefault
+              ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+              : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+          }`}>
+          <LabelIcon label={loc.label} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold">{labelText(loc)}</span>
+            {loc.isDefault && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                Default
+              </Badge>
+            )}
+            {address.isAddressVerified && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                <ShieldCheck size={9} className="mr-0.5" /> Verified
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs font-mono text-muted-foreground mt-0.5">
+            {address.ghanaPostGPS}
+          </p>
         </div>
       </div>
 
       {/* Address detail lines */}
-      <div className="mt-3 pl-12 space-y-1">
+      <div className="mt-2.5 pl-12 space-y-0.5">
         {(address.houseNumber || address.streetName) && (
           <p className="text-xs text-foreground/80">
             {[address.houseNumber, address.streetName]
@@ -519,9 +639,8 @@ function AddressCard({
             {address.gpsCoordinates.longitude.toFixed(5)}
           </p>
         )}
-
         {needsEnrichment && (
-          <div className="flex items-center gap-2 flex-wrap pt-1.5">
+          <div className="flex items-center gap-2 flex-wrap pt-1">
             <p className="text-xs italic text-muted-foreground/60">
               Address details unavailable
             </p>
@@ -541,25 +660,71 @@ function AddressCard({
         )}
       </div>
 
+      {/* Action bar — always fully visible */}
+      <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
+        <button
+          type="button"
+          onClick={loc.isDefault ? onUnsetDefault : onSetDefault}
+          disabled={isSettingDefault || isUnsettingDefault}
+          title={loc.isDefault ? "Remove as default" : "Set as default"}
+          className={`p-2 rounded-xl transition-colors disabled:opacity-40 ${
+            loc.isDefault
+              ? "text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+              : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+          }`}>
+          {isSettingDefault || isUnsettingDefault ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Star
+              size={16}
+              className={loc.isDefault ? "fill-amber-500" : ""}
+            />
+          )}
+        </button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onEdit}
+          className="flex-1 gap-1.5 text-xs">
+          <Pencil size={13} /> View & Edit
+        </Button>
+        <button
+          type="button"
+          onClick={isConfirmingDelete ? onCancelDelete : onRequestDelete}
+          disabled={isDeleting}
+          title={isConfirmingDelete ? "Cancel delete" : "Remove address"}
+          className={`p-2 rounded-xl transition-colors disabled:opacity-40 ${
+            isConfirmingDelete
+              ? "text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              : "text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+          }`}>
+          {isDeleting ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : isConfirmingDelete ? (
+            <X size={16} />
+          ) : (
+            <Trash2 size={16} />
+          )}
+        </button>
+      </div>
+
       {/* Delete confirmation */}
-      {confirmDelete && (
-        <div className="mt-3 pl-12 flex items-center gap-3 pt-3 border-t border-border">
+      {isConfirmingDelete && (
+        <div className="mt-2 flex items-center gap-3">
           <p className="text-xs text-red-600 dark:text-red-400 font-medium">
             Remove this address?
           </p>
           <button
             type="button"
-            onClick={() => {
-              setConfirmDelete(false);
-              onDelete();
-            }}
+            onClick={onDelete}
             disabled={isDeleting}
             className="text-xs font-semibold text-red-600 dark:text-red-400 underline underline-offset-2 disabled:opacity-50">
             {isDeleting ? "Removing…" : "Yes, remove"}
           </button>
           <button
             type="button"
-            onClick={() => setConfirmDelete(false)}
+            onClick={onCancelDelete}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             Cancel
           </button>
@@ -880,9 +1045,12 @@ export default function ClientPreferencePage() {
   // ── Tab state ─────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
-  // ── Add new address popover ────────────────────────────────────────────────
-  const [newAddressOpen, setNewAddressOpen] = useState(false);
-  const [addFormError, setAddFormError] = useState<string | null>(null);
+  // ── Address dialogs ───────────────────────────────────────────────────────
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addDialogError, setAddDialogError] = useState<string | null>(null);
+  const [editingLoc, setEditingLoc] = useState<Location | null>(null);
+  const [editDialogError, setEditDialogError] = useState<string | null>(null);
+  const [deletingConfirmId, setDeletingConfirmId] = useState<string | null>(null);
 
   // ── Removing favorites ────────────────────────────────────────────────────
   const [removingServiceId, setRemovingServiceId] = useState<string | null>(null);
@@ -1051,7 +1219,7 @@ export default function ClientPreferencePage() {
   // ── Address handlers ──────────────────────────────────────────────────────
   const handleAdd = useCallback(
     async (values: AddressFormValues) => {
-      setAddFormError(null);
+      setAddDialogError(null);
       const body: SaveAddressBody = {
         label: values.label,
         ...(values.label === LocationLabel.OTHER &&
@@ -1066,10 +1234,10 @@ export default function ClientPreferencePage() {
       const result = await saveAddress(body);
       if (result) {
         toast.success("Address saved.");
-        setNewAddressOpen(false);
+        setAddDialogOpen(false);
         refreshLocations();
       } else {
-        setAddFormError("Failed to save address. Please try again.");
+        setAddDialogError("Failed to save address. Please try again.");
       }
     },
     [saveAddress, refreshLocations],
@@ -1104,6 +1272,7 @@ export default function ClientPreferencePage() {
   const handleDelete = useCallback(
     async (locationId: string) => {
       setDeletingId(locationId);
+      setDeletingConfirmId(null);
       await removeAddress(locationId);
       toast.success("Address removed.");
       setDeletingId(null);
@@ -1149,6 +1318,20 @@ export default function ClientPreferencePage() {
       setReEnrichingId(null);
     },
     [updateAddress, refreshLocations],
+  );
+
+  const handleEditSubmit = useCallback(
+    async (values: AddressFormValues) => {
+      if (!editingLoc) return;
+      setEditDialogError(null);
+      const ok = await handleUpdate(editingLoc, values);
+      if (ok) {
+        setEditingLoc(null);
+      } else {
+        setEditDialogError("Failed to update address. Please try again.");
+      }
+    },
+    [editingLoc, handleUpdate],
   );
 
   // ── Favorites handlers ────────────────────────────────────────────────────
@@ -1200,53 +1383,6 @@ export default function ClientPreferencePage() {
               Manage your saved addresses and favorites.
             </p>
           </div>
-          {activeTab === "addresses" && (
-            <Popover
-              open={newAddressOpen}
-              onOpenChange={(o) => {
-                setNewAddressOpen(o);
-                if (!o) setAddFormError(null);
-              }}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="text-xs gap-1.5 shrink-0">
-                  <Plus size={13} /> New address
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[min(24rem,calc(100vw-2rem))] p-0"
-                align="end"
-                side="bottom">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                  <p className="text-sm font-semibold text-foreground">
-                    New address
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setNewAddressOpen(false)}
-                    className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                    <X size={14} />
-                  </button>
-                </div>
-                <div className="px-4 py-4 max-h-[70vh] overflow-y-auto">
-                  <ClientAddressForm
-                    initial={{
-                      ...EMPTY_FORM,
-                      isDefault: locations.length === 0,
-                    }}
-                    saving={isSavingLocation}
-                    serverError={addFormError}
-                    onSubmit={handleAdd}
-                    onCancel={() => setNewAddressOpen(false)}
-                    submitLabel="Save address"
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
         </div>
       </div>
 
@@ -1306,6 +1442,25 @@ export default function ClientPreferencePage() {
                 {/* ══ Addresses ══════════════════════════════════════════════ */}
                 {activeTab === "addresses" && (
                   <div className="space-y-4">
+                    {/* Toolbar: count + add button */}
+                    {!isLoadingLocations && (
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm text-muted-foreground">
+                          {locations.length === 0
+                            ? "No saved addresses yet."
+                            : `${locations.length} address${locations.length !== 1 ? "es" : ""} saved`}
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5 text-xs shrink-0"
+                          onClick={() => setAddDialogOpen(true)}>
+                          <Plus size={13} /> Add address
+                        </Button>
+                      </div>
+                    )}
+
                     {isLoadingLocations && (
                       <div className="flex items-center gap-2 py-10 justify-center text-muted-foreground text-sm">
                         <Loader2 size={16} className="animate-spin" /> Loading addresses…
@@ -1313,43 +1468,130 @@ export default function ClientPreferencePage() {
                     )}
 
                     {!isLoadingLocations && locations.length === 0 && (
+                      <EmptyState
+                        icon={MapPin}
+                        title="No saved addresses"
+                        description="Save an address to speed up task posting."
+                      />
+                    )}
+
+                    {!isLoadingLocations && locations.length > 0 && (
                       <>
-                        <EmptyState
-                          icon={MapPin}
-                          title="No saved addresses"
-                          description="Save an address to speed up task posting."
-                        />
-                        <div className="text-center -mt-6">
-                          <button
-                            type="button"
-                            onClick={() => setNewAddressOpen(true)}
-                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
-                            <Plus size={13} /> Add your first address
-                          </button>
+                        {/* Desktop table (md+) */}
+                        <div className="hidden md:block rounded-xl border border-border overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-zinc-50/80 dark:bg-zinc-800/50 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/50">
+                                <TableHead className="pl-4">Label</TableHead>
+                                <TableHead>Address</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right pr-4">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {locations.map((loc) => {
+                                const id = loc._id.toString();
+                                return (
+                                  <AddressRow
+                                    key={id}
+                                    loc={loc}
+                                    onEdit={() => setEditingLoc(loc)}
+                                    onDelete={() => handleDelete(id)}
+                                    onSetDefault={() => handleSetDefault(id)}
+                                    onUnsetDefault={() => handleUnsetDefault(id)}
+                                    onReEnrich={() => handleReEnrich(loc)}
+                                    isSettingDefault={settingDefaultId === id}
+                                    isUnsettingDefault={unsettingDefaultId === id}
+                                    isDeleting={deletingId === id}
+                                    isReEnriching={reEnrichingId === id}
+                                    isConfirmingDelete={deletingConfirmId === id}
+                                    onRequestDelete={() => setDeletingConfirmId(id)}
+                                    onCancelDelete={() => setDeletingConfirmId(null)}
+                                  />
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+
+                        {/* Mobile card list */}
+                        <div className="md:hidden space-y-3">
+                          {locations.map((loc) => {
+                            const id = loc._id.toString();
+                            return (
+                              <AddressMobileCard
+                                key={id}
+                                loc={loc}
+                                onEdit={() => setEditingLoc(loc)}
+                                onDelete={() => handleDelete(id)}
+                                onSetDefault={() => handleSetDefault(id)}
+                                onUnsetDefault={() => handleUnsetDefault(id)}
+                                onReEnrich={() => handleReEnrich(loc)}
+                                isSettingDefault={settingDefaultId === id}
+                                isUnsettingDefault={unsettingDefaultId === id}
+                                isDeleting={deletingId === id}
+                                isReEnriching={reEnrichingId === id}
+                                isConfirmingDelete={deletingConfirmId === id}
+                                onRequestDelete={() => setDeletingConfirmId(id)}
+                                onCancelDelete={() => setDeletingConfirmId(null)}
+                              />
+                            );
+                          })}
                         </div>
                       </>
                     )}
 
-                    {!isLoadingLocations &&
-                      locations.map((loc) => {
-                        const id = loc._id.toString();
-                        return (
-                          <AddressCard
-                            key={id}
-                            loc={loc}
-                            onUpdate={(values) => handleUpdate(loc, values)}
-                            onDelete={() => handleDelete(id)}
-                            onSetDefault={() => handleSetDefault(id)}
-                            onUnsetDefault={() => handleUnsetDefault(id)}
-                            onReEnrich={() => handleReEnrich(loc)}
-                            isSettingDefault={settingDefaultId === id}
-                            isUnsettingDefault={unsettingDefaultId === id}
-                            isDeleting={deletingId === id}
-                            isSaving={isSavingLocation}
-                            isReEnriching={reEnrichingId === id}
+                    {/* Edit address dialog */}
+                    <Dialog
+                      open={!!editingLoc}
+                      onOpenChange={(o) => {
+                        if (!o) {
+                          setEditingLoc(null);
+                          setEditDialogError(null);
+                        }
+                      }}>
+                      <DialogContent className="max-h-[85vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Edit address</DialogTitle>
+                        </DialogHeader>
+                        {editingLoc && (
+                          <ClientAddressForm
+                            initial={editInitialValues(editingLoc)}
+                            readonlyAddress={editingLoc.address}
+                            saving={isSavingLocation}
+                            serverError={editDialogError}
+                            onSubmit={handleEditSubmit}
+                            onCancel={() => {
+                              setEditingLoc(null);
+                              setEditDialogError(null);
+                            }}
+                            submitLabel="Save changes"
                           />
-                        );
-                      })}
+                        )}
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Add address dialog */}
+                    <Dialog
+                      open={addDialogOpen}
+                      onOpenChange={(o) => {
+                        setAddDialogOpen(o);
+                        if (!o) setAddDialogError(null);
+                      }}>
+                      <DialogContent className="max-h-[85vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>New address</DialogTitle>
+                        </DialogHeader>
+                        <ClientAddressForm
+                          initial={{ ...EMPTY_FORM, isDefault: locations.length === 0 }}
+                          saving={isSavingLocation}
+                          serverError={addDialogError}
+                          onSubmit={handleAdd}
+                          onCancel={() => setAddDialogOpen(false)}
+                          submitLabel="Save address"
+                        />
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 )}
 
