@@ -15,6 +15,8 @@ import {
   Send,
   ExternalLink,
   Filter,
+  SendHorizonal,
+  CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,8 +141,23 @@ function StatCard({
 
 // ─── Request row ──────────────────────────────────────────────────────────────
 
+const isTaskSource = (source: RequestSource) =>
+  source === RequestSource.TASK_INTEREST || source === RequestSource.TASK_MATCH;
+
 function RequestRow({ req }: { req: ProviderRequest }) {
   const cfg = STATUS_CFG[req.status] ?? STATUS_CFG[RequestStatus.PENDING];
+
+  const taskStatusPill = isTaskSource(req.source) ? (
+    req.convertedToBookingId ? (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/50">
+        <CalendarCheck size={9} /> Task Booked
+      </span>
+    ) : req.status === RequestStatus.PENDING || req.status === RequestStatus.RESCHEDULED ? (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-700/50">
+        <SendHorizonal size={9} /> Task Requested
+      </span>
+    ) : null
+  ) : null;
 
   return (
     <tr className="border-b border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
@@ -150,10 +167,13 @@ function RequestRow({ req }: { req: ProviderRequest }) {
         </p>
       </td>
       <td className="px-4 py-3">
-        <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-          {cfg.label}
-        </span>
+        <div className="flex flex-col gap-1">
+          <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+            {cfg.label}
+          </span>
+          {taskStatusPill}
+        </div>
       </td>
       <td className="px-4 py-3">
         <span className="text-[11px] text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-full">

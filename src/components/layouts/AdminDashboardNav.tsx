@@ -149,7 +149,7 @@ const navigationItems: NavigationItem[] = [
   },
 ];
 
-export const AdminNav: React.FC = () => {
+export const AdminNav: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -231,6 +231,7 @@ export const AdminNav: React.FC = () => {
                     href={user && canAccessRoute(item) ? item.href : "/login"}
                     onMouseEnter={() => setHoveredItem(item.href)}
                     onMouseLeave={() => setHoveredItem(null)}
+                    onClick={() => onClose?.()}
                     className={cn(
                       "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
                       isActive

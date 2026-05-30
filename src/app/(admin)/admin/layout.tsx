@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <SheetHeader className="sr-only">
             <SheetTitle>Admin Navigation</SheetTitle>
           </SheetHeader>
-          <AdminNav />
+          <AdminNav onClose={() => setIsMobileNavOpen(false)} />
         </SheetContent>
       </Sheet>
 
