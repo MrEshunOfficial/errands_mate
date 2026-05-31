@@ -20,24 +20,24 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export function useTagSuggestions() {
+export function useDescriptionGeneration() {
   const [state, dispatch] = useReducer(reducer, {
     isLoading: false,
     isError: false,
   });
 
-  const suggest = useCallback(async (name: string, description: string): Promise<string[]> => {
-    if (!name.trim()) return [];
+  const generate = useCallback(async (name: string, context?: string): Promise<string> => {
+    if (!name.trim()) return "";
     dispatch({ type: "START" });
     try {
-      const tags = await aiAPI.suggestTags(name, description);
+      const description = await aiAPI.generateDescription(name, context);
       dispatch({ type: "DONE" });
-      return tags;
+      return description;
     } catch {
       dispatch({ type: "ERROR" });
-      return [];
+      return "";
     }
   }, []);
 
-  return { ...state, suggest };
+  return { ...state, generate };
 }

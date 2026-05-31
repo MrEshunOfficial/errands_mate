@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useActiveCategories } from "@/hooks/services/categories/useServiceCategory";
 import { useTagSuggestions } from "@/hooks/ai/useTagSuggestions";
+import { useDescriptionGeneration } from "@/hooks/ai/useDescriptionGeneration";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -163,7 +164,8 @@ export function ServiceBasicInfoForm({
   // ── Internal UI state ─────────────────────────────────────────────────
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
-  const { tags: aiTags, isLoading: aiLoading, suggest } = useTagSuggestions();
+  const { isLoading: aiLoading, suggest } = useTagSuggestions();
+  const { isLoading: descLoading, generate: generateDesc } = useDescriptionGeneration();
 
   // ── Data ──────────────────────────────────────────────────────────────
   const {
@@ -176,12 +178,6 @@ export function ServiceBasicInfoForm({
   // ── Patch helper ──────────────────────────────────────────────────────
   function patch(partial: Partial<BasicInfoFormState>) {
     onChange({ ...value, ...partial });
-  }
-
-  function addSuggestedTag(tag: string) {
-    const existing = value.tags.split(",").map((t) => t.trim()).filter(Boolean);
-    if (existing.includes(tag)) return;
-    patch({ tags: [...existing, tag].join(", ") });
   }
 
   // ── Title change — auto-derives slug unless manually edited ───────────
@@ -358,17 +354,34 @@ export function ServiceBasicInfoForm({
       </FieldRow>
 
       {/* Description */}
-      <FieldRow
-        id="description"
-        label="Description"
-        required
-        error={errors.description}>
+      <FieldRow id="description" required error={errors.description}>
+        <div className="flex items-center justify-between mb-1.5">
+          <label
+            htmlFor="description"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Description <span className="text-red-500 ml-0.5">*</span>
+          </label>
+          <button
+            type="button"
+            disabled={descLoading || !value.title.trim()}
+            onClick={async () => {
+              const desc = await generateDesc(value.title, selectedCategory?.catName);
+              if (desc) patch({ description: desc });
+            }}
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-teal-600 dark:hover:text-teal-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            {descLoading
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <Sparkles className="w-3.5 h-3.5" />}
+            {descLoading ? "Generating…" : "Generate"}
+          </button>
+        </div>
         <textarea
           id="description"
           value={value.description}
           onChange={(e) => patch({ description: e.target.value })}
           rows={6}
           placeholder="Describe your service in detail…"
+          disabled={descLoading}
           className={cn(
             "w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm",
             "focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none transition-colors",
@@ -410,7 +423,12 @@ export function ServiceBasicInfoForm({
           <button
             type="button"
             disabled={aiLoading || !value.title.trim()}
-            onClick={() => suggest(value.title, value.description)}
+            onClick={async () => {
+              const tags = await suggest(value.title, value.description);
+              const existing = value.tags.split(",").map((t) => t.trim()).filter(Boolean);
+              const newTags = tags.filter((t) => !existing.includes(t));
+              if (newTags.length) patch({ tags: [...existing, ...newTags].join(", ") });
+            }}
             className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
             {aiLoading
               ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -418,26 +436,6 @@ export function ServiceBasicInfoForm({
             {aiLoading ? "Suggesting…" : "Suggest"}
           </button>
         </div>
-
-        {aiTags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {aiTags
-              .filter((t) => {
-                const existing = value.tags.split(",").map((s) => s.trim()).filter(Boolean);
-                return !existing.includes(t);
-              })
-              .map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => addSuggestedTag(tag)}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs rounded-full border border-dashed border-teal-400 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors">
-                  <Sparkles className="w-3 h-3" />
-                  {tag}
-                </button>
-              ))}
-          </div>
-        )}
       </FieldRow>
     </div>
   );

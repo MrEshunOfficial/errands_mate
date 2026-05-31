@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useTagSuggestions } from "@/hooks/ai/useTagSuggestions";
+import { useDescriptionGeneration } from "@/hooks/ai/useDescriptionGeneration";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -164,7 +165,8 @@ export default function CategoryForm({
   >({});
   const [tagInput, setTagInput] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
-  const { tags: aiTags, isLoading: aiLoading, suggest } = useTagSuggestions();
+  const { isLoading: aiLoading, suggest } = useTagSuggestions();
+  const { isLoading: descLoading, generate: generateDesc } = useDescriptionGeneration();
 
   const validParentCategories = availableCategories.filter(
     (c) => c._id !== currentCategoryId,
@@ -273,15 +275,30 @@ export default function CategoryForm({
 
         {/* Description */}
         <div className="space-y-1.5">
-          <Label>
-            Description <span className="text-destructive">*</span>
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label>
+              Description <span className="text-destructive">*</span>
+            </Label>
+            <button
+              type="button"
+              disabled={descLoading || !formData.catName.trim() || isLoading}
+              onClick={async () => {
+                const desc = await generateDesc(formData.catName);
+                if (desc) handleFieldChange("catDesc", desc);
+              }}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              {descLoading
+                ? <Loader2 className="size-3 animate-spin" />
+                : <Sparkles className="size-3" />}
+              {descLoading ? "Generating…" : "Generate"}
+            </button>
+          </div>
           <Textarea
             value={formData.catDesc}
             onChange={(e) => handleFieldChange("catDesc", e.target.value)}
             placeholder="Describe what services belong in this category"
             rows={4}
-            disabled={isLoading}
+            disabled={isLoading || descLoading}
             className={cn(
               "resize-none",
               errors.catDesc &&
@@ -348,7 +365,11 @@ export default function CategoryForm({
             <button
               type="button"
               disabled={aiLoading || !formData.catName.trim() || isLoading}
-              onClick={() => suggest(formData.catName, formData.catDesc)}
+              onClick={async () => {
+                const tags = await suggest(formData.catName, formData.catDesc);
+                const newTags = tags.filter(t => !formData.tags?.includes(t));
+                if (newTags.length) handleFieldChange("tags", [...(formData.tags ?? []), ...newTags]);
+              }}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               {aiLoading
                 ? <Loader2 className="size-3 animate-spin" />
@@ -405,23 +426,6 @@ export default function CategoryForm({
                   {tag}
                 </button>
               ))}
-            </div>
-          )}
-
-          {!tagInput && aiTags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {aiTags
-                .filter((t) => !formData.tags?.includes(t))
-                .map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => addTag(tag)}
-                    className="inline-flex items-center gap-1 rounded-full border border-dashed border-primary/40 px-2.5 py-0.5 text-xs text-primary hover:bg-primary/5 transition-colors">
-                    <Sparkles className="size-3" />
-                    {tag}
-                  </button>
-                ))}
             </div>
           )}
 
