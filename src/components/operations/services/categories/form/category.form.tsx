@@ -283,7 +283,7 @@ export default function CategoryForm({
               type="button"
               disabled={descLoading || !formData.catName.trim() || isLoading}
               onClick={async () => {
-                const desc = await generateDesc(formData.catName);
+                const desc = await generateDesc("category", formData.catName);
                 if (desc) handleFieldChange("catDesc", desc);
               }}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors">

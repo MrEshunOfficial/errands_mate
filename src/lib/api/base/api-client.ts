@@ -32,26 +32,18 @@ export abstract class APIClient {
    * Resolve base URL with smart defaults for development and production
    */
   private resolveBaseURL(providedURL?: string): string {
-    // 1. Use explicitly provided URL
-    if (providedURL) {
-      return providedURL;
-    }
+    if (providedURL) return providedURL;
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
 
-    // 2. Use environment variable if set
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return process.env.NEXT_PUBLIC_API_URL;
-    }
-
-    if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-      return process.env.NEXT_PUBLIC_BACKEND_URL;
-    }
-
-    // 3. In browser, use current origin (works for both dev and production)
-    if (typeof window !== "undefined") {
+    // In the browser during development, use same origin so the Next.js rewrite
+    // proxy routes /api/* to the backend. This avoids cross-port cookie and CORS
+    // issues that occur when hitting localhost:5000 directly from localhost:3000.
+    if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
       return window.location.origin;
     }
 
-    // 4. Server-side fallback for development
+    if (process.env.NEXT_PUBLIC_BACKEND_URL) return process.env.NEXT_PUBLIC_BACKEND_URL;
+    if (typeof window !== "undefined") return window.location.origin;
     return "http://localhost:3000";
   }
 
@@ -186,12 +178,8 @@ export abstract class APIClient {
    * Handle request errors
    */
   protected handleRequestError(error: unknown): void {
-    // Silence noisy API errors during development
-    if (process.env.NODE_ENV === "development") {
-      return;
-    }
     if (error instanceof Error) {
-      console.error("API Request Error:", error.message, error.stack);
+      console.error("API Request Error:", error.message, error);
     }
   }
 

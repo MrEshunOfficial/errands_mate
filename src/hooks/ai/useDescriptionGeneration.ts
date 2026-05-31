@@ -26,11 +26,16 @@ export function useDescriptionGeneration() {
     isError: false,
   });
 
-  const generate = useCallback(async (name: string, context?: string): Promise<string> => {
-    if (!name.trim()) return "";
+  const generate = useCallback(async (
+    entityType: string,
+    title: string,
+    category?: string,
+    additionalContext?: string,
+  ): Promise<string> => {
+    if (!title.trim()) return "";
     dispatch({ type: "START" });
     try {
-      const description = await aiAPI.generateDescription(name, context);
+      const description = await aiAPI.generateDescription(entityType, title, category, additionalContext);
       dispatch({ type: "DONE" });
       return description;
     } catch {

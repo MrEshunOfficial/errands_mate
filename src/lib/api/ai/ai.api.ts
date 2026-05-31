@@ -11,10 +11,15 @@ class AIAPI extends APIClient {
     return res.tags ?? [];
   }
 
-  async generateDescription(name: string, context?: string): Promise<string> {
+  async generateDescription(
+    entityType: string,
+    title: string,
+    category?: string,
+    additionalContext?: string,
+  ): Promise<string> {
     const res = await this.post<{ success: boolean; description: string }>(
       `${this.BASE}/generate-description`,
-      { name, context },
+      { entityType, title, category, additionalContext },
     );
     return res.description ?? "";
   }

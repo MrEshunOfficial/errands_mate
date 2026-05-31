@@ -365,7 +365,7 @@ export function ServiceBasicInfoForm({
             type="button"
             disabled={descLoading || !value.title.trim()}
             onClick={async () => {
-              const desc = await generateDesc(value.title, selectedCategory?.catName);
+              const desc = await generateDesc("service", value.title, selectedCategory?.catName);
               if (desc) patch({ description: desc });
             }}
             className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-teal-600 dark:hover:text-teal-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
