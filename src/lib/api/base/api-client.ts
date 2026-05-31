@@ -35,16 +35,13 @@ export abstract class APIClient {
     if (providedURL) return providedURL;
     if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
 
-    // In the browser during development, use same origin so the Next.js rewrite
-    // proxy routes /api/* to the backend. This avoids cross-port cookie and CORS
-    // issues that occur when hitting localhost:5000 directly from localhost:3000.
-    if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
-      return window.location.origin;
-    }
-
-    if (process.env.NEXT_PUBLIC_BACKEND_URL) return process.env.NEXT_PUBLIC_BACKEND_URL;
+    // Always use same origin in the browser so requests go through the Next.js
+    // rewrite proxy. This ensures auth cookies and headers are forwarded to the
+    // backend correctly in both dev and production.
     if (typeof window !== "undefined") return window.location.origin;
-    return "http://localhost:3000";
+
+    // Server-side: go directly to the backend.
+    return process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3000";
   }
 
   /**
