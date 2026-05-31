@@ -12,6 +12,7 @@ import {
   FileText,
   Hash,
   ImageIcon,
+  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useTagSuggestions } from "@/hooks/ai/useTagSuggestions";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -162,6 +164,7 @@ export default function CategoryForm({
   >({});
   const [tagInput, setTagInput] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
+  const { tags: aiTags, isLoading: aiLoading, suggest } = useTagSuggestions();
 
   const validParentCategories = availableCategories.filter(
     (c) => c._id !== currentCategoryId,
@@ -335,12 +338,24 @@ export default function CategoryForm({
 
         {/* Tags */}
         <div className="space-y-1.5">
-          <Label>
-            Tags{" "}
-            <span className="text-xs font-normal text-muted-foreground">
-              optional
-            </span>
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label>
+              Tags{" "}
+              <span className="text-xs font-normal text-muted-foreground">
+                optional
+              </span>
+            </Label>
+            <button
+              type="button"
+              disabled={aiLoading || !formData.catName.trim() || isLoading}
+              onClick={() => suggest(formData.catName, formData.catDesc)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              {aiLoading
+                ? <Loader2 className="size-3 animate-spin" />
+                : <Sparkles className="size-3" />}
+              {aiLoading ? "Suggesting…" : "Suggest tags"}
+            </button>
+          </div>
 
           <div
             onClick={() => tagInputRef.current?.focus()}
@@ -390,6 +405,23 @@ export default function CategoryForm({
                   {tag}
                 </button>
               ))}
+            </div>
+          )}
+
+          {!tagInput && aiTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {aiTags
+                .filter((t) => !formData.tags?.includes(t))
+                .map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => addTag(tag)}
+                    className="inline-flex items-center gap-1 rounded-full border border-dashed border-primary/40 px-2.5 py-0.5 text-xs text-primary hover:bg-primary/5 transition-colors">
+                    <Sparkles className="size-3" />
+                    {tag}
+                  </button>
+                ))}
             </div>
           )}
 

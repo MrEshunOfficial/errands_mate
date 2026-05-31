@@ -860,7 +860,8 @@ export default function ServicesListPage(): React.ReactElement {
       ? removeFavoriteService(id)
       : addFavoriteService(id);
     action.then((ok) => {
-      if (!ok) toast.error("Could not update saved services. Please try again.");
+      if (!ok)
+        toast.error("Could not update saved services. Please try again.");
     });
   };
 
@@ -1068,33 +1069,6 @@ export default function ServicesListPage(): React.ReactElement {
                   )}
                 </button>
               </div>
-
-              {/* Quick category pills */}
-              {categories.length > 0 && (
-                <div className="flex flex-nowrap overflow-x-auto scrollbar-none sm:flex-wrap sm:overflow-x-visible gap-1.5 sm:gap-2 pb-0.5 sm:pb-0">
-                  <button
-                    onClick={() => updateFilter("selectedCategory", "")}
-                    className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                      !filters.selectedCategory
-                        ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                        : "border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-stone-300 bg-white dark:bg-stone-800/80"
-                    }`}>
-                    All
-                  </button>
-                  {categories.slice(0, 6).map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => updateFilter("selectedCategory", c.id)}
-                      className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                        filters.selectedCategory === c.id
-                          ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                          : "border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-stone-300 bg-white dark:bg-stone-800/80"
-                      }`}>
-                      {c.label}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>

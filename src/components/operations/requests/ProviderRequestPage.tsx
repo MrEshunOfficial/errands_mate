@@ -19,10 +19,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
-  Zap,
-  Flame,
-  Timer,
-  ChevronsUp,
   Phone,
   Mail,
   Circle,
@@ -65,6 +61,7 @@ import type { Location } from "@/types/location.types";
 import type { Service } from "@/types/services/service.types";
 import { LocationFormFields } from "@/components/shared/location";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import { Button } from "@/components/ui/button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -103,42 +100,6 @@ const INITIAL_FORM: FormState = {
   newLocationLabel: LocationLabel.HOME,
   newLocationCustomLabel: "",
 };
-
-const PRIORITY_OPTIONS: {
-  value: TaskPriority;
-  label: string;
-  icon: React.ReactNode;
-  color: string;
-}[] = [
-  {
-    value: TaskPriority.LOW,
-    label: "Low",
-    icon: <Timer size={13} />,
-    color:
-      "bg-stone-50 border-stone-200 text-stone-600 dark:bg-stone-800/40 dark:border-stone-700 dark:text-stone-400",
-  },
-  {
-    value: TaskPriority.MEDIUM,
-    label: "Medium",
-    icon: <Zap size={13} />,
-    color:
-      "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-700/50 dark:text-amber-400",
-  },
-  {
-    value: TaskPriority.HIGH,
-    label: "High",
-    icon: <Flame size={13} />,
-    color:
-      "bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-900/20 dark:border-orange-700/50 dark:text-orange-400",
-  },
-  {
-    value: TaskPriority.URGENT,
-    label: "Urgent",
-    icon: <ChevronsUp size={13} />,
-    color:
-      "bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-700/50 dark:text-red-400",
-  },
-];
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -442,7 +403,10 @@ function TaskContextCard({ task }: { task: Task | null | undefined }) {
   if (!task) return null;
 
   const loc = resolveTaskLocation(task.locationContext);
-  const locationLine = [loc.ghanaPostGPS, loc.resolvedAddress ?? loc.nearbyLandmark]
+  const locationLine = [
+    loc.ghanaPostGPS,
+    loc.resolvedAddress ?? loc.nearbyLandmark,
+  ]
     .filter(Boolean)
     .join(" · ");
 
@@ -813,20 +777,30 @@ function ProviderRequestInner() {
 
   const { mutate: sendBrowseRequest, loading: browseSubmitting } =
     useCreateServiceBrowseRequest({
-      onError: (err) => { toast.error(err); setSubmitError(err); },
+      onError: (err) => {
+        toast.error(err);
+        setSubmitError(err);
+      },
     });
 
   const { mutate: sendTaskMatchRequest, loading: taskMatchSubmitting } =
     useCreateTaskMatchRequest({
-      onError: (err) => { toast.error(err); setSubmitError(err); },
+      onError: (err) => {
+        toast.error(err);
+        setSubmitError(err);
+      },
     });
 
   const { mutate: sendTaskInterestRequest, loading: taskInterestSubmitting } =
     useCreateTaskInterestRequest({
-      onError: (err) => { toast.error(err); setSubmitError(err); },
+      onError: (err) => {
+        toast.error(err);
+        setSubmitError(err);
+      },
     });
 
-  const submitting = browseSubmitting || taskMatchSubmitting || taskInterestSubmitting;
+  const submitting =
+    browseSubmitting || taskMatchSubmitting || taskInterestSubmitting;
   const isClosed = profile?.status === ProviderStatus.Closed;
   const isBooked = profile?.status === ProviderStatus.Booked;
 
@@ -964,7 +938,11 @@ function ProviderRequestInner() {
     let locationPayload: {
       ghanaPostGPS: string;
       nearbyLandmark?: string;
-      gpsCoordinates?: { latitude: number; longitude: number; accuracy?: number };
+      gpsCoordinates?: {
+        latitude: number;
+        longitude: number;
+        accuracy?: number;
+      };
     };
 
     if (form.locationMode === "new") {
@@ -1414,7 +1392,10 @@ function ProviderRequestInner() {
                   <div className="flex items-center justify-between">
                     <button
                       type="button"
-                      onClick={() => { setShowMessage(false); set("clientMessage", ""); }}
+                      onClick={() => {
+                        setShowMessage(false);
+                        set("clientMessage", "");
+                      }}
                       className="flex items-center gap-1 text-xs text-stone-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                       <X size={11} /> Remove
                     </button>
@@ -1428,7 +1409,7 @@ function ProviderRequestInner() {
 
             {/* ── Budget ──────────────────────────────────────────── */}
             {!showBudget ? (
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowBudget(true)}
                 className="w-full flex items-center gap-2 px-4 sm:px-5 py-3.5 rounded-2xl border border-dashed border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 hover:border-emerald-300 dark:hover:border-emerald-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-sm font-medium">
@@ -1437,7 +1418,7 @@ function ProviderRequestInner() {
                 <span className="ml-auto text-xs text-stone-400 dark:text-stone-500">
                   optional
                 </span>
-              </button>
+              </Button>
             ) : (
               <SectionCard
                 icon={<Wallet size={14} />}
@@ -1495,7 +1476,11 @@ function ProviderRequestInner() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setShowBudget(false); set("budgetMin", ""); set("budgetMax", ""); }}
+                    onClick={() => {
+                      setShowBudget(false);
+                      set("budgetMin", "");
+                      set("budgetMax", "");
+                    }}
                     className="flex items-center gap-1 text-xs text-stone-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                     <X size={11} /> Remove budget
                   </button>
@@ -1518,13 +1503,13 @@ function ProviderRequestInner() {
 
             {/* ── Submit ──────────────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-              <button
+              <Button
                 type="button"
                 onClick={() => router.back()}
                 className="flex-1 sm:flex-none h-11 px-6 rounded-xl border border-stone-200 dark:border-stone-700 text-sm font-semibold text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all">
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 disabled={
                   submitting ||
@@ -1543,7 +1528,7 @@ function ProviderRequestInner() {
                     Send Request
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
