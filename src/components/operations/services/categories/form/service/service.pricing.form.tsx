@@ -10,7 +10,7 @@ import type {
   PricingModel,
   PricingUnit,
 } from "@/types/services/service.types";
-import { SUPPORTED_CURRENCIES } from "@/types/services/service.types";
+import { useCurrencies } from "@/hooks/useCurrencies";
 
 // =============================================================================
 // Types
@@ -225,14 +225,18 @@ function CurrencySelect({
   onChange: (val: string) => void;
   className?: string;
 }) {
+  const { currencies, loading } = useCurrencies();
   return (
     <select
       id="currency"
       value={value}
+      disabled={loading}
       onChange={(e) => onChange(e.target.value)}
-      className={cn(inputCls, "w-24 shrink-0", className)}>
-      {SUPPORTED_CURRENCIES.map((c) => (
-        <option key={c} value={c}>{c}</option>
+      className={cn(inputCls, "w-44 shrink-0", className)}>
+      {currencies.map(({ code, name }) => (
+        <option key={code} value={code}>
+          {code} — {name}
+        </option>
       ))}
     </select>
   );

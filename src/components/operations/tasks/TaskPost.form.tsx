@@ -41,7 +41,7 @@ import {
   useActiveCategories,
   useSuggestCategory,
 } from "@/hooks/services/categories/useServiceCategory";
-import { CategorySuggestion } from "@/types/services/categories/service.category.types";
+import { CategoryCover, CategorySuggestion } from "@/types/services/categories/service.category.types";
 import { useCreateTask, useTriggerMatching, useUpdateTask } from "@/hooks/tasks/useTasks";
 import { useTaskAttachment } from "@/hooks/files/useTaskAttachment";
 import { useClientPreference } from "@/hooks/profiles/useClientPreference";
@@ -366,11 +366,18 @@ export default function PostTaskForm() {
     isError: categoriesError,
   } = useActiveCategories();
 
-  const categories = (categoryData ?? []).map((c: Category) => ({
-    id: c._id,
-    label: c.catName,
-    icon: (c as Category & { icon?: string }).icon ?? "📋",
-  }));
+  const categories = (categoryData ?? []).map((c: Category) => {
+    const coverObj =
+      c.catCoverId && typeof c.catCoverId === "object"
+        ? (c.catCoverId as CategoryCover)
+        : null;
+    return {
+      id: c._id,
+      label: c.catName,
+      icon: (c as Category & { icon?: string }).icon ?? "📋",
+      cover: coverObj?.thumbnailUrl ?? coverObj?.url ?? null,
+    };
+  });
 
   // ── Category suggestions ─────────────────────────────────────────────────────
   const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
@@ -726,13 +733,22 @@ export default function PostTaskForm() {
                 <span className="flex items-center gap-2">
                   {draft.category ? (
                     <>
-                      <span className="text-base leading-none">
-                        {
-                          categories.find(
-                            (c) => c.id.toString() === draft.category,
-                          )?.icon
-                        }
-                      </span>
+                      {(() => {
+                        const sel = categories.find(
+                          (c) => c.id.toString() === draft.category,
+                        );
+                        return sel?.cover ? (
+                          <img
+                            src={sel.cover}
+                            alt={sel.label}
+                            className="w-6 h-6 rounded object-cover shrink-0"
+                          />
+                        ) : (
+                          <span className="text-base leading-none">
+                            {sel?.icon}
+                          </span>
+                        );
+                      })()}
                       <span className="font-medium text-stone-800 dark:text-stone-100">
                         {
                           categories.find(
@@ -777,9 +793,17 @@ export default function PostTaskForm() {
                           setCategoryPopoverOpen(false);
                         }}
                         className="flex items-center gap-3 px-3 py-2 cursor-pointer">
-                        <span className="text-base leading-none w-5 text-center">
-                          {cat.icon}
-                        </span>
+                        {cat.cover ? (
+                          <img
+                            src={cat.cover}
+                            alt={cat.label}
+                            className="w-6 h-6 rounded object-cover shrink-0"
+                          />
+                        ) : (
+                          <span className="text-base leading-none w-6 text-center shrink-0">
+                            {cat.icon}
+                          </span>
+                        )}
                         <span className="text-sm">{cat.label}</span>
                         {draft.category === cat.id.toString() && (
                           <CheckCircle
