@@ -12,7 +12,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useActiveCategories } from "@/hooks/services/categories/useServiceCategory";
 import { useTagSuggestions } from "@/hooks/ai/useTagSuggestions";
-import { useDescriptionGeneration } from "@/hooks/ai/useDescriptionGeneration";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -165,7 +164,6 @@ export function ServiceBasicInfoForm({
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
   const { isLoading: aiLoading, suggest } = useTagSuggestions();
-  const { isLoading: descLoading, generate: generateDesc } = useDescriptionGeneration();
 
   // ── Data ──────────────────────────────────────────────────────────────
   const {
@@ -354,34 +352,13 @@ export function ServiceBasicInfoForm({
       </FieldRow>
 
       {/* Description */}
-      <FieldRow id="description" required error={errors.description}>
-        <div className="flex items-center justify-between mb-1.5">
-          <label
-            htmlFor="description"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Description <span className="text-red-500 ml-0.5">*</span>
-          </label>
-          <button
-            type="button"
-            disabled={descLoading || !value.title.trim()}
-            onClick={async () => {
-              const desc = await generateDesc("service", value.title, selectedCategory?.catName);
-              if (desc) patch({ description: desc });
-            }}
-            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-teal-600 dark:hover:text-teal-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-            {descLoading
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : <Sparkles className="w-3.5 h-3.5" />}
-            {descLoading ? "Generating…" : "Generate"}
-          </button>
-        </div>
+      <FieldRow id="description" label="Description" required error={errors.description}>
         <textarea
           id="description"
           value={value.description}
           onChange={(e) => patch({ description: e.target.value })}
           rows={6}
           placeholder="Describe your service in detail…"
-          disabled={descLoading}
           className={cn(
             "w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm",
             "focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none transition-colors",

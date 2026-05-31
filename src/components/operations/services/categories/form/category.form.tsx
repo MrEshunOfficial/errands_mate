@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useTagSuggestions } from "@/hooks/ai/useTagSuggestions";
-import { useDescriptionGeneration } from "@/hooks/ai/useDescriptionGeneration";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -166,7 +165,6 @@ export default function CategoryForm({
   const [tagInput, setTagInput] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
   const { isLoading: aiLoading, suggest } = useTagSuggestions();
-  const { isLoading: descLoading, generate: generateDesc } = useDescriptionGeneration();
 
   const validParentCategories = availableCategories.filter(
     (c) => c._id !== currentCategoryId,
@@ -275,30 +273,15 @@ export default function CategoryForm({
 
         {/* Description */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label>
-              Description <span className="text-destructive">*</span>
-            </Label>
-            <button
-              type="button"
-              disabled={descLoading || !formData.catName.trim() || isLoading}
-              onClick={async () => {
-                const desc = await generateDesc("category", formData.catName);
-                if (desc) handleFieldChange("catDesc", desc);
-              }}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              {descLoading
-                ? <Loader2 className="size-3 animate-spin" />
-                : <Sparkles className="size-3" />}
-              {descLoading ? "Generating…" : "Generate"}
-            </button>
-          </div>
+          <Label>
+            Description <span className="text-destructive">*</span>
+          </Label>
           <Textarea
             value={formData.catDesc}
             onChange={(e) => handleFieldChange("catDesc", e.target.value)}
             placeholder="Describe what services belong in this category"
             rows={4}
-            disabled={isLoading || descLoading}
+            disabled={isLoading}
             className={cn(
               "resize-none",
               errors.catDesc &&
