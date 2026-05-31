@@ -184,7 +184,7 @@ export function MatchedProvidersDrawer({
   }));
   const selectedCat = categories.find((c) => c.id === editCategory);
 
-  const { data: suggestData } = useSuggestCategory(editTitle);
+  const { data: suggestData, isLoading: suggestLoading } = useSuggestCategory(editTitle);
   const visibleSuggestions: CategorySuggestion[] = (suggestData ?? []).filter(
     (s) => !dismissedSuggestions.has(s._id),
   );
@@ -318,6 +318,13 @@ export function MatchedProvidersDrawer({
                 <label className="block text-[11px] font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-1.5">
                   Category
                 </label>
+
+                {!editCategory && suggestLoading && editTitle.trim().length >= 3 && (
+                  <div className="flex items-center gap-1.5 mb-2 text-[11px] text-stone-400 dark:text-stone-500">
+                    <Loader2 size={11} className="animate-spin" />
+                    Finding category suggestions…
+                  </div>
+                )}
 
                 {!editCategory && visibleSuggestions.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 mb-2">

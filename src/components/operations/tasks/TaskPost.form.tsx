@@ -374,7 +374,7 @@ export default function PostTaskForm() {
 
   // ── Category suggestions ─────────────────────────────────────────────────────
   const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
-  const { data: suggestData } = useSuggestCategory(draft.title);
+  const { data: suggestData, isLoading: suggestLoading } = useSuggestCategory(draft.title);
   const visibleSuggestions: CategorySuggestion[] = (suggestData ?? []).filter(
     (s) => !dismissedSuggestions.has(s._id),
   );
@@ -645,6 +645,13 @@ export default function PostTaskForm() {
 
       <div>
         <FieldLabel icon={Tag}>Select Category</FieldLabel>
+
+        {!draft.category && suggestLoading && draft.title.trim().length >= 3 && (
+          <div className="flex items-center gap-1.5 mb-2 text-[11px] text-stone-400 dark:text-stone-500">
+            <Loader2 size={11} className="animate-spin" />
+            Finding category suggestions…
+          </div>
+        )}
 
         {!draft.category && visibleSuggestions.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-2">
