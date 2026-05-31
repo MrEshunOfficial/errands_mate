@@ -163,7 +163,7 @@ export function ServiceBasicInfoForm({
   // ── Internal UI state ─────────────────────────────────────────────────
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
-  const { isLoading: aiLoading, suggest } = useTagSuggestions();
+  const { isLoading: aiLoading, isError: aiError, suggest } = useTagSuggestions();
 
   // ── Data ──────────────────────────────────────────────────────────────
   const {
@@ -406,11 +406,11 @@ export function ServiceBasicInfoForm({
               const newTags = tags.filter((t) => !existing.includes(t));
               if (newTags.length) patch({ tags: [...existing, ...newTags].join(", ") });
             }}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs border rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${aiError ? "border-red-400 text-red-500 hover:border-red-500 hover:text-red-600" : "border-gray-300 dark:border-gray-700 text-gray-500 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400"}`}>
             {aiLoading
               ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
               : <Sparkles className="w-3.5 h-3.5" />}
-            {aiLoading ? "Suggesting…" : "Suggest"}
+            {aiLoading ? "Suggesting…" : aiError ? "Failed — retry" : "Suggest"}
           </button>
         </div>
       </FieldRow>

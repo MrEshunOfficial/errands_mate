@@ -33,7 +33,8 @@ export function useTagSuggestions() {
       const tags = await aiAPI.suggestTags(name, description);
       dispatch({ type: "DONE" });
       return tags;
-    } catch {
+    } catch (err) {
+      console.error("[useTagSuggestions] failed:", err);
       dispatch({ type: "ERROR" });
       return [];
     }

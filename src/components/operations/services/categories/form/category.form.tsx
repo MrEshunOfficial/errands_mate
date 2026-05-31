@@ -164,7 +164,7 @@ export default function CategoryForm({
   >({});
   const [tagInput, setTagInput] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
-  const { isLoading: aiLoading, suggest } = useTagSuggestions();
+  const { isLoading: aiLoading, isError: aiError, suggest } = useTagSuggestions();
 
   const validParentCategories = availableCategories.filter(
     (c) => c._id !== currentCategoryId,
@@ -353,11 +353,11 @@ export default function CategoryForm({
                 const newTags = tags.filter(t => !formData.tags?.includes(t));
                 if (newTags.length) handleFieldChange("tags", [...(formData.tags ?? []), ...newTags]);
               }}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              className={`flex items-center gap-1.5 text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${aiError ? "text-destructive hover:text-destructive" : "text-muted-foreground hover:text-primary"}`}>
               {aiLoading
                 ? <Loader2 className="size-3 animate-spin" />
                 : <Sparkles className="size-3" />}
-              {aiLoading ? "Suggesting…" : "Suggest tags"}
+              {aiLoading ? "Suggesting…" : aiError ? "Failed — retry" : "Suggest tags"}
             </button>
           </div>
 
