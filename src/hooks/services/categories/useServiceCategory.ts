@@ -16,9 +16,10 @@ import {
 import {
   Category,
   CategoryObject,
+  CategorySuggestion,
   CategoryWithServices,
 } from "@/types/services/categories/service.category.types";
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 // Re-export every public type so consumers only ever import from this hook
 // file — never directly from the API or types layers.
@@ -40,6 +41,7 @@ export type {
   // Entities
   Category,
   CategoryObject,
+  CategorySuggestion,
   CategoryWithServices,
 };
 
@@ -309,6 +311,29 @@ export function useSearchCategories(
     () => categoryAPI.searchCategories(params),
     [params.q, params.page, params.limit, params.isActive],
     options,
+  );
+}
+
+/**
+ * Debounced category suggestions driven by a task title string.
+ * Fires only when title.length >= 3; returns [] immediately otherwise.
+ */
+export function useSuggestCategory(title: string, limit = 3) {
+  const [debouncedTitle, setDebouncedTitle] = useState("");
+
+  useEffect(() => {
+    if (title.length < 3) {
+      setDebouncedTitle("");
+      return;
+    }
+    const timer = setTimeout(() => setDebouncedTitle(title), 300);
+    return () => clearTimeout(timer);
+  }, [title]);
+
+  return useQuery<CategorySuggestion[]>(
+    () => categoryAPI.suggestCategory(debouncedTitle, limit),
+    [debouncedTitle, limit],
+    { enabled: debouncedTitle.length >= 3 },
   );
 }
 

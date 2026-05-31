@@ -5,6 +5,7 @@
 import {
   Category,
   CategoryObject,
+  CategorySuggestion,
   CategoryWithServices,
 } from "@/types/services/categories/service.category.types";
 import { APIClient, APIError } from "../../base/api-client";
@@ -120,6 +121,10 @@ export class CategoryAPI extends APIClient {
 
   async searchCategories(params: SearchCategoriesParams): Promise<Category[]> {
     return this.get<Category[]>(`${this.base}/search`, params);
+  }
+
+  async suggestCategory(q: string, limit = 3): Promise<CategorySuggestion[]> {
+    return this.get<CategorySuggestion[]>(`${this.base}/suggest`, { q, limit });
   }
 
   async getAllTags(): Promise<string[]> {

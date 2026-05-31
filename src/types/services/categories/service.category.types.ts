@@ -61,3 +61,13 @@ export interface CategoryObject extends Category {
   subcategories?: CategoryObject[];
   services?: Service[];
 }
+
+/** Shape returned by GET /api/category/suggest */
+export interface CategorySuggestion {
+  _id: string;
+  catName: string;
+  catDesc: string;
+  slug: string;
+  tags?: string[];
+  score: number;
+}

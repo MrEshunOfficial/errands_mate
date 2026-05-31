@@ -10,8 +10,13 @@ import {
   User,
   X,
 } from "lucide-react";
+
 import { useState, useEffect } from "react";
-import { useActiveCategories } from "@/hooks/services/categories/useServiceCategory";
+import {
+  useActiveCategories,
+  useSuggestCategory,
+} from "@/hooks/services/categories/useServiceCategory";
+import { CategorySuggestion } from "@/types/services/categories/service.category.types";
 import { Category } from "@/types/services/categories/service.category.types";
 import {
   Popover,
@@ -169,6 +174,7 @@ export function MatchedProvidersDrawer({
   const [editCategory, setEditCategory] = useState("");
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [hasSubmittedEdit, setHasSubmittedEdit] = useState(false);
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
 
   const { data: categoryData, isLoading: catsLoading } = useActiveCategories();
   const categories = (categoryData ?? []).map((c: Category) => ({
@@ -177,6 +183,11 @@ export function MatchedProvidersDrawer({
     icon: (c as Category & { icon?: string }).icon ?? "📋",
   }));
   const selectedCat = categories.find((c) => c.id === editCategory);
+
+  const { data: suggestData } = useSuggestCategory(editTitle);
+  const visibleSuggestions: CategorySuggestion[] = (suggestData ?? []).filter(
+    (s) => !dismissedSuggestions.has(s._id),
+  );
 
   useEffect(() => {
     if (hasSubmittedEdit && !editSaving) {
@@ -193,6 +204,7 @@ export function MatchedProvidersDrawer({
     setEditTitle(taskTitle);
     setEditDescription(taskDescription ?? "");
     setEditCategory(taskCategory ?? "");
+    setDismissedSuggestions(new Set());
     setEditMode(true);
   }
 
@@ -306,6 +318,35 @@ export function MatchedProvidersDrawer({
                 <label className="block text-[11px] font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-1.5">
                   Category
                 </label>
+
+                {!editCategory && visibleSuggestions.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className="text-[11px] text-stone-400 dark:text-stone-500 shrink-0">
+                      Suggested:
+                    </span>
+                    {visibleSuggestions.map((s) => (
+                      <div
+                        key={s._id}
+                        className="flex items-center rounded-full border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setEditCategory(s._id)}
+                          className="pl-2.5 pr-1.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-800/30 transition-colors">
+                          {s.catName}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setDismissedSuggestions((prev) => new Set([...prev, s._id]))
+                          }
+                          className="pr-2 pl-0.5 py-1 text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 transition-colors">
+                          <X size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {catsLoading ? (
                   <div className="flex items-center gap-2 py-2 text-xs text-stone-400 dark:text-stone-500">
                     <Loader2 size={12} className="animate-spin" />

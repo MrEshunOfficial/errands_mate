@@ -20,6 +20,7 @@ import {
   List,
   PlusCircle,
   Router,
+  X,
 } from "lucide-react";
 
 import {
@@ -36,7 +37,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useActiveCategories } from "@/hooks/services/categories/useServiceCategory";
+import {
+  useActiveCategories,
+  useSuggestCategory,
+} from "@/hooks/services/categories/useServiceCategory";
+import { CategorySuggestion } from "@/types/services/categories/service.category.types";
 import { useCreateTask, useTriggerMatching, useUpdateTask } from "@/hooks/tasks/useTasks";
 import { useTaskAttachment } from "@/hooks/files/useTaskAttachment";
 import { useClientPreference } from "@/hooks/profiles/useClientPreference";
@@ -367,6 +372,13 @@ export default function PostTaskForm() {
     icon: (c as Category & { icon?: string }).icon ?? "📋",
   }));
 
+  // ── Category suggestions ─────────────────────────────────────────────────────
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
+  const { data: suggestData } = useSuggestCategory(draft.title);
+  const visibleSuggestions: CategorySuggestion[] = (suggestData ?? []).filter(
+    (s) => !dismissedSuggestions.has(s._id),
+  );
+
   // ── Validation ───────────────────────────────────────────────────────────────
   const stepValid = [
     draft.title.trim().length >= 3, // step 0 — Details
@@ -604,6 +616,7 @@ export default function PostTaskForm() {
     setEnrichedProviders([]);
     setMatchingSummary(undefined);
     setDrawerOpen(false);
+    setDismissedSuggestions(new Set());
   }
 
   // ── Step content ─────────────────────────────────────────────────────────────
@@ -632,6 +645,34 @@ export default function PostTaskForm() {
 
       <div>
         <FieldLabel icon={Tag}>Select Category</FieldLabel>
+
+        {!draft.category && visibleSuggestions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="text-[11px] text-stone-400 dark:text-stone-500 shrink-0">
+              Suggested:
+            </span>
+            {visibleSuggestions.map((s) => (
+              <div
+                key={s._id}
+                className="flex items-center rounded-full border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => set("category")(s._id)}
+                  className="pl-2.5 pr-1.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-800/30 transition-colors">
+                  {s.catName}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDismissedSuggestions((prev) => new Set([...prev, s._id]))
+                  }
+                  className="pr-2 pl-0.5 py-1 text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 transition-colors">
+                  <X size={11} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {categoriesLoading && (
           <div className="flex items-center gap-2 py-3 text-xs text-stone-400 dark:text-stone-500">
